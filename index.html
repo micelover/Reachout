@@ -1141,8 +1141,31 @@ async function loadBrowse(field, page) {
       return;
     }
 
-    grid.innerHTML = data.results.map(cardHTML).join('');
-    renderPagination(state.total, page);
+    const user = getAuthUser();
+    if (user || data.results.length <= 3) {
+      grid.innerHTML = data.results.map(cardHTML).join('');
+      renderPagination(state.total, page);
+    } else {
+      const visible = data.results.slice(0, 3).map(cardHTML).join('');
+      const gated   = data.results.slice(3).map(cardHTML).join('');
+      grid.innerHTML = visible + `
+        <div class="grid-gate-wrap">
+          <div class="blurred-rows">${gated}</div>
+          <div class="grid-gate-overlay">
+            <div class="gate-card">
+              <div class="gate-lock">🔒</div>
+              <div class="gate-title">Sign in to view all results</div>
+              <div class="gate-sub">We found <strong>${state.total.toLocaleString()} professors</strong> matching your search. Create a free account to unlock them all.</div>
+              <div class="gate-btns">
+                <button class="gate-btn-primary" onclick="showAuth('sign-in')">Sign In</button>
+                <button class="gate-btn-secondary" onclick="showAuth('sign-up')">Create Account — it's free</button>
+              </div>
+              <div class="gate-note">No credit card required</div>
+            </div>
+          </div>
+        </div>`;
+      pag.innerHTML = '';
+    }
   } catch (err) {
     grid.innerHTML = errorHTML('Start the local server to search real researchers from OpenAlex.');
     count.textContent = '—';
