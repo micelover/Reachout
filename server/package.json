@@ -1,0 +1,14 @@
+{
+  "name": "reachout-server",
+  "version": "1.0.0",
+  "description": "ReachOut discovery engine — OpenAlex proxy",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

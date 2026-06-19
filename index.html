@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReachOut — Find the right professor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,800;9..144,900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --g900: #0D2B1E;
+  --g800: #1B4D3E;
+  --g700: #1F5C49;
+  --g600: #2D7A5F;
+  --g100: #D1FAE5;
+  --g50:  #ECFDF5;
+  --n950: #030712;
+  --n900: #111827;
+  --n800: #1F2937;
+  --n700: #374151;
+  --n600: #4B5563;
+  --n500: #6B7280;
+  --n400: #9CA3AF;
+  --n300: #D1D5DB;
+  --n200: #E5E7EB;
+  --n100: #F3F4F6;
+  --n50:  #F9FAFB;
+  --white: #FFFFFF;
+  --bg: #F6F7F9;
+  --font-d: 'Fraunces', Georgia, serif;
+  --font-b: 'DM Sans', system-ui, sans-serif;
+  --r-sm: 6px; --r-md: 10px; --r-lg: 14px; --r-xl: 20px;
+  --sh-sm: 0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
+  --sh-md: 0 4px 14px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.04);
+  --sh-lg: 0 10px 32px rgba(0,0,0,.1),0 4px 10px rgba(0,0,0,.05);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:var(--font-b);background:var(--bg);color:var(--n900);line-height:1.6;-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}
+button{cursor:pointer;border:none;background:none;font-family:inherit}
+.page{display:none}
+.page.active{display:block;animation:fadeUp .28s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── NAV TOP ── */
+.nav{position:sticky;top:0;z-index:100;background:var(--white);border-bottom:1px solid var(--n200);height:56px;display:flex;align-items:center;padding:0 32px;gap:36px}
+.nav-logo{font-family:var(--font-d);font-size:20px;font-weight:700;color:var(--g800);cursor:pointer;letter-spacing:-.4px}
+.nav-links{display:flex;gap:2px;list-style:none}
+.nav-links a{display:block;padding:6px 12px;font-size:14px;font-weight:500;color:var(--n600);border-radius:var(--r-sm);transition:color .15s;position:relative}
+.nav-links a:hover{color:var(--n900)}
+.nav-links a.active{color:var(--g800);font-weight:600}
+.nav-links a.active::after{content:'';position:absolute;bottom:-17px;left:12px;right:12px;height:2px;background:var(--g800);border-radius:1px}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.nav-searchbox{display:flex;align-items:center;gap:8px;background:var(--n50);border:1px solid var(--n200);border-radius:100px;padding:6px 16px;width:210px}
+.nav-searchbox input{background:none;border:none;outline:none;font-family:var(--font-b);font-size:13.5px;color:var(--n700);width:100%}
+.nav-searchbox input::placeholder{color:var(--n400)}
+.nav-profile{display:flex;align-items:center;gap:6px;padding:6px 14px;border:1.5px solid var(--n200);border-radius:100px;font-size:13.5px;font-weight:500;color:var(--n700);background:var(--white);transition:all .15s}
+.nav-profile:hover{border-color:var(--n400);background:var(--n50)}
+
+/* ── BUTTONS ── */
+.btn-p{display:inline-flex;align-items:center;gap:6px;background:var(--g800);color:var(--white);padding:10px 20px;border-radius:var(--r-md);font-size:14px;font-weight:600;font-family:var(--font-b);transition:all .15s;cursor:pointer;border:none}
+.btn-p:hover{background:var(--g700);transform:translateY(-1px);box-shadow:0 4px 14px rgba(27,77,62,.28)}
+.btn-s{display:inline-flex;align-items:center;gap:6px;background:var(--white);color:var(--n700);padding:10px 20px;border-radius:var(--r-md);font-size:14px;font-weight:500;font-family:var(--font-b);border:1.5px solid var(--n200);transition:all .15s;cursor:pointer}
+.btn-s:hover{border-color:var(--n400);background:var(--n50)}
+
+/* ── HOW IT WORKS PAGE ── */
+.hiw-page{background:var(--white);min-height:100vh}
+.hiw-wrap{max-width:780px;margin:0 auto;padding:80px 40px 80px}
+.hiw-back{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;color:var(--n500);margin-bottom:48px;cursor:pointer;transition:color .15s;background:none;border:none;font-family:var(--font-b);padding:0}
+.hiw-back:hover{color:var(--n900)}
+.hiw-hero{text-align:center;margin-bottom:64px}
+.hiw-eyebrow{display:inline-flex;align-items:center;gap:6px;background:var(--g50);border:1px solid var(--g100);color:var(--g800);font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:5px 12px;border-radius:100px;margin-bottom:20px}
+.hiw-hero h1{font-family:var(--font-d);font-size:clamp(28px,3.5vw,42px);font-weight:800;color:var(--n900);letter-spacing:-.5px;line-height:1.2;margin-bottom:14px}
+.hiw-hero p{font-size:15.5px;color:var(--n500);line-height:1.7;max-width:440px;margin:0 auto}
+.hiw-steps{display:flex;flex-direction:column;gap:2px;margin-bottom:56px;position:relative}
+.hiw-connector{position:absolute;left:31px;top:64px;bottom:64px;width:1px;background:linear-gradient(to bottom,var(--g100),var(--n200));z-index:0}
+.hiw-step{display:flex;gap:20px;align-items:flex-start;background:var(--white);border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:24px 26px;position:relative;z-index:1;transition:all .2s}
+.hiw-step:hover{border-color:var(--n300);box-shadow:var(--sh-sm);transform:translateX(3px)}
+.hiw-num{width:40px;height:40px;border-radius:50%;background:var(--g800);color:var(--white);font-family:var(--font-d);font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.hiw-step-body{flex:1}
+.hiw-step-body h3{font-size:15px;font-weight:700;color:var(--n900);margin-bottom:5px}
+.hiw-step-body p{font-size:13.5px;color:var(--n500);line-height:1.65}
+.hiw-step-icon{width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:var(--n50);border-radius:var(--r-md);color:var(--n500);flex-shrink:0;margin-top:2px}
+.hiw-cta{text-align:center;background:var(--n50);border:1.5px solid var(--n200);border-radius:var(--r-xl);padding:40px 32px}
+.hiw-cta p{font-size:13.5px;color:var(--n500);margin-bottom:20px;line-height:1.6}
+.hiw-cta h2{font-family:var(--font-d);font-size:24px;font-weight:800;color:var(--n900);letter-spacing:-.3px;margin-bottom:8px}
+.hiw-cta-btns{display:flex;gap:10px;justify-content:center}
+
+/* ── FOOTER ── */
+.footer{background:var(--white);border-top:1px solid var(--n200);padding:24px 40px;display:flex;align-items:center;justify-content:space-between}
+.footer-copy{font-size:13px;color:var(--n500)}
+.footer-links{display:flex;gap:24px}
+.footer-links a{font-size:13px;color:var(--n500);transition:color .15s}
+.footer-links a:hover{color:var(--n700)}
+
+/* ═══════════════════════════
+   PAGE: HOME
+═══════════════════════════ */
+.home-page{background:var(--white);min-height:100vh}
+.home-nav-icon{display:flex;align-items:center;background:var(--n50);border:1px solid var(--n200);border-radius:100px;padding:7px 12px}
+.home-hero{text-align:center;padding:90px 40px 56px;max-width:680px;margin:0 auto}
+.home-hero h1{font-family:var(--font-d);font-size:clamp(32px,4.5vw,50px);font-weight:700;line-height:1.15;color:var(--n900);letter-spacing:-0.5px;margin-bottom:18px}
+.home-hero p{font-size:16.5px;color:var(--n500);line-height:1.7;max-width:460px;margin:0 auto 32px}
+.home-hero-btns{display:flex;gap:10px;justify-content:center}
+.home-hero-btns .btn-p,.home-hero-btns .btn-s{padding:12px 24px;font-size:15px}
+
+.home-preview{max-width:840px;margin:0 auto 72px;padding:0 40px}
+.preview-frame{background:var(--n50);border:1px solid var(--n200);border-radius:var(--r-xl);overflow:hidden;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center}
+.preview-mock{width:56%;background:var(--white);border-radius:var(--r-lg);box-shadow:var(--sh-lg);overflow:hidden}
+.mock-bar{background:var(--white);border-bottom:1px solid var(--n100);padding:10px 14px;display:flex;align-items:center;gap:6px}
+.mock-dot{width:8px;height:8px;border-radius:50%}
+.mock-row{padding:10px 14px;border-bottom:1px solid var(--n50);display:flex;align-items:center;gap:10px}
+.mock-av{width:26px;height:26px;border-radius:50%;background:var(--n200);flex-shrink:0}
+.mock-lines{flex:1}
+.mock-line{height:7px;border-radius:4px;background:var(--n200);margin-bottom:4px}
+.mock-badge-s{width:52px;height:18px;border-radius:100px;background:var(--g100);flex-shrink:0}
+
+.home-features{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;max-width:840px;margin:0 auto 72px;padding:0 40px}
+.feat-card{background:var(--n50);border:1px solid var(--n200);border-radius:var(--r-lg);padding:26px}
+.feat-icon{width:38px;height:38px;background:var(--n100);border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;margin-bottom:14px;color:var(--n600)}
+.feat-card h3{font-size:14.5px;font-weight:600;color:var(--n900);margin-bottom:8px}
+.feat-card p{font-size:13px;color:var(--n500);line-height:1.6}
+
+.home-foot{background:var(--white);border-top:1px solid var(--n200);padding:28px 40px;display:flex;align-items:center;justify-content:space-between}
+.home-foot-logo{font-family:var(--font-d);font-size:18px;font-weight:700;color:var(--g800)}
+
+/* ═══════════════════════════
+   PAGE: BROWSE
+═══════════════════════════ */
+.browse-wrap{max-width:1100px;margin:0 auto;padding:48px 40px}
+.browse-hero{margin-bottom:32px}
+.browse-hero h1{font-family:var(--font-d);font-size:36px;font-weight:800;color:var(--n900);letter-spacing:-.8px;margin-bottom:8px}
+.browse-hero p{font-size:14.5px;color:var(--n500);line-height:1.7}
+
+.browse-controls{display:flex;gap:10px;margin-bottom:30px;align-items:center}
+.browse-search{flex:1;display:flex;align-items:center;gap:10px;background:var(--white);border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:11px 18px}
+.browse-search input{flex:1;border:none;outline:none;font-family:var(--font-b);font-size:14px;color:var(--n700);background:none}
+.browse-search input::placeholder{color:var(--n400)}
+.filter-btn{display:flex;align-items:center;gap:6px;padding:10px 16px;border:1.5px solid var(--n200);border-radius:var(--r-lg);background:var(--white);font-family:var(--font-b);font-size:13.5px;font-weight:500;color:var(--n700);cursor:pointer;transition:all .15s;white-space:nowrap}
+.filter-btn:hover{border-color:var(--n400);background:var(--n50)}
+
+.prof-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:36px}
+.prof-card{background:var(--white);border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:22px;position:relative;transition:all .2s;cursor:pointer}
+.prof-card:hover{border-color:var(--n300);box-shadow:var(--sh-md);transform:translateY(-2px)}
+
+.pc-head{display:flex;gap:12px;align-items:flex-start;margin-bottom:12px;position:relative}
+.pc-av{width:50px;height:50px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;background:var(--n100);overflow:hidden}
+.pc-av img{width:100%;height:100%;object-fit:cover}
+.pc-av-init{width:50px;height:50px;border-radius:50%;flex-shrink:0;background:var(--n200);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:var(--n600)}
+.pc-info{flex:1;min-width:0}
+.pc-name{font-size:14.5px;font-weight:700;color:var(--n900);line-height:1.3;margin-bottom:4px}
+.pc-uni{font-size:12px;color:var(--n500);display:flex;align-items:center;gap:4px}
+.match-badge{position:absolute;top:0;right:0;background:var(--g50);border:1px solid var(--g100);color:var(--g800);font-size:11px;font-weight:700;padding:3px 8px;border-radius:100px;display:flex;align-items:center;gap:3px}
+.heart{position:absolute;bottom:0;right:0;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1.5px solid var(--n200);background:var(--white);color:var(--n400);font-size:14px;cursor:pointer;transition:all .15s}
+.heart:hover{border-color:#F43F5E;color:#F43F5E}
+.heart.on{border-color:#F43F5E;color:#F43F5E;background:#FFF1F2}
+
+.pc-desc{font-size:13px;color:var(--n600);line-height:1.6;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tag-row{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.tag{background:var(--n100);color:var(--n700);font-size:11.5px;font-weight:500;padding:3px 9px;border-radius:100px}
+.tag-more{color:var(--n500);font-size:11.5px;font-weight:500;padding:3px 4px}
+.pc-foot{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--n100)}
+.pc-loc{font-size:12px;color:var(--n500);display:flex;align-items:center;gap:4px}
+.view-btn{background:var(--g800);color:var(--white);font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:var(--r-md);font-family:var(--font-b);cursor:pointer;border:none;transition:background .15s}
+.view-btn:hover{background:var(--g700)}
+
+.pagination{display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:24px}
+.pg-btn{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-md);border:1.5px solid var(--n200);background:var(--white);font-size:14px;font-weight:500;color:var(--n700);cursor:pointer;transition:all .15s;font-family:var(--font-b)}
+.pg-btn:hover{border-color:var(--n400)}
+.pg-btn.active{background:var(--g800);border-color:var(--g800);color:var(--white)}
+.pg-btn.arr{color:var(--n500)}
+.pg-dots{font-size:14px;color:var(--n400);padding:0 2px}
+
+/* ═══════════════════════════
+   PAGE: ONBOARDING
+═══════════════════════════ */
+.onb-page{min-height:100vh;background:var(--n50)}
+.onb-progress{height:3px;background:var(--n200)}
+.onb-fill{height:100%;width:50%;background:var(--g800);transition:width .3s}
+.onb-wrap{max-width:660px;margin:0 auto;padding:52px 40px 80px}
+.step-label{font-size:11.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--g700);margin-bottom:10px}
+.onb-wrap h1{font-family:var(--font-d);font-size:42px;font-weight:900;color:var(--n900);letter-spacing:-1.5px;line-height:1.1;margin-bottom:10px}
+.onb-wrap>p{font-size:15px;color:var(--n500);margin-bottom:32px;line-height:1.6}
+.q-card{background:var(--white);border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:26px;margin-bottom:14px}
+.q-card h3{font-size:14.5px;font-weight:600;color:var(--n900);margin-bottom:14px}
+.field-sel{display:flex;align-items:center;gap:10px;border:1.5px solid var(--n200);border-radius:var(--r-md);padding:10px 14px;cursor:pointer;transition:border-color .15s;color:var(--n400);font-size:14px}
+.field-sel:hover{border-color:var(--n400)}
+.int-tags{display:flex;flex-wrap:wrap;gap:8px}
+.int-tag{padding:7px 14px;border-radius:100px;border:1.5px solid var(--n200);background:var(--white);font-size:13px;font-weight:500;color:var(--n700);cursor:pointer;transition:all .15s;font-family:var(--font-b)}
+.int-tag:hover{border-color:var(--g600);color:var(--g700)}
+.int-tag.sel{background:var(--g50);border-color:var(--g700);color:var(--g800)}
+.loc-inp{display:flex;align-items:center;gap:10px;border:1.5px solid var(--n200);border-radius:var(--r-md);padding:10px 14px;transition:border-color .15s}
+.loc-inp:focus-within{border-color:var(--g700)}
+.loc-inp input{flex:1;border:none;outline:none;font-family:var(--font-b);font-size:14px;color:var(--n700)}
+.loc-inp input::placeholder{color:var(--n400)}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border:1.5px solid var(--n200);border-radius:var(--r-md)}
+.tog-info .tog-t{font-size:14px;font-weight:600;color:var(--n900);margin-bottom:2px}
+.tog-info .tog-d{font-size:13px;color:var(--n500)}
+.toggle{width:44px;height:24px;background:var(--n300);border-radius:100px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--g700)}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;background:var(--white);border-radius:50%;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle.on::after{transform:translateX(20px)}
+.onb-nav{display:flex;justify-content:space-between;align-items:center;margin-top:28px}
+.back-btn{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:500;color:var(--n600);background:none;border:none;cursor:pointer;font-family:var(--font-b);transition:color .15s}
+.back-btn:hover{color:var(--n900)}
+.cont-btn{background:var(--g800);color:var(--white);padding:11px 22px;border-radius:var(--r-md);font-size:14px;font-weight:600;font-family:var(--font-b);border:none;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s}
+.cont-btn:hover{background:var(--g700)}
+
+/* ═══════════════════════════
+   PAGE: PROFILE
+═══════════════════════════ */
+.prof-page{min-height:100vh;background:var(--white)}
+.prof-wrap{max-width:1100px;margin:0 auto;padding:32px 40px 60px}
+.back-link{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;color:var(--n600);margin-bottom:22px;cursor:pointer;transition:color .15s}
+.back-link:hover{color:var(--n900)}
+.prof-layout{display:grid;grid-template-columns:1fr 310px;gap:22px}
+
+.ph-card{background:var(--white);border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:26px;margin-bottom:20px;position:relative;overflow:hidden}
+.ph-watermark{position:absolute;right:-8px;top:50%;transform:translateY(-50%);font-size:110px;opacity:.05;pointer-events:none;line-height:1}
+.ph-inner{display:flex;gap:18px;align-items:flex-start}
+.ph-photo{width:86px;height:86px;border-radius:50%;background:var(--n200);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:34px;overflow:hidden}
+.ph-photo img{width:100%;height:100%;object-fit:cover}
+.ph-info{flex:1}
+.ph-name{font-family:var(--font-d);font-size:28px;font-weight:800;color:var(--n900);letter-spacing:-.4px;margin-bottom:5px}
+.ph-inst{font-size:13px;color:var(--n500);display:flex;align-items:center;gap:4px;margin-bottom:14px}
+.ph-tabs{display:flex;gap:5px;margin-bottom:12px}
+.ph-tab{padding:5px 11px;border:1.5px solid var(--n200);border-radius:var(--r-md);font-size:12px;font-weight:500;color:var(--n600);background:var(--white);cursor:pointer;font-family:var(--font-b);transition:all .15s}
+.ph-tab:hover{border-color:var(--n400)}
+.ph-tab.active{background:var(--n900);border-color:var(--n900);color:var(--white)}
+
+.sec-head{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:var(--n900);margin-bottom:12px}
+.res-sum{border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:20px;margin-bottom:20px}
+.res-sum p{font-size:13.5px;color:var(--n600);line-height:1.75}
+
+.hook-card{background:var(--g800);border-radius:var(--r-lg);padding:26px;color:var(--white)}
+.hook-pub{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.hook-pill{background:rgba(255,255,255,.18);color:var(--white);font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:3px 8px;border-radius:var(--r-sm)}
+.hook-venue{font-size:13px;opacity:.65}
+.hook-title{font-family:var(--font-d);font-size:21px;font-weight:800;line-height:1.3;margin-bottom:18px}
+.hook-strat{background:rgba(255,255,255,.1);border-radius:var(--r-md);padding:14px 16px;border-left:3px solid rgba(255,255,255,.35)}
+.hook-strat-lbl{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:.55;display:flex;align-items:center;gap:5px;margin-bottom:7px}
+.hook-strat p{font-size:13px;line-height:1.7;opacity:.88}
+
+/* Sidebar */
+.sb-card{background:var(--white);border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:20px;margin-bottom:14px}
+.sb-card h4{font-size:12.5px;font-weight:700;color:var(--n900);margin-bottom:12px}
+.act-p{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:var(--g800);color:var(--white);padding:11px;border-radius:var(--r-md);font-size:13.5px;font-weight:600;font-family:var(--font-b);border:none;cursor:pointer;margin-bottom:8px;transition:background .15s}
+.act-p:hover{background:var(--g700)}
+.act-s{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:var(--white);color:var(--n700);padding:10px;border-radius:var(--r-md);font-size:13.5px;font-weight:500;font-family:var(--font-b);border:1.5px solid var(--n200);cursor:pointer;margin-bottom:14px;transition:all .15s}
+.act-s:hover{border-color:var(--n400)}
+.ct-item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--n600);margin-bottom:8px}
+.ct-copy{margin-left:auto;color:var(--n400);cursor:pointer;transition:color .15s}
+.ct-copy:hover{color:var(--n700)}
+.sb-lbl{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n500);margin-bottom:10px}
+.acc-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--n700)}
+.acc-dot{width:8px;height:8px;border-radius:50%;background:#10B981;flex-shrink:0}
+.proj-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--n100)}
+.proj-item:last-child{border-bottom:none;padding-bottom:0}
+.proj-ic{color:var(--n400);margin-top:1px;flex-shrink:0}
+.proj-name{font-size:13px;font-weight:600;color:var(--n800);margin-bottom:2px}
+.proj-meta{font-size:12px;color:var(--n500)}
+
+/* ═══════════════════════════
+   PAGE: TRACKER
+═══════════════════════════ */
+#page-tracker.active{display:block;min-height:100vh}
+#page-home.active,#page-browse.active,#page-profile.active{margin-left:240px}
+.tr-sidebar{width:240px;background:var(--white);border-right:1px solid var(--n200);display:flex;flex-direction:column;padding:24px 0;position:fixed;left:0;top:0;bottom:0;z-index:50}
+.tr-logo{font-family:var(--font-d);font-size:20px;font-weight:700;color:var(--g800);padding:0 20px 24px;cursor:pointer;letter-spacing:-.4px}
+.tr-nav{flex:1;list-style:none;padding:0 10px}
+.tr-nav li{margin-bottom:2px}
+.tr-nav a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r-md);font-size:14px;font-weight:500;color:var(--n600);transition:all .15s}
+.tr-nav a:hover{background:var(--n50);color:var(--n900)}
+.tr-nav a.active{background:var(--n100);color:var(--n900);font-weight:600}
+.tr-nav .sep{border-top:1px solid var(--n200);margin:8px 0 8px 12px;padding-top:10px}
+.tr-nav .sep a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r-md);font-size:14px;font-weight:500;color:var(--n600)}
+.tr-nav .sep a:hover{background:var(--n50);color:var(--n900)}
+.tr-bottom{padding:16px 20px;border-top:1px solid var(--n200)}
+.tr-user{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.tr-u-av{width:34px;height:34px;border-radius:50%;background:var(--n200);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px}
+.tr-u-name{font-size:13px;font-weight:600;color:var(--n900)}
+.tr-u-role{font-size:12px;color:var(--n500)}
+.find-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;background:var(--g800);color:var(--white);padding:10px;border-radius:var(--r-md);font-size:13.5px;font-weight:600;font-family:var(--font-b);border:none;cursor:pointer;transition:background .15s}
+.find-btn:hover{background:var(--g700)}
+.tr-auth-btns{display:flex;flex-direction:column;gap:8px}
+.tr-signin-btn{display:flex;align-items:center;justify-content:center;width:100%;background:var(--g800);color:var(--white);padding:10px;border-radius:var(--r-md);font-size:13.5px;font-weight:600;font-family:var(--font-b);border:none;cursor:pointer;transition:background .15s}
+.tr-signin-btn:hover{background:var(--g700)}
+.tr-signup-btn{display:flex;align-items:center;justify-content:center;width:100%;background:var(--white);color:var(--g800);padding:9px;border-radius:var(--r-md);font-size:13.5px;font-weight:600;font-family:var(--font-b);border:1.5px solid var(--g800);cursor:pointer;transition:background .15s,color .15s}
+.tr-signup-btn:hover{background:var(--g50)}
+
+.tr-main{margin-left:240px;flex:1;padding:36px 40px;background:var(--bg);min-height:100vh}
+.tr-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:26px}
+.tr-head h1{font-family:var(--font-d);font-size:27px;font-weight:800;color:var(--n900);letter-spacing:-.4px;margin-bottom:4px}
+.tr-head p{font-size:13.5px;color:var(--n500)}
+.tr-head-acts{display:flex;gap:8px}
+
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px}
+.stat-card{background:var(--white);border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:20px 22px;display:flex;align-items:flex-start;justify-content:space-between}
+.stat-lbl{font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n500);margin-bottom:7px}
+.stat-val{font-family:var(--font-d);font-size:34px;font-weight:800;color:var(--n900);line-height:1;margin-bottom:9px}
+.stat-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:100px;font-size:12px;font-weight:600}
+.stat-badge.green{background:var(--g50);color:var(--g800)}
+.stat-badge.dark{background:var(--g800);color:var(--white)}
+.stat-badge.gray{background:var(--n100);color:var(--n600)}
+.stat-icon{font-size:26px;opacity:.1;margin-top:4px}
+
+.tr-controls{display:flex;gap:12px;align-items:center;background:var(--white);border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:14px 18px;margin-bottom:18px}
+.tr-search{display:flex;align-items:center;gap:8px;background:var(--n50);border:1.5px solid var(--n200);border-radius:var(--r-md);padding:7px 12px;flex:1}
+.tr-search input{flex:1;border:none;outline:none;font-family:var(--font-b);font-size:13.5px;color:var(--n700);background:none}
+.tr-search input::placeholder{color:var(--n400)}
+.sf-btns{display:flex;gap:5px}
+.sf-btn{padding:6px 13px;border-radius:100px;border:1.5px solid var(--n200);background:var(--white);font-size:13px;font-weight:500;color:var(--n600);cursor:pointer;font-family:var(--font-b);transition:all .15s;white-space:nowrap}
+.sf-btn:hover{border-color:var(--n400)}
+.sf-btn.active{background:var(--n900);border-color:var(--n900);color:var(--white)}
+
+.tbl-wrap{background:var(--white);border:1.5px solid var(--n200);border-radius:var(--r-lg);overflow:hidden}
+.tbl{width:100%;border-collapse:collapse}
+.tbl thead th{font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n500);padding:13px 18px;text-align:left;border-bottom:1.5px solid var(--n200);background:var(--n50);white-space:nowrap}
+.tbl tbody td{padding:15px 18px;border-bottom:1px solid var(--n100);vertical-align:middle}
+.tbl tbody tr:last-child td{border-bottom:none}
+.tbl tbody tr:hover{background:var(--n50)}
+.tbl-av{width:34px;height:34px;border-radius:50%;background:var(--n200);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:var(--n600);flex-shrink:0;overflow:hidden}
+.tbl-av img{width:100%;height:100%;object-fit:cover}
+.tbl-pname{font-size:13px;font-weight:600;color:var(--n900);margin-bottom:2px}
+.tbl-pfield{font-size:11.5px;color:var(--n500)}
+.tbl-uni{font-size:13px;font-weight:600;color:var(--n800);margin-bottom:2px}
+.tbl-lab{font-size:11.5px;color:var(--n500)}
+.spill{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:100px;font-size:11.5px;font-weight:600}
+.spill::before{content:'';width:6px;height:6px;border-radius:50%}
+.spill.replied{background:var(--g50);color:var(--g800);border:1px solid var(--g100)}
+.spill.replied::before{background:#10B981}
+.spill.emailed{background:var(--n100);color:var(--n700);border:1px solid var(--n200)}
+.spill.emailed::before{background:var(--n400)}
+.spill.toemail{background:var(--n50);color:var(--n600);border:1px solid var(--n200)}
+.spill.toemail::before{background:var(--n300)}
+.nact{display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:500;color:var(--n700)}
+.nact.over{color:#DC2626}
+.mnu-btn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-sm);cursor:pointer;color:var(--n400);transition:all .15s}
+.mnu-btn:hover{background:var(--n100);color:var(--n700)}
+.tbl-foot{padding:13px 18px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--n200)}
+.tbl-foot-txt{font-size:13px;color:var(--n500)}
+.tbl-pag{display:flex;gap:4px}
+.tp-btn{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-sm);border:1.5px solid var(--n200);background:var(--white);font-size:13px;font-weight:500;color:var(--n700);cursor:pointer;font-family:var(--font-b);transition:all .15s}
+.tp-btn:hover{border-color:var(--n400)}
+.tp-btn.active{background:var(--g800);border-color:var(--g800);color:var(--white)}
+</style>
+</head>
+<body>
+
+<aside id="global-sidebar" class="tr-sidebar">
+  <div class="tr-logo" onclick="go('home')">Reachout</div>
+  <ul class="tr-nav">
+    <li>
+      <a id="nav-home" href="#" class="active" onclick="go('home');return false">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+        Home
+      </a>
+    </li>
+    <li>
+      <a id="nav-browse" href="#" onclick="go('browse');return false">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Browse
+      </a>
+    </li>
+    <li>
+      <a id="nav-tracker" href="#" onclick="go('tracker');return false">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Tracker
+      </a>
+    </li>
+    <li class="sep">
+      <a href="#">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        Settings
+      </a>
+    </li>
+  </ul>
+  <div class="tr-bottom">
+    <div id="tr-logged-in" style="display:none">
+      <div class="tr-user">
+        <div class="tr-u-av">👤</div>
+        <div>
+          <div class="tr-u-name" id="tr-user-name">Student Portal</div>
+          <div class="tr-u-role" id="tr-user-role">Research Assistant</div>
+        </div>
+      </div>
+      <button class="find-btn" onclick="go('browse')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        Find Mentors
+      </button>
+    </div>
+    <div id="tr-logged-out" class="tr-auth-btns">
+      <button class="tr-signin-btn" onclick="showAuth('sign-in')">Sign In</button>
+      <button class="tr-signup-btn" onclick="showAuth('sign-up')">Create Account</button>
+    </div>
+  </div>
+</aside>
+
+<!-- ══════════════════════════════════
+     PAGE: HOME
+══════════════════════════════════ -->
+<div id="page-home" class="page home-page active">
+  <div class="home-hero">
+    <h1>Find the right professor. Write an email they'll actually answer.</h1>
+    <p>Reachout connects motivated students with world-class research labs. Start your journey with confidence.</p>
+    <div class="home-hero-btns">
+      <button class="btn-p" onclick="go('browse')">Get Started</button>
+      <button class="btn-s" onclick="go('how-it-works')">Learn More</button>
+    </div>
+  </div>
+
+  <div class="home-preview">
+    <div class="preview-frame">
+      <div class="preview-mock">
+        <div class="mock-bar">
+          <div class="mock-dot" style="background:#FF5F57"></div>
+          <div class="mock-dot" style="background:#FFBD2E"></div>
+          <div class="mock-dot" style="background:#28C840"></div>
+        </div>
+        <div class="mock-row">
+          <div class="mock-av"></div>
+          <div class="mock-lines"><div class="mock-line" style="width:72%"></div><div class="mock-line" style="width:50%"></div></div>
+          <div class="mock-badge-s"></div>
+        </div>
+        <div class="mock-row" style="background:#f0fdf4">
+          <div style="width:8px;height:8px;border-radius:50%;background:#10B981;flex-shrink:0"></div>
+          <div class="mock-lines"><div class="mock-line" style="width:68%;background:#bbf7d0;height:9px"></div></div>
+        </div>
+        <div class="mock-row">
+          <div class="mock-av" style="opacity:.55"></div>
+          <div class="mock-lines"><div class="mock-line" style="width:78%"></div><div class="mock-line" style="width:45%"></div></div>
+          <div style="width:8px;height:8px;border-radius:50%;background:#F59E0B;flex-shrink:0"></div>
+        </div>
+        <div class="mock-row">
+          <div class="mock-av" style="opacity:.3"></div>
+          <div class="mock-lines"><div class="mock-line" style="width:60%"></div><div class="mock-line" style="width:40%"></div></div>
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--n300);flex-shrink:0"></div>
+        </div>
+        <div class="mock-row" style="justify-content:center;padding:14px">
+          <div style="height:5px;background:var(--g800);width:28%;border-radius:3px;margin:0 auto"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="home-features">
+    <div class="feat-card">
+      <div class="feat-icon">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </div>
+      <h3>Find labs by your interests</h3>
+      <p>Filter through thousands of world-class research labs based on your specific academic focus and career goals.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      </div>
+      <h3>Write in your own voice</h3>
+      <p>Use our guided templates and intelligent suggestions to craft compelling outreach emails that sound authentic.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      </div>
+      <h3>Track your outreach</h3>
+      <p>Keep everything organized in one place. Monitor who you've contacted, when to follow up, and track your success rate.</p>
+    </div>
+  </div>
+
+  <div class="home-foot">
+    <span class="home-foot-logo">Reachout</span>
+    <div class="footer-links">
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+      <a href="#">Contact Support</a>
+      <a href="#">University Partnerships</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     PAGE: HOW IT WORKS
+══════════════════════════════════ -->
+<div id="page-how-it-works" class="page hiw-page">
+  <div class="hiw-wrap">
+    <button class="hiw-back" onclick="go('home')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,18 9,12 15,6"/></svg>
+      Back to Home
+    </button>
+
+    <div class="hiw-hero">
+      <div class="hiw-eyebrow">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        How It Works
+      </div>
+      <h1>From interest to inbox in minutes</h1>
+      <p>Reachout handles the research so you can focus on making a genuine connection.</p>
+    </div>
+
+    <div class="hiw-steps">
+      <div class="hiw-connector"></div>
+
+      <div class="hiw-step">
+        <div class="hiw-num">1</div>
+        <div class="hiw-step-body">
+          <h3>Build your profile</h3>
+          <p>Chat with our AI or upload your resume. We extract your background, interests, and goals — taking just 2 minutes. This powers every recommendation we make.</p>
+        </div>
+        <div class="hiw-step-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        </div>
+      </div>
+
+      <div class="hiw-step">
+        <div class="hiw-num">2</div>
+        <div class="hiw-step-body">
+          <h3>Discover professors</h3>
+          <p>Browse our curated database of researchers matched to your interests. Add them manually or import a CSV. We automatically fetch their recent papers and lab details.</p>
+        </div>
+        <div class="hiw-step-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </div>
+      </div>
+
+      <div class="hiw-step">
+        <div class="hiw-num">3</div>
+        <div class="hiw-step-body">
+          <h3>Generate personalised emails</h3>
+          <p>Our AI reads each professor's latest publications and writes a tailored outreach email that references their specific research — not a generic template.</p>
+        </div>
+        <div class="hiw-step-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+      </div>
+
+      <div class="hiw-step">
+        <div class="hiw-num">4</div>
+        <div class="hiw-step-body">
+          <h3>Track &amp; send</h3>
+          <p>Review, edit, and send directly from Reachout. Track email opens and replies automatically. We remind you when to follow up so no opportunity slips away.</p>
+        </div>
+        <div class="hiw-step-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="hiw-cta">
+      <h2>Ready to reach out?</h2>
+      <p>Join hundreds of students who've already connected with their dream research labs.</p>
+      <div class="hiw-cta-btns">
+        <button class="btn-p" onclick="go('browse')">Get Started</button>
+        <button class="btn-s" onclick="go('home')">Back to Home</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="home-foot">
+    <span class="home-foot-logo">Reachout</span>
+    <div class="footer-links">
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+      <a href="#">Contact Support</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     PAGE: BROWSE
+══════════════════════════════════ -->
+<div id="page-browse" class="page">
+  <div class="browse-wrap">
+    <div class="browse-hero">
+      <h1>Recommended Professors</h1>
+      <p id="browseSubtitle">Discover top researchers and mentors aligned with your academic interests.<br>We've found <strong id="browseCount">—</strong> relevant matches.</p>
+    </div>
+
+    <div class="browse-controls">
+      <div class="browse-search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--n400)"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input id="browseSearchInput" type="text" placeholder="Search by field (e.g. robotics, climate science)…">
+      </div>
+      <button class="filter-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+        Filters
+      </button>
+      <button class="filter-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        University
+      </button>
+      <button class="filter-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        Domain
+      </button>
+    </div>
+
+    <div class="prof-grid" id="profGrid">
+      <!-- populated by discovery engine -->
+    </div>
+
+    <div class="pagination" id="profPagination"></div>
+  </div>
+
+  <div class="footer">
+    <span class="footer-copy">© 2024 Reachout Research Platform. All rights reserved.</span>
+    <div class="footer-links">
+      <a href="#">Privacy Policy</a><a href="#">Terms of Service</a>
+      <a href="#">Contact Support</a><a href="#">University Partnerships</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     PAGE: ONBOARDING
+══════════════════════════════════ -->
+<div id="page-onboarding" class="page onb-page">
+  <div class="onb-progress"><div class="onb-fill"></div></div>
+  <div class="onb-wrap">
+    <div class="step-label">Step 2 of 4</div>
+    <h1>Tell us about your research.</h1>
+    <p>We'll use this to match you with relevant mentors and projects in the Reachout network.</p>
+
+    <div class="q-card">
+      <h3>1. What is your primary field of study?</h3>
+      <div class="field-sel">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <span style="flex:1">Search or select a field...</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6,9 12,15 18,9"/></svg>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <h3>2. Select your specific research interests</h3>
+      <p style="font-size:13px;color:var(--n500);margin-bottom:12px">Choose up to 5 topics that excite you.</p>
+      <div class="int-tags">
+        <button class="int-tag" onclick="toggleTag(this)">Machine Learning</button>
+        <button class="int-tag" onclick="toggleTag(this)">Marine Biology</button>
+        <button class="int-tag" onclick="toggleTag(this)">Urban Planning</button>
+        <button class="int-tag" onclick="toggleTag(this)">Genetics</button>
+        <button class="int-tag" onclick="toggleTag(this)">Climate Science</button>
+        <button class="int-tag" onclick="toggleTag(this)">Data Ethics</button>
+        <button class="int-tag" onclick="toggleTag(this)">Computer Vision</button>
+        <button class="int-tag" onclick="toggleTag(this)">Public Health</button>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <h3>3. Where are you currently located?</h3>
+      <div class="loc-inp">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--n400)"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <input type="text" placeholder="e.g., Boston, MA or London, UK">
+      </div>
+    </div>
+
+    <div class="q-card">
+      <h3>4. How do you prefer to collaborate?</h3>
+      <div class="toggle-row">
+        <div class="tog-info">
+          <div class="tog-t">Remote Only</div>
+          <div class="tog-d">I am only looking for virtual mentorship.</div>
+        </div>
+        <div class="toggle" onclick="this.classList.toggle('on')"></div>
+      </div>
+    </div>
+
+    <div class="onb-nav">
+      <button class="back-btn" onclick="go('home')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,18 9,12 15,6"/></svg>
+        Back
+      </button>
+      <button class="cont-btn" onclick="go('browse')">
+        Continue
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,18 15,12 9,6"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     PAGE: PROFESSOR PROFILE
+══════════════════════════════════ -->
+<div id="page-profile" class="page prof-page">
+  <div class="prof-wrap">
+    <span class="back-link" onclick="go('browse')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,18 9,12 15,6"/></svg>
+      Back to Browse
+    </span>
+
+    <div class="prof-layout">
+      <div class="prof-main">
+        <div class="ph-card">
+          <div class="ph-watermark">🎓</div>
+          <div class="ph-inner">
+            <div class="ph-photo" id="profPhoto">👨‍💼</div>
+            <div class="ph-info">
+              <div class="ph-name" id="profName">Loading…</div>
+              <div class="ph-inst" id="profInst">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                <span id="profInstText">—</span>
+              </div>
+              <div class="ph-tabs">
+                <button class="ph-tab active" onclick="setTab(this)">To Email</button>
+                <button class="ph-tab" onclick="setTab(this)">Emailed</button>
+                <button class="ph-tab" onclick="setTab(this)">Replied</button>
+              </div>
+              <div class="tag-row" id="profTagRow"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="res-sum">
+          <div class="sec-head"><span>📚</span> Research Summary</div>
+          <p id="profResSum">Loading research summary…</p>
+        </div>
+
+        <div id="hookSection">
+          <div class="sec-head"><span>📣</span> Outreach Hook</div>
+          <div class="hook-card">
+            <div class="hook-pub">
+              <span class="hook-pill">Latest Publication</span>
+              <span class="hook-venue" id="hookVenue">—</span>
+            </div>
+            <div class="hook-title" id="hookTitle">Loading…</div>
+            <div class="hook-strat">
+              <div class="hook-strat-lbl">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                Hook Strategy for Email:
+              </div>
+              <p id="hookStratText">Mention their most recent work and connect it to your own background or research interests. Ask a specific question about their ongoing projects.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="prof-sidebar">
+        <div class="sb-card">
+          <h4>Take Action</h4>
+          <button class="act-p">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            Draft Outreach Email
+          </button>
+          <button class="act-s">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Log Interaction
+          </button>
+          <div class="ct-item">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 7L2 7"/></svg>
+            evance@cs.stanford.edu
+            <span class="ct-copy" onclick="navigator.clipboard?.writeText('evance@cs.stanford.edu')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </span>
+          </div>
+          <div class="ct-item">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            Lab Website
+          </div>
+        </div>
+
+        <div class="sb-card">
+          <div class="sb-lbl">Accepting Students?</div>
+          <div class="acc-row">
+            <div class="acc-dot"></div>
+            Actively recruiting PhDs for Fall 2024
+          </div>
+        </div>
+
+        <div class="sb-card">
+          <div class="sb-lbl">Related Projects</div>
+          <div class="proj-item">
+            <div class="proj-ic">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+            </div>
+            <div>
+              <div class="proj-name">Energy-Aware Routing in Sensor Networks</div>
+              <div class="proj-meta">Funded by NSF · Active</div>
+            </div>
+          </div>
+          <div class="proj-item">
+            <div class="proj-ic">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+            </div>
+            <div>
+              <div class="proj-name">Adaptive Compute for Autonomous Vehicles</div>
+              <div class="proj-meta">Joint with AutoLabs · Completing</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     PAGE: TRACKER
+══════════════════════════════════ -->
+<div id="page-tracker" class="page">
+  <main class="tr-main">
+    <div class="tr-head">
+      <div>
+        <h1>Outreach Tracker</h1>
+        <p>Manage and track your communications with potential research mentors.</p>
+      </div>
+      <div class="tr-head-acts">
+        <button class="btn-s">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export
+        </button>
+        <button class="btn-p">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Contact
+        </button>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div>
+          <div class="stat-lbl">Total Saved</div>
+          <div class="stat-val">42</div>
+          <span class="stat-badge green">+3 this week</span>
+        </div>
+        <div class="stat-icon">👥</div>
+      </div>
+      <div class="stat-card">
+        <div>
+          <div class="stat-lbl">Emails Sent</div>
+          <div class="stat-val">18</div>
+          <span class="stat-badge gray">42% conversion</span>
+        </div>
+        <div class="stat-icon">✉️</div>
+      </div>
+      <div class="stat-card">
+        <div>
+          <div class="stat-lbl">Replies Received</div>
+          <div class="stat-val">5</div>
+          <span class="stat-badge dark">2 meetings set</span>
+        </div>
+        <div class="stat-icon">📬</div>
+      </div>
+    </div>
+
+    <div class="tr-controls">
+      <div class="tr-search">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--n400)"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search professors, universities...">
+      </div>
+      <div class="sf-btns">
+        <button class="sf-btn active" onclick="setSF(this)">All Status</button>
+        <button class="sf-btn" onclick="setSF(this)">To Email</button>
+        <button class="sf-btn" onclick="setSF(this)">Emailed</button>
+        <button class="sf-btn" onclick="setSF(this)">Replied</button>
+      </div>
+    </div>
+
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>Professor</th>
+            <th>University / Lab</th>
+            <th>Status</th>
+            <th>Last Activity</th>
+            <th>Next Action</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:11px">
+                <div class="tbl-av">DR</div>
+                <div><div class="tbl-pname">Dr. Elena Rodriguez</div><div class="tbl-pfield">Cognitive Neuroscience</div></div>
+              </div>
+            </td>
+            <td><div class="tbl-uni">Stanford University</div><div class="tbl-lab">Memory &amp; Learning Lab</div></td>
+            <td><span class="spill replied">Replied</span></td>
+            <td><div style="font-size:13px;font-weight:500;color:var(--n800)">Oct 24, 2023</div><div style="font-size:11.5px;color:var(--n500)">Received email</div></td>
+            <td>
+              <div class="nact">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Meeting Tomorrow
+              </div>
+            </td>
+            <td><div class="mnu-btn">⋮</div></td>
+          </tr>
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:11px">
+                <div class="tbl-av">AK</div>
+                <div><div class="tbl-pname">Prof. Alistair Kim</div><div class="tbl-pfield">Quantum Computing</div></div>
+              </div>
+            </td>
+            <td><div class="tbl-uni">MIT</div><div class="tbl-lab">Q-Systems Group</div></td>
+            <td><span class="spill emailed">Emailed</span></td>
+            <td><div style="font-size:13px;font-weight:500;color:var(--n800)">Oct 20, 2023</div><div style="font-size:11.5px;color:var(--n500)">Sent initial outreach</div></td>
+            <td>
+              <div class="nact">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Follow-up in 2 days
+              </div>
+            </td>
+            <td><div class="mnu-btn">⋮</div></td>
+          </tr>
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:11px">
+                <div class="tbl-av">SC</div>
+                <div><div class="tbl-pname">Dr. Sarah Chen</div><div class="tbl-pfield">Bioinformatics</div></div>
+              </div>
+            </td>
+            <td><div class="tbl-uni">UC Berkeley</div><div class="tbl-lab">Computational Bio Lab</div></td>
+            <td><span class="spill toemail">To Email</span></td>
+            <td><div style="font-size:13px;font-weight:500;color:var(--n800)">Oct 26, 2023</div><div style="font-size:11.5px;color:var(--n500)">Profile saved</div></td>
+            <td>
+              <div class="nact">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+                Draft Email ✏
+              </div>
+            </td>
+            <td><div class="mnu-btn">⋮</div></td>
+          </tr>
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:11px">
+                <div class="tbl-av" style="font-size:17px">👨‍🔬</div>
+                <div><div class="tbl-pname">Prof. James Wilson</div><div class="tbl-pfield">Materials Science</div></div>
+              </div>
+            </td>
+            <td><div class="tbl-uni">Georgia Tech</div><div class="tbl-lab">Advanced Polymers</div></td>
+            <td><span class="spill emailed">Emailed</span></td>
+            <td><div style="font-size:13px;font-weight:500;color:var(--n800)">Oct 15, 2023</div><div style="font-size:11.5px;color:var(--n500)">Follow-up sent</div></td>
+            <td>
+              <div class="nact over">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Overdue (3 days)
+              </div>
+            </td>
+            <td><div class="mnu-btn">⋮</div></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="tbl-foot">
+        <span class="tbl-foot-txt">Showing 1 to 4 of 42 entries</span>
+        <div class="tbl-pag">
+          <button class="tp-btn">‹</button>
+          <button class="tp-btn active">1</button>
+          <button class="tp-btn">2</button>
+          <button class="tp-btn">3</button>
+          <span style="display:flex;align-items:center;padding:0 4px;font-size:13px;color:var(--n400)">…</span>
+          <button class="tp-btn">›</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  ReachOut — Discovery Engine Frontend
+//  Talks to the Express proxy at localhost:8787
+//  which proxies OpenAlex (free, no key needed).
+// ═══════════════════════════════════════════════════════
+
+const API = 'http://localhost:8787';
+
+// ─── App state ───────────────────────────────────────
+const state = {
+  field: 'machine learning',
+  page: 1,
+  perPage: 12,
+  total: 0,
+  currentAuthorId: null,
+  backendOk: null,   // null = unknown, true/false
+};
+
+// ─── Auth state ──────────────────────────────────────
+function getAuthUser() {
+  try { return JSON.parse(localStorage.getItem('auth_user') || 'null'); } catch { return null; }
+}
+function setAuthUser(user) {
+  if (user) localStorage.setItem('auth_user', JSON.stringify(user));
+  else localStorage.removeItem('auth_user');
+  updateAuthUI();
+}
+function updateAuthUI() {
+  const user = getAuthUser();
+  document.getElementById('tr-logged-in').style.display = user ? '' : 'none';
+  document.getElementById('tr-logged-out').style.display = user ? 'none' : '';
+  if (user) {
+    document.getElementById('tr-user-name').textContent = user.name || 'Student Portal';
+    document.getElementById('tr-user-role').textContent = user.role || 'Research Assistant';
+  }
+}
+function showAuth(mode) {
+  // TODO: navigate to sign-in/sign-up page when built
+  console.log('Auth mode:', mode);
+}
+
+// ─── API helpers ─────────────────────────────────────
+async function apiFetch(path) {
+  const res = await fetch(API + path);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+async function checkBackend() {
+  try {
+    await apiFetch('/api/health');
+    state.backendOk = true;
+  } catch {
+    state.backendOk = false;
+  }
+}
+
+// ─── Card template ───────────────────────────────────
+const UNI_SVG = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`;
+const LOC_SVG = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+const MATCH_SVG = `<svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>`;
+
+function initials(name) {
+  return name.split(' ').filter(Boolean).slice(-2).map(w => w[0]).join('').toUpperCase().slice(0,2);
+}
+
+function cardHTML(prof) {
+  const inits = initials(prof.name);
+  const visibleTags = prof.topics.slice(0, 2);
+  const extraCount = prof.topics.length - visibleTags.length;
+  const tagHTML = visibleTags.map(t => `<span class="tag">${esc(t)}</span>`).join('') +
+    (extraCount > 0 ? `<span class="tag-more">+${extraCount} more</span>` : '');
+  const location = prof.country ? countryName(prof.country) : 'Remote';
+  const desc = prof.topics.length
+    ? `Researcher in ${prof.topics.slice(0,3).join(', ')}.`
+    : 'Academic researcher.';
+
+  return `
+  <div class="prof-card" onclick="go('profile','${esc(prof.id)}')">
+    <div class="pc-head">
+      <div class="pc-av-init">${inits}</div>
+      <div class="pc-info">
+        <div class="pc-name">${esc(prof.name)}</div>
+        <div class="pc-uni">${UNI_SVG} ${esc(prof.institution)}</div>
+      </div>
+      <span class="match-badge">${MATCH_SVG} ${prof.matchScore}% Match</span>
+      <button class="heart" onclick="event.stopPropagation();toggleH(this)">♡</button>
+    </div>
+    <p class="pc-desc">${esc(desc)}</p>
+    <div class="tag-row">${tagHTML}</div>
+    <div class="pc-foot">
+      <span class="pc-loc">${LOC_SVG} ${esc(location)}</span>
+      <button class="view-btn" onclick="event.stopPropagation();go('profile','${esc(prof.id)}')">View Profile</button>
+    </div>
+  </div>`;
+}
+
+function skeletonCard() {
+  return `
+  <div class="prof-card" style="pointer-events:none">
+    <div class="pc-head">
+      <div class="pc-av-init" style="background:var(--n100);color:transparent">—</div>
+      <div class="pc-info">
+        <div style="height:14px;background:var(--n100);border-radius:4px;width:70%;margin-bottom:6px"></div>
+        <div style="height:11px;background:var(--n100);border-radius:4px;width:45%"></div>
+      </div>
+    </div>
+    <div style="height:11px;background:var(--n100);border-radius:4px;width:90%;margin-bottom:6px"></div>
+    <div style="height:11px;background:var(--n100);border-radius:4px;width:65%;margin-bottom:14px"></div>
+    <div style="display:flex;gap:6px;margin-bottom:14px">
+      <div style="height:22px;background:var(--n100);border-radius:100px;width:80px"></div>
+      <div style="height:22px;background:var(--n100);border-radius:100px;width:70px"></div>
+    </div>
+    <div style="height:1px;background:var(--n100);margin-bottom:12px"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="height:11px;background:var(--n100);border-radius:4px;width:55px"></div>
+      <div style="height:30px;background:var(--n100);border-radius:var(--r-md);width:90px"></div>
+    </div>
+  </div>`;
+}
+
+function errorHTML(msg) {
+  return `
+  <div style="grid-column:1/-1;text-align:center;padding:60px 20px">
+    <div style="font-size:32px;margin-bottom:12px">🔌</div>
+    <div style="font-size:15px;font-weight:600;color:var(--n800);margin-bottom:6px">Discovery engine not running</div>
+    <div style="font-size:13.5px;color:var(--n500);margin-bottom:20px;max-width:360px;margin-left:auto;margin-right:auto">${esc(msg)}</div>
+    <code style="font-size:12px;background:var(--n100);padding:8px 14px;border-radius:var(--r-md);display:inline-block">cd website/server &amp;&amp; node index.js</code>
+  </div>`;
+}
+
+function emptyHTML(field) {
+  return `
+  <div style="grid-column:1/-1;text-align:center;padding:60px 20px">
+    <div style="font-size:32px;margin-bottom:12px">🔍</div>
+    <div style="font-size:15px;font-weight:600;color:var(--n800);margin-bottom:6px">No results for "${esc(field)}"</div>
+    <div style="font-size:13.5px;color:var(--n500)">Try a broader field name like "machine learning" or "biology".</div>
+  </div>`;
+}
+
+// ─── Browse: load data ────────────────────────────────
+let searchDebounceTimer = null;
+
+async function loadBrowse(field, page) {
+  field = (field || state.field).trim() || 'machine learning';
+  page = page || 1;
+  state.field = field;
+  state.page = page;
+
+  const grid = document.getElementById('profGrid');
+  const pag  = document.getElementById('profPagination');
+  const count = document.getElementById('browseCount');
+
+  // Show skeletons while loading
+  grid.innerHTML = Array(6).fill(0).map(skeletonCard).join('');
+  pag.innerHTML = '';
+  count.textContent = '—';
+
+  try {
+    const data = await apiFetch(
+      `/api/discover?field=${encodeURIComponent(field)}&page=${page}&per_page=${state.perPage}`
+    );
+    state.total = data.total || 0;
+    count.textContent = state.total.toLocaleString();
+
+    if (!data.results || !data.results.length) {
+      grid.innerHTML = emptyHTML(field);
+      return;
+    }
+
+    grid.innerHTML = data.results.map(cardHTML).join('');
+    renderPagination(state.total, page);
+  } catch (err) {
+    grid.innerHTML = errorHTML('Start the local server to search real researchers from OpenAlex.');
+    count.textContent = '—';
+  }
+}
+
+function renderPagination(total, current) {
+  const pages = Math.ceil(total / state.perPage);
+  if (pages <= 1) { document.getElementById('profPagination').innerHTML = ''; return; }
+
+  const pag = document.getElementById('profPagination');
+  let html = `<button class="pg-btn arr" onclick="loadBrowse('${esc(state.field)}',${Math.max(1, current-1)})">‹</button>`;
+
+  const show = new Set();
+  show.add(1); show.add(pages);
+  for (let i = Math.max(1, current-1); i <= Math.min(pages, current+1); i++) show.add(i);
+  const sorted = [...show].sort((a,b) => a-b);
+
+  let prev = 0;
+  sorted.forEach(p => {
+    if (prev && p - prev > 1) html += `<span class="pg-dots">…</span>`;
+    html += `<button class="pg-btn ${p===current?'active':''}" onclick="loadBrowse('${esc(state.field)}',${p})">${p}</button>`;
+    prev = p;
+  });
+
+  html += `<button class="pg-btn arr" onclick="loadBrowse('${esc(state.field)}',${Math.min(pages, current+1)})">›</button>`;
+  pag.innerHTML = html;
+}
+
+// ─── Profile: load data ───────────────────────────────
+async function loadProfile(authorId) {
+  const setEl = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+  const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+
+  setText('profName', 'Loading…');
+  setText('profInstText', '—');
+  setEl('profTagRow', '');
+  setText('profResSum', 'Loading…');
+  setText('hookTitle', '—');
+  setText('hookVenue', '—');
+
+  try {
+    const data = await apiFetch(`/api/professor/${authorId}`);
+    const { profile, recentPapers, latestPublication } = data;
+
+    setText('profName', profile.name);
+    setText('profInstText', profile.institution);
+    setEl('profTagRow', profile.topics.map(t => `<span class="tag">${esc(t)}</span>`).join(''));
+    setText('profResSum', profile.summary || `${profile.name} has published ${profile.worksCount} works with ${profile.citedByCount.toLocaleString()} citations.`);
+
+    if (latestPublication) {
+      setText('hookTitle', `"${latestPublication.title}"`);
+      const venueYear = [latestPublication.venue, latestPublication.year].filter(Boolean).join(' · ');
+      setText('hookVenue', venueYear || '—');
+      setText('hookStratText',
+        `Reference their recent paper "${latestPublication.title.slice(0,60)}…" and explain how your own background connects to this work. Ask a specific question about their ongoing research.`
+      );
+    } else {
+      setText('hookTitle', 'No recent publications found');
+      setText('hookVenue', '—');
+    }
+
+    // Update ORCID link if sidebar has one
+    const el = document.getElementById('profOrcid');
+    if (el) el.textContent = profile.orcid ? 'ORCID Profile' : 'Not available';
+
+  } catch (err) {
+    setText('profName', 'Failed to load');
+    setText('profResSum', 'Could not reach the discovery engine. Make sure the server is running.');
+  }
+}
+
+// ─── Router ──────────────────────────────────────────
+function go(page, authorId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+
+  const sidebar = document.getElementById('global-sidebar');
+  if (sidebar) sidebar.style.display = (page === 'onboarding' || page === 'how-it-works') ? 'none' : 'flex';
+
+  ['home','browse','tracker'].forEach(id => {
+    const el = document.getElementById('nav-' + id);
+    if (el) el.classList.remove('active');
+  });
+  const activeMap = { home:'nav-home', browse:'nav-browse', tracker:'nav-tracker', profile:'nav-browse' };
+  const activeEl = document.getElementById(activeMap[page]);
+  if (activeEl) activeEl.classList.add('active');
+
+  window.scrollTo(0, 0);
+
+  // Trigger data fetches on navigation
+  if (page === 'browse') {
+    const input = document.getElementById('browseSearchInput');
+    const field = (input && input.value.trim()) || state.field;
+    loadBrowse(field, state.page);
+  }
+  if (page === 'profile' && authorId) {
+    state.currentAuthorId = authorId;
+    loadProfile(authorId);
+  }
+}
+
+// ─── Search input wiring ─────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  updateAuthUI();
+
+  const input = document.getElementById('browseSearchInput');
+  if (input) {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        clearTimeout(searchDebounceTimer);
+        loadBrowse(input.value, 1);
+      }
+    });
+    input.addEventListener('input', () => {
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        if (input.value.trim().length >= 3) loadBrowse(input.value, 1);
+      }, 600);
+    });
+  }
+
+  // Auto-load browse if it's the active page on startup
+  if (document.getElementById('page-browse')?.classList.contains('active')) {
+    loadBrowse(state.field, 1);
+  }
+});
+
+// ─── Utility ─────────────────────────────────────────
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+const COUNTRY_NAMES = {
+  US:'United States',GB:'United Kingdom',CA:'Canada',AU:'Australia',
+  DE:'Germany',FR:'France',JP:'Japan',CN:'China',IN:'India',
+  NL:'Netherlands',SE:'Sweden',CH:'Switzerland',SG:'Singapore',
+  KR:'South Korea',BR:'Brazil',MX:'Mexico',IT:'Italy',ES:'Spain',
+};
+function countryName(code) { return COUNTRY_NAMES[code?.toUpperCase()] || code || 'International'; }
+
+// ─── Other UI helpers (unchanged) ────────────────────
+function toggleH(btn) {
+  const on = btn.classList.toggle('on');
+  btn.textContent = on ? '♥' : '♡';
+}
+function toggleTag(btn) {
+  if (!btn.classList.contains('sel') && document.querySelectorAll('.int-tag.sel').length >= 5) return;
+  btn.classList.toggle('sel');
+}
+function setTab(t) {
+  t.closest('.ph-tabs').querySelectorAll('.ph-tab').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+}
+function setSF(b) {
+  b.closest('.sf-btns').querySelectorAll('.sf-btn').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+}
+</script>
+</body>
+</html>
