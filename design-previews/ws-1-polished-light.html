@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReachOut — Resume Analysis Workspace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,800;9..144,900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --g900:#0D2B1E;--g800:#1B4D3E;--g700:#1F5C49;--g600:#2D7A5F;--g100:#D1FAE5;--g50:#ECFDF5;
+  --n950:#030712;--n900:#111827;--n800:#1F2937;--n700:#374151;--n600:#4B5563;--n500:#6B7280;--n400:#9CA3AF;--n300:#D1D5DB;--n200:#E5E7EB;--n100:#F3F4F6;--n50:#F9FAFB;--white:#fff;
+  --bg:#F6F7F9;
+  --font-d:'Fraunces',Georgia,serif;
+  --font-b:'DM Sans',system-ui,sans-serif;
+  --r-md:10px;--r-lg:14px;--r-xl:20px;
+  --sh-sm:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
+  --sh-md:0 4px 14px rgba(0,0,0,.08);
+  --sh-lg:0 10px 32px rgba(0,0,0,.1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font-b);
+  background:var(--bg);
+  color:var(--n900);
+  -webkit-font-smoothing:antialiased;
+  line-height:1.5;
+}
+
+/* ---------- Nav ---------- */
+.nav{
+  position:sticky;top:0;z-index:50;
+  background:rgba(255,255,255,.85);
+  backdrop-filter:saturate(180%) blur(12px);
+  border-bottom:1px solid var(--n200);
+}
+.nav-inner{
+  max-width:1320px;margin:0 auto;padding:0 32px;height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.wordmark{
+  font-family:var(--font-d);font-weight:800;font-size:22px;
+  color:var(--g800);letter-spacing:-.02em;
+  display:flex;align-items:center;gap:9px;
+}
+.wordmark .dot{
+  width:9px;height:9px;border-radius:50%;
+  background:var(--g600);box-shadow:0 0 0 4px var(--g100);
+}
+.account-pill{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 14px 7px 8px;border-radius:999px;
+  background:var(--white);border:1px solid var(--n200);
+  font-size:13.5px;font-weight:600;color:var(--n700);
+  box-shadow:var(--sh-sm);cursor:pointer;transition:.18s;
+}
+.account-pill:hover{border-color:var(--n300);box-shadow:var(--sh-md)}
+.account-pill .avatar{
+  width:26px;height:26px;border-radius:50%;
+  background:linear-gradient(135deg,var(--g600),var(--g800));
+  color:#fff;font-size:11px;font-weight:700;
+  display:grid;place-items:center;
+}
+
+/* ---------- Page shell ---------- */
+.shell{max-width:1320px;margin:0 auto;padding:44px 32px 80px}
+
+/* ---------- Header ---------- */
+.page-head{margin-bottom:36px;max-width:680px}
+.eyebrow{
+  font-family:var(--font-b);font-weight:600;font-size:12.5px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--g600);
+  display:inline-flex;align-items:center;gap:8px;margin-bottom:14px;
+}
+.eyebrow .pulse{
+  width:7px;height:7px;border-radius:50%;background:var(--g600);
+  box-shadow:0 0 0 0 rgba(45,122,95,.5);
+  animation:pulse 2.2s infinite;
+}
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 rgba(45,122,95,.45)}
+  70%{box-shadow:0 0 0 9px rgba(45,122,95,0)}
+  100%{box-shadow:0 0 0 0 rgba(45,122,95,0)}
+}
+.page-head h1{
+  font-family:var(--font-d);font-weight:800;font-size:40px;
+  line-height:1.08;letter-spacing:-.025em;color:var(--n900);margin-bottom:12px;
+}
+.page-head p{font-size:16.5px;color:var(--n600);max-width:560px}
+
+/* ---------- Workspace grid ---------- */
+.workspace{
+  display:grid;grid-template-columns:380px 1fr;gap:32px;align-items:start;
+}
+@media(max-width:900px){
+  .workspace{grid-template-columns:1fr}
+}
+
+/* ---------- Left column ---------- */
+.left-col{position:sticky;top:96px}
+@media(max-width:900px){.left-col{position:static}}
+
+.doc-card{
+  position:relative;background:var(--white);
+  border-radius:var(--r-xl);box-shadow:var(--sh-lg);
+  border:1px solid var(--n200);overflow:hidden;
+}
+.doc-toolbar{
+  position:absolute;top:14px;right:14px;z-index:6;
+  display:flex;align-items:center;gap:8px;
+}
+.analyzed-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--g50);border:1px solid var(--g100);
+  color:var(--g700);font-size:11.5px;font-weight:700;
+  padding:5px 10px;border-radius:999px;
+  box-shadow:var(--sh-sm);
+}
+.analyzed-pill svg{width:13px;height:13px}
+.remove-btn{
+  width:26px;height:26px;border-radius:50%;
+  background:var(--white);border:1px solid var(--n200);
+  display:grid;place-items:center;cursor:pointer;
+  color:var(--n500);box-shadow:var(--sh-sm);transition:.16s;
+}
+.remove-btn:hover{color:var(--n800);border-color:var(--n300);transform:rotate(90deg)}
+.remove-btn svg{width:13px;height:13px}
+
+/* scan overlay */
+.scan-layer{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:hidden;border-radius:var(--r-xl)}
+.scan-grid{
+  position:absolute;inset:0;opacity:.5;
+  background-image:linear-gradient(rgba(45,122,95,.07) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(45,122,95,.07) 1px,transparent 1px);
+  background-size:22px 22px;
+  -webkit-mask-image:linear-gradient(180deg,transparent,#000 30%,#000 70%,transparent);
+          mask-image:linear-gradient(180deg,transparent,#000 30%,#000 70%,transparent);
+}
+.scan-beam{
+  position:absolute;left:0;right:0;height:120px;
+  background:linear-gradient(180deg,transparent,rgba(45,122,95,.16) 45%,rgba(45,122,95,.28) 50%,rgba(45,122,95,.16) 55%,transparent);
+  border-top:1px solid rgba(45,122,95,.0);
+  box-shadow:0 0 24px rgba(45,122,95,.18);
+  animation:scan 5.5s cubic-bezier(.45,0,.55,1) infinite;
+}
+.scan-beam::after{
+  content:"";position:absolute;left:0;right:0;top:50%;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(45,122,95,.6),transparent);
+}
+@keyframes scan{
+  0%{top:-120px}
+  100%{top:100%}
+}
+
+/* the resume document */
+.resume{
+  display:grid;grid-template-columns:118px 1fr;
+  font-size:8.5px;line-height:1.42;color:var(--n800);
+  min-height:460px;position:relative;z-index:2;
+}
+.r-side{
+  background:#181d1a;color:#cfd8d2;padding:18px 12px;
+}
+.r-photo{
+  width:52px;height:52px;border-radius:50%;margin:2px auto 14px;
+  background:radial-gradient(circle at 35% 30%,#3a463f,#222a25);
+  border:2px solid rgba(255,255,255,.12);
+  display:grid;place-items:center;
+  font-family:var(--font-d);font-weight:700;font-size:17px;color:#aebdb3;
+}
+.r-side-h{
+  font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:#7e9387;margin:14px 0 7px;
+  border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:4px;
+}
+.r-contact{display:flex;align-items:center;gap:6px;margin-bottom:6px;color:#b9c5bd}
+.r-contact svg{width:10px;height:10px;flex:none;color:#7e9387}
+.r-contact span{word-break:break-all}
+.r-edu .r-row-t{font-weight:600;color:#e3eae5}
+.r-edu .r-row-s{color:#94a39a;margin-bottom:7px}
+.r-lang{margin-bottom:8px}
+.r-lang-top{display:flex;justify-content:space-between;margin-bottom:3px}
+.r-bar{height:3px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden}
+.r-bar i{display:block;height:100%;background:linear-gradient(90deg,#3d7a5f,#5aa583);border-radius:2px}
+
+.r-main{padding:20px 18px;background:#fff}
+.r-name{
+  font-family:var(--font-d);font-weight:800;font-size:19px;letter-spacing:.01em;
+  color:var(--n900);line-height:1;margin-bottom:3px;
+}
+.r-title{font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--g600);font-weight:600;margin-bottom:14px}
+.r-main-h{
+  font-size:8.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--g800);margin:13px 0 6px;
+  display:flex;align-items:center;gap:7px;
+}
+.r-main-h::after{content:"";flex:1;height:1px;background:var(--n200)}
+.r-sum{color:var(--n600);font-size:8px;line-height:1.55}
+.r-skills{display:grid;grid-template-columns:1fr 1fr;gap:2px 14px}
+.r-skill{display:flex;align-items:center;gap:5px;color:var(--n700);font-size:8px}
+.r-skill::before{content:"";width:3px;height:3px;border-radius:50%;background:var(--g600);flex:none}
+.r-exp{margin-bottom:9px}
+.r-exp-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.r-exp-role{font-weight:700;color:var(--n900);font-size:8.5px}
+.r-exp-loc{color:var(--n400);font-size:7.5px;white-space:nowrap}
+.r-exp li{margin-left:11px;color:var(--n600);font-size:8px;line-height:1.5}
+.r-proj{display:flex;gap:6px;flex-wrap:wrap}
+.r-proj span{
+  font-size:7.5px;font-weight:600;color:var(--g700);
+  background:var(--g50);border:1px solid var(--g100);
+  padding:3px 8px;border-radius:999px;
+}
+
+/* status chip under doc */
+.doc-status{
+  display:flex;align-items:center;gap:9px;margin-top:14px;
+  font-size:13px;color:var(--n600);
+  background:var(--white);border:1px solid var(--n200);
+  padding:11px 14px;border-radius:var(--r-md);box-shadow:var(--sh-sm);
+}
+.doc-status .ico{
+  width:24px;height:24px;border-radius:7px;flex:none;
+  background:var(--g50);color:var(--g700);display:grid;place-items:center;
+}
+.doc-status .ico svg{width:14px;height:14px}
+.doc-status b{color:var(--n800);font-weight:600}
+
+/* CTA */
+.cta{
+  margin-top:16px;width:100%;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  background:var(--g800);color:#fff;
+  font-family:var(--font-b);font-weight:600;font-size:15.5px;
+  border:none;border-radius:var(--r-lg);padding:16px 20px;cursor:pointer;
+  box-shadow:0 6px 18px rgba(27,77,62,.28);
+  transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s,background .2s;
+}
+.cta svg{width:19px;height:19px}
+.cta:hover{
+  background:var(--g700);transform:translateY(-2px);
+  box-shadow:0 12px 28px rgba(27,77,62,.36);
+}
+.cta:active{transform:translateY(0)}
+
+/* ---------- Right column ---------- */
+.right-head{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin-bottom:20px;
+}
+.right-head h2{
+  font-family:var(--font-d);font-weight:700;font-size:25px;
+  letter-spacing:-.02em;color:var(--n900);
+}
+.count-chip{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--g800);color:#fff;font-size:12.5px;font-weight:600;
+  padding:6px 13px;border-radius:999px;box-shadow:var(--sh-sm);
+}
+.count-chip .n{
+  background:rgba(255,255,255,.22);border-radius:6px;
+  padding:0 6px;font-weight:700;
+}
+
+/* interests strip */
+.interests{
+  background:var(--white);border:1px solid var(--n200);
+  border-radius:var(--r-lg);padding:18px 20px;margin-bottom:24px;
+  box-shadow:var(--sh-sm);
+}
+.interests .lbl{
+  font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--n500);margin-bottom:12px;display:flex;align-items:center;gap:8px;
+}
+.interests .lbl svg{width:15px;height:15px;color:var(--g600)}
+.chips{display:flex;flex-wrap:wrap;gap:9px}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--g50);border:1px solid var(--g100);
+  color:var(--g700);font-size:13px;font-weight:600;
+  padding:7px 13px;border-radius:999px;transition:.16s;
+}
+.chip::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--g600)}
+.chip:hover{background:var(--g100);border-color:var(--g600)}
+
+/* prof grid */
+.prof-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:1100px){.prof-grid{grid-template-columns:1fr}}
+@media(max-width:900px){.prof-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:620px){.prof-grid{grid-template-columns:1fr}}
+
+.prof{
+  background:var(--white);border:1px solid var(--n200);
+  border-radius:var(--r-lg);padding:20px;box-shadow:var(--sh-sm);
+  transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s,border-color .22s;
+  display:flex;flex-direction:column;
+}
+.prof:hover{
+  transform:translateY(-4px);box-shadow:var(--sh-lg);border-color:var(--g600);
+}
+.prof-top{display:flex;align-items:flex-start;gap:13px;margin-bottom:13px}
+.prof-av{
+  width:46px;height:46px;border-radius:13px;flex:none;
+  display:grid;place-items:center;
+  font-family:var(--font-d);font-weight:700;font-size:16px;color:#fff;
+}
+.av-green{background:linear-gradient(135deg,#3d8a68,#1f5c49)}
+.av-blue{background:linear-gradient(135deg,#5b86c4,#3a5a92)}
+.av-amber{background:linear-gradient(135deg,#d8a24a,#b07d2a)}
+.av-violet{background:linear-gradient(135deg,#9a7cc4,#6c52a0)}
+.prof-id{flex:1;min-width:0}
+.prof-name{
+  font-family:var(--font-d);font-weight:700;font-size:17px;
+  color:var(--n900);letter-spacing:-.01em;line-height:1.15;
+}
+.prof-uni{
+  display:flex;align-items:center;gap:6px;
+  font-size:12.5px;color:var(--n500);margin-top:3px;
+}
+.prof-uni svg{width:13px;height:13px;flex:none}
+.match-badge{
+  display:inline-flex;align-items:center;gap:6px;flex:none;
+  background:var(--g50);border:1px solid var(--g100);
+  color:var(--g700);font-size:12px;font-weight:700;
+  padding:5px 10px;border-radius:999px;white-space:nowrap;
+}
+.match-badge .led{width:6px;height:6px;border-radius:50%;background:var(--g600);box-shadow:0 0 0 3px var(--g100)}
+.prof-desc{font-size:13.5px;color:var(--n600);line-height:1.5;margin-bottom:14px}
+.tags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px}
+.tag{
+  font-size:11.5px;font-weight:500;color:var(--n600);
+  background:var(--n50);border:1px solid var(--n200);
+  padding:4px 9px;border-radius:7px;
+}
+.prof-foot{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:auto;padding-top:14px;border-top:1px solid var(--n100);
+}
+.prof-loc{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--n500)}
+.prof-loc svg{width:13px;height:13px;flex:none}
+.view-btn{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:13px;font-weight:600;color:var(--g700);
+  background:none;border:none;cursor:pointer;padding:4px 2px;transition:.16s;
+}
+.view-btn svg{width:14px;height:14px;transition:transform .16s}
+.view-btn:hover{color:var(--g800)}
+.view-btn:hover svg{transform:translateX(3px)}
+
+/* ---------- stagger animation ---------- */
+@keyframes rise{
+  from{opacity:0;transform:translateY(16px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.rise{opacity:0;animation:rise .6s cubic-bezier(.2,.8,.2,1) forwards}
+.d1{animation-delay:.05s}.d2{animation-delay:.12s}.d3{animation-delay:.19s}
+.d4{animation-delay:.26s}.d5{animation-delay:.34s}.d6{animation-delay:.42s}
+.d7{animation-delay:.50s}.d8{animation-delay:.58s}.d9{animation-delay:.66s}
+
+@media(prefers-reduced-motion:reduce){
+  .rise{animation:none;opacity:1}
+  .scan-beam,.eyebrow .pulse{animation:none}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="wordmark"><span class="dot"></span>ReachOut</div>
+    <button class="account-pill">
+      <span class="avatar">GL</span>
+      Account
+    </button>
+  </div>
+</nav>
+
+<div class="shell">
+
+  <!-- HEADER -->
+  <header class="page-head rise d1">
+    <span class="eyebrow"><span class="pulse"></span>Analysis complete</span>
+    <h1>Your resume, analyzed</h1>
+    <p>We've read your background and pulled out the research themes that matter. Hit <strong>Find matching professors</strong> to surface the best-fit labs.</p>
+  </header>
+
+  <!-- WORKSPACE -->
+  <div class="workspace">
+
+    <!-- LEFT -->
+    <div class="left-col rise d2">
+      <div class="doc-card">
+        <div class="doc-toolbar">
+          <span class="analyzed-pill">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Analyzed
+          </span>
+          <button class="remove-btn" aria-label="Remove resume">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <div class="scan-layer">
+          <div class="scan-grid"></div>
+          <div class="scan-beam"></div>
+        </div>
+
+        <!-- RESUME -->
+        <div class="resume">
+          <aside class="r-side">
+            <div class="r-photo">GL</div>
+
+            <div class="r-contact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg><span>gladwyn504@gmail.com</span></div>
+            <div class="r-contact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg><span>925 315 5548</span></div>
+            <div class="r-contact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span>San Ramon, CA</span></div>
+
+            <div class="r-side-h">Education</div>
+            <div class="r-edu">
+              <div class="r-row-t">High School Diploma</div>
+              <div class="r-row-s">DVHS · San Ramon</div>
+              <div class="r-row-s">Expected June 2027 · 3.53 GPA</div>
+            </div>
+
+            <div class="r-side-h">Languages</div>
+            <div class="r-lang">
+              <div class="r-lang-top"><span>Spanish</span></div>
+              <div class="r-bar"><i style="width:62%"></i></div>
+            </div>
+            <div class="r-lang">
+              <div class="r-lang-top"><span>Chinese (Mandarin)</span></div>
+              <div class="r-bar"><i style="width:80%"></i></div>
+            </div>
+            <div class="r-lang">
+              <div class="r-lang-top"><span>English</span></div>
+              <div class="r-bar"><i style="width:100%"></i></div>
+            </div>
+          </aside>
+
+          <main class="r-main">
+            <div class="r-name">GLADWYN LI</div>
+            <div class="r-title">Founder · Student · Builder</div>
+
+            <div class="r-main-h">Professional Summary</div>
+            <p class="r-sum">Driven high-school founder blending product, research, and engineering. Builds AI-powered tools end to end and leads small teams toward data-driven outcomes.</p>
+
+            <div class="r-main-h">Skills</div>
+            <div class="r-skills">
+              <span class="r-skill">Strategic thinking</span>
+              <span class="r-skill">Delegation</span>
+              <span class="r-skill">Python</span>
+              <span class="r-skill">Web development</span>
+              <span class="r-skill">Adaptability</span>
+              <span class="r-skill">Data-driven decisions</span>
+              <span class="r-skill">AI research</span>
+            </div>
+
+            <div class="r-main-h">Professional Experience</div>
+            <div class="r-exp">
+              <div class="r-exp-top"><span class="r-exp-role">Startup Founder</span><span class="r-exp-loc">San Ramon</span></div>
+              <ul>
+                <li>Founded and shipped a local-commerce platform from scratch.</li>
+                <li>Led product, growth, and a small cross-functional team.</li>
+              </ul>
+            </div>
+            <div class="r-exp">
+              <div class="r-exp-top"><span class="r-exp-role">DVHS Teacher's Assistant</span><span class="r-exp-loc">San Ramon</span></div>
+              <ul>
+                <li>Supported classroom instruction and student mentoring.</li>
+                <li>Built lightweight tools to streamline grading.</li>
+              </ul>
+            </div>
+
+            <div class="r-main-h">Projects</div>
+            <div class="r-proj">
+              <span>LocalCrate</span>
+              <span>Automated YouTube Channel</span>
+            </div>
+          </main>
+        </div>
+      </div>
+
+      <!-- status chip -->
+      <div class="doc-status">
+        <span class="ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        </span>
+        <span><b>Analyzed</b> · skills &amp; interests extracted</span>
+      </div>
+
+      <!-- CTA -->
+      <button class="cta">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Find matching professors
+      </button>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="right-col">
+      <div class="right-head rise d3">
+        <h2>Suggested professors</h2>
+        <span class="count-chip"><span class="n">4</span> matches</span>
+      </div>
+
+      <!-- interests -->
+      <div class="interests rise d4">
+        <div class="lbl">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V18h6v-1.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"/></svg>
+          Research interests from your resume
+        </div>
+        <div class="chips">
+          <span class="chip">Machine Learning</span>
+          <span class="chip">Web Development</span>
+          <span class="chip">Market Research</span>
+          <span class="chip">Data-Driven Decision Making</span>
+          <span class="chip">Entrepreneurship</span>
+        </div>
+      </div>
+
+      <!-- professors -->
+      <div class="prof-grid">
+
+        <!-- 1 -->
+        <article class="prof rise d5">
+          <div class="prof-top">
+            <div class="prof-av av-green">SC</div>
+            <div class="prof-id">
+              <div class="prof-name">Dr. Sarah Chen</div>
+              <div class="prof-uni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01"/></svg>Stanford University</div>
+            </div>
+            <span class="match-badge"><span class="led"></span>94% Match</span>
+          </div>
+          <p class="prof-desc">Builds reinforcement-learning systems for dexterous robotic manipulation.</p>
+          <div class="tags"><span class="tag">Robotics</span><span class="tag">Reinforcement Learning</span><span class="tag">Manipulation</span></div>
+          <div class="prof-foot">
+            <span class="prof-loc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>San Jose, CA</span>
+            <button class="view-btn">View Profile <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          </div>
+        </article>
+
+        <!-- 2 -->
+        <article class="prof rise d6">
+          <div class="prof-top">
+            <div class="prof-av av-blue">MR</div>
+            <div class="prof-id">
+              <div class="prof-name">Dr. Marcus Reed</div>
+              <div class="prof-uni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01"/></svg>MIT</div>
+            </div>
+            <span class="match-badge"><span class="led"></span>91% Match</span>
+          </div>
+          <p class="prof-desc">Studies data-driven decision making and human–AI collaboration in teams.</p>
+          <div class="tags"><span class="tag">HCI</span><span class="tag">Decision Science</span><span class="tag">AI</span></div>
+          <div class="prof-foot">
+            <span class="prof-loc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Cambridge, MA</span>
+            <button class="view-btn">View Profile <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          </div>
+        </article>
+
+        <!-- 3 -->
+        <article class="prof rise d7">
+          <div class="prof-top">
+            <div class="prof-av av-amber">EV</div>
+            <div class="prof-id">
+              <div class="prof-name">Dr. Elena Vasquez</div>
+              <div class="prof-uni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01"/></svg>UC Berkeley</div>
+            </div>
+            <span class="match-badge"><span class="led"></span>88% Match</span>
+          </div>
+          <p class="prof-desc">Works on adaptive web systems and large-scale market platforms.</p>
+          <div class="tags"><span class="tag">Web Systems</span><span class="tag">Marketplaces</span></div>
+          <div class="prof-foot">
+            <span class="prof-loc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Berkeley, CA</span>
+            <button class="view-btn">View Profile <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          </div>
+        </article>
+
+        <!-- 4 -->
+        <article class="prof rise d8">
+          <div class="prof-top">
+            <div class="prof-av av-violet">DP</div>
+            <div class="prof-id">
+              <div class="prof-name">Dr. David Park</div>
+              <div class="prof-uni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01"/></svg>Carnegie Mellon</div>
+            </div>
+            <span class="match-badge"><span class="led"></span>85% Match</span>
+          </div>
+          <p class="prof-desc">Researches strategic partnerships and innovation in entrepreneurial ecosystems.</p>
+          <div class="tags"><span class="tag">Strategy</span><span class="tag">Entrepreneurship</span></div>
+          <div class="prof-foot">
+            <span class="prof-loc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Pittsburgh, PA</span>
+            <button class="view-btn">View Profile <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          </div>
+        </article>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

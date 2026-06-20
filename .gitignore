@@ -1,0 +1,13 @@
+# Secrets — never commit
+server/.env
+.env
+
+# Dependencies
+node_modules/
+server/node_modules/
+
+# Brainstorm / visual-companion scratch
+.superpowers/
+
+# OS
+.DS_Store

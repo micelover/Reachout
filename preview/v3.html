@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sebastian Thrun — Publications</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,800;9..144,900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+--g900:#0D2B1E; --g800:#1B4D3E; --g700:#1F5C49; --g600:#2D7A5F; --g100:#D1FAE5; --g50:#ECFDF5;
+--n900:#111827; --n800:#1F2937; --n700:#374151; --n600:#4B5563; --n500:#6B7280; --n400:#9CA3AF; --n300:#D1D5DB; --n200:#E5E7EB; --n100:#F3F4F6; --n50:#F9FAFB;
+--white:#FFFFFF; --bg:#F6F7F9;
+--font-d:'Fraunces',Georgia,serif; --font-b:'DM Sans',system-ui,sans-serif;
+--r-sm:6px; --r-md:10px; --r-lg:14px; --r-xl:20px;
+--sh-sm:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
+--sh-md:0 4px 14px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.04);
+--sh-lg:0 10px 32px rgba(0,0,0,.1),0 4px 10px rgba(0,0,0,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+font-family:var(--font-b);
+background:var(--bg);
+color:var(--n900);
+line-height:1.5;
+-webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:800px;margin:0 auto;padding:32px 24px 80px;}
+
+/* ---- Header ---- */
+.back{
+display:inline-flex;align-items:center;gap:6px;
+font-size:13px;font-weight:500;color:var(--n500);
+text-decoration:none;margin-bottom:22px;
+transition:color .15s;
+}
+.back:hover{color:var(--g800);}
+.back svg{width:14px;height:14px;}
+
+.name{
+font-family:var(--font-d);
+font-size:30px;font-weight:700;
+color:var(--n900);
+letter-spacing:-.01em;
+line-height:1.15;
+}
+.inst{
+font-size:15px;color:var(--n500);font-weight:400;
+margin-top:3px;
+}
+.areas{
+margin-top:12px;
+font-size:12.5px;color:var(--n400);font-weight:400;
+}
+.areas .dot{margin:0 6px;color:var(--n300);}
+
+/* ---- Publications header ---- */
+.pubhead{
+display:flex;align-items:center;justify-content:space-between;
+margin-top:34px;margin-bottom:14px;
+gap:16px;
+}
+.pubtitle{
+font-size:13px;font-weight:600;color:var(--n700);
+text-transform:uppercase;letter-spacing:.06em;
+}
+.pubtitle .count{color:var(--n400);font-weight:500;margin-left:6px;}
+
+/* segmented sort toggle */
+.seg{
+display:inline-flex;background:var(--n100);
+border-radius:var(--r-md);padding:3px;gap:2px;
+}
+.seg button{
+font-family:var(--font-b);
+font-size:12.5px;font-weight:600;
+color:var(--n500);
+background:transparent;border:none;cursor:pointer;
+padding:6px 14px;border-radius:7px;
+transition:color .2s,background .2s,box-shadow .2s;
+}
+.seg button:hover{color:var(--n700);}
+.seg button.active{
+background:var(--g800);color:var(--white);
+box-shadow:var(--sh-sm);
+}
+
+/* ---- Dense list ---- */
+.list{
+background:var(--white);
+border:1px solid var(--n200);
+border-radius:var(--r-lg);
+box-shadow:var(--sh-sm);
+overflow:hidden;
+}
+.row{
+display:flex;align-items:center;gap:12px;
+padding:11px 16px;
+border-bottom:1px solid var(--n100);
+cursor:pointer;
+transition:background .12s;
+width:100%;text-align:left;
+background:none;border-left:none;border-right:none;border-top:none;
+font-family:var(--font-b);
+}
+.row:last-child{border-bottom:none;}
+.row:hover{background:var(--n50);}
+.row:focus-visible{outline:2px solid var(--g600);outline-offset:-2px;}
+
+.row-title{
+flex:1 1 auto;min-width:0;
+font-size:14px;font-weight:500;color:var(--n800);
+white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.row-badges{flex:0 0 auto;display:flex;gap:5px;align-items:center;}
+.row-meta{
+flex:0 0 auto;
+font-size:12px;color:var(--n400);
+white-space:nowrap;
+max-width:200px;overflow:hidden;text-overflow:ellipsis;
+}
+.row-cites{
+flex:0 0 auto;
+font-size:12.5px;font-weight:600;color:var(--n600);
+text-align:right;
+min-width:56px;
+font-variant-numeric:tabular-nums;
+}
+.row-cites .lbl{font-size:10px;font-weight:500;color:var(--n400);display:block;line-height:1;}
+
+/* badges */
+.badge{
+display:inline-flex;align-items:center;
+font-size:10px;font-weight:600;
+padding:2px 7px;border-radius:20px;
+letter-spacing:.02em;white-space:nowrap;
+}
+.badge.recent{background:var(--g50);color:var(--g700);}
+.badge.cited{background:#FEF3C7;color:#92400E;}
+.badge.preprint{background:var(--n100);color:var(--n600);}
+.badge.oa{background:#DBEAFE;color:#1E40AF;}
+
+/* ---- Footer ---- */
+.foot{
+margin-top:18px;
+display:flex;align-items:center;gap:18px;
+font-size:13px;
+}
+.foot .all{font-weight:600;color:var(--n700);}
+.foot a{color:var(--g800);text-decoration:none;font-weight:500;}
+.foot a:hover{text-decoration:underline;}
+.foot .sep{color:var(--n300);}
+
+/* ---- Drawer ---- */
+.backdrop{
+position:fixed;inset:0;
+background:rgba(13,43,30,.32);
+opacity:0;visibility:hidden;
+transition:opacity .28s ease, visibility .28s;
+z-index:40;
+}
+.backdrop.open{opacity:1;visibility:visible;}
+
+.drawer{
+position:fixed;top:0;right:0;bottom:0;
+width:420px;max-width:92vw;
+background:var(--white);
+box-shadow:var(--sh-lg);
+transform:translateX(100%);
+transition:transform .32s cubic-bezier(.4,0,.2,1);
+z-index:50;
+display:flex;flex-direction:column;
+}
+.drawer.open{transform:translateX(0);}
+
+.drawer-head{
+display:flex;justify-content:flex-end;
+padding:16px 16px 0;
+}
+.drawer-close{
+width:34px;height:34px;border-radius:50%;
+border:none;background:var(--n100);color:var(--n600);
+cursor:pointer;display:flex;align-items:center;justify-content:center;
+transition:background .15s,color .15s;
+}
+.drawer-close:hover{background:var(--n200);color:var(--n900);}
+.drawer-close svg{width:16px;height:16px;}
+
+.drawer-body{
+padding:8px 28px 28px;
+overflow-y:auto;flex:1;
+}
+.d-badges{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.d-title{
+font-family:var(--font-d);
+font-size:21px;font-weight:600;
+color:var(--n900);line-height:1.3;
+letter-spacing:-.005em;
+}
+.d-meta{
+margin-top:12px;
+font-size:13.5px;color:var(--n500);
+}
+.d-meta .v{color:var(--n700);font-weight:500;}
+.d-cites{
+margin-top:16px;
+font-size:13px;color:var(--n600);
+}
+.d-cites strong{font-size:22px;color:var(--n900);font-weight:700;font-family:var(--font-d);}
+
+.d-actions{
+margin-top:24px;
+display:flex;flex-wrap:wrap;gap:8px;
+}
+.d-link{
+display:inline-flex;align-items:center;gap:6px;
+font-size:13px;font-weight:500;
+color:var(--n700);
+border:1px solid var(--n200);
+background:var(--white);
+padding:8px 13px;border-radius:var(--r-md);
+text-decoration:none;cursor:pointer;
+transition:border-color .15s,background .15s,color .15s;
+}
+.d-link:hover{border-color:var(--g600);color:var(--g800);background:var(--g50);}
+.d-link svg{width:14px;height:14px;}
+
+.d-copy{
+margin-top:18px;width:100%;
+display:flex;align-items:center;justify-content:center;gap:8px;
+font-family:var(--font-b);
+font-size:14px;font-weight:600;color:var(--white);
+background:var(--g800);
+border:none;border-radius:var(--r-md);
+padding:13px;cursor:pointer;
+transition:background .18s;
+}
+.d-copy:hover{background:var(--g900);}
+.d-copy.copied{background:var(--g600);}
+.d-copy svg{width:16px;height:16px;}
+
+.d-cite-preview{
+margin-top:14px;
+font-size:12px;color:var(--n400);
+line-height:1.5;
+border-left:2px solid var(--n200);
+padding-left:12px;
+font-style:italic;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="#" class="back">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Back to results
+  </a>
+
+  <h1 class="name" id="profName"></h1>
+  <div class="inst" id="profInst"></div>
+  <div class="areas" id="profAreas"></div>
+
+  <div class="pubhead">
+    <div class="pubtitle">Publications <span class="count" id="pubCount"></span></div>
+    <div class="seg" role="tablist" aria-label="Sort publications">
+      <button id="sortRecent" class="active" role="tab" aria-selected="true">Recent</button>
+      <button id="sortCited" role="tab" aria-selected="false">Most cited</button>
+    </div>
+  </div>
+
+  <div class="list" id="list"></div>
+
+  <div class="foot">
+    <span class="all" id="allCount"></span>
+    <a id="footScholar" href="#" target="_blank" rel="noopener">Google Scholar</a>
+    <span class="sep">·</span>
+    <a id="footOpenalex" href="#" target="_blank" rel="noopener">OpenAlex</a>
+  </div>
+</div>
+
+<!-- Drawer -->
+<div class="backdrop" id="backdrop"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle" tabindex="-1">
+  <div class="drawer-head">
+    <button class="drawer-close" id="drawerClose" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+</aside>
+
+<script>
+const PROF = {
+  name:"Sebastian Thrun", institution:"Stanford University", worksCount:446,
+  areas:["Robotics","Machine Learning","Computer Vision","Path Planning","Medical AI"],
+  links:{scholar:"https://scholar.google.com/scholar?q=%22Sebastian%20Thrun%22", openalex:"https://openalex.org/works?filter=author.id:A5066710774"},
+  papers:[
+    {title:"Foundation models for generalist medical artificial intelligence", year:2024, venue:"Nature", type:"article", citedByCount:412, isMostRecent:true, isOpenAccess:true, oaPdfUrl:"https://www.nature.com/articles/s41586-023-06555-x.pdf", doi:"10.1038/s41586-023-06555-x"},
+    {title:"Large language models encode clinical knowledge", year:2023, venue:"Nature Medicine", type:"article", citedByCount:980, isOpenAccess:false, doi:"10.1038/s41591-023-02448-8"},
+    {title:"Self-supervised representation learning for robotic perception", year:2023, venue:"arXiv", type:"preprint", isPreprint:true, citedByCount:34, isOpenAccess:true, oaPdfUrl:"https://arxiv.org/pdf/2303.00001", doi:null},
+    {title:"Dermatologist-level classification of skin cancer with deep neural networks", year:2017, venue:"Nature", type:"article", citedByCount:13765, isMostCited:true, isOpenAccess:true, oaPdfUrl:null, doi:"10.1038/nature21056"},
+    {title:"A guide to deep learning in healthcare", year:2018, venue:"Nature Medicine", type:"review", citedByCount:4664, isOpenAccess:false, doi:"10.1038/s41591-018-0316-z"},
+    {title:"Probabilistic robotics", year:2002, venue:"Communications of the ACM", type:"article", citedByCount:8013, isOpenAccess:false, doi:"10.1145/504729.504754"},
+    {title:"Stanley: The robot that won the DARPA Grand Challenge", year:2006, venue:"Journal of Field Robotics", type:"article", citedByCount:2111, isOpenAccess:true, oaPdfUrl:"https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/rob.20147", doi:"10.1002/rob.20147"},
+    {title:"The dynamic window approach to collision avoidance", year:1997, venue:"IEEE Robotics & Automation Magazine", type:"article", citedByCount:3636, isOpenAccess:false, doi:"10.1109/100.580977"}
+  ]
+};
+
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = n => (n==null?'0':n.toLocaleString('en-US'));
+
+let sortMode = 'recent';
+let lastFocused = null;
+
+// ---- Header ----
+document.getElementById('profName').textContent = PROF.name;
+document.getElementById('profInst').textContent = PROF.institution;
+document.getElementById('profAreas').innerHTML = PROF.areas.map(esc).join('<span class="dot">·</span>');
+document.getElementById('pubCount').textContent = PROF.papers.length + ' shown';
+document.getElementById('allCount').textContent = 'All ' + PROF.worksCount + ' →';
+document.getElementById('footScholar').href = PROF.links.scholar;
+document.getElementById('footOpenalex').href = PROF.links.openalex;
+
+// ---- Badges helper ----
+function badgesFor(p, full){
+  const out = [];
+  if(p.isMostRecent) out.push('<span class="badge recent">Most recent</span>');
+  if(p.isMostCited) out.push('<span class="badge cited">Most cited</span>');
+  if(p.isPreprint) out.push('<span class="badge preprint">Preprint</span>');
+  if(p.isOpenAccess) out.push('<span class="badge oa">Open access</span>');
+  return out;
+}
+
+// ---- List rendering ----
+function sortedPapers(){
+  const arr = PROF.papers.map((p,i)=>({...p,_i:i}));
+  if(sortMode==='recent'){
+    arr.sort((a,b)=> (b.year-a.year) || ((b.citedByCount||0)-(a.citedByCount||0)));
+  }else{
+    arr.sort((a,b)=> ((b.citedByCount||0)-(a.citedByCount||0)));
+  }
+  return arr;
+}
+
+function renderList(){
+  const list = document.getElementById('list');
+  list.innerHTML = sortedPapers().map(p => {
+    const badges = badgesFor(p).join('');
+    return `<button class="row" data-i="${p._i}">
+      <span class="row-title" title="${esc(p.title)}">${esc(p.title)}</span>
+      <span class="row-badges">${badges}</span>
+      <span class="row-meta">${esc(p.venue)} · ${p.year}</span>
+      <span class="row-cites">${fmt(p.citedByCount)}<span class="lbl">cites</span></span>
+    </button>`;
+  }).join('');
+  list.querySelectorAll('.row').forEach(r=>{
+    r.addEventListener('click', ()=> openDrawer(Number(r.dataset.i)));
+  });
+}
+
+// ---- Sort toggle ----
+const btnRecent = document.getElementById('sortRecent');
+const btnCited = document.getElementById('sortCited');
+function setSort(mode){
+  sortMode = mode;
+  const r = mode==='recent';
+  btnRecent.classList.toggle('active', r);
+  btnCited.classList.toggle('active', !r);
+  btnRecent.setAttribute('aria-selected', r);
+  btnCited.setAttribute('aria-selected', !r);
+  renderList();
+}
+btnRecent.addEventListener('click', ()=> setSort('recent'));
+btnCited.addEventListener('click', ()=> setSort('cited'));
+
+// ---- Drawer ----
+const drawer = document.getElementById('drawer');
+const backdrop = document.getElementById('backdrop');
+const drawerBody = document.getElementById('drawerBody');
+let copyResetTimer = null;
+
+function typeLabel(p){
+  if(p.isPreprint) return 'Preprint';
+  return (p.type||'article').charAt(0).toUpperCase() + (p.type||'article').slice(1);
+}
+
+function openDrawer(i){
+  const p = PROF.papers[i];
+  if(!p) return;
+  lastFocused = document.activeElement;
+
+  const badges = badgesFor(p, true).join('');
+  const actions = [];
+  if(p.oaPdfUrl){
+    actions.push(`<a class="d-link" href="${esc(p.oaPdfUrl)}" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+      Read PDF</a>`);
+  }
+  if(p.doi){
+    actions.push(`<a class="d-link" href="https://doi.org/${esc(p.doi)}" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      DOI</a>`);
+  }
+  const scholarUrl = 'https://scholar.google.com/scholar?q=' + encodeURIComponent(p.title);
+  actions.push(`<a class="d-link" href="${esc(scholarUrl)}" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+    Google Scholar</a>`);
+  actions.push(`<a class="d-link" href="${esc(PROF.links.openalex)}" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+    OpenAlex</a>`);
+
+  let citation = `${PROF.name}. "${p.title}." ${p.venue}, ${p.year}.`;
+  if(p.doi) citation += ` https://doi.org/${p.doi}`;
+
+  drawerBody.innerHTML = `
+    <div class="d-badges">${badges || ''}</div>
+    <div class="d-title" id="dTitle">${esc(p.title)}</div>
+    <div class="d-meta"><span class="v">${esc(p.venue)}</span> · ${p.year} · ${esc(typeLabel(p))}</div>
+    <div class="d-cites"><strong>${fmt(p.citedByCount)}</strong> citations</div>
+    <div class="d-actions">${actions.join('')}</div>
+    <button class="d-copy" id="dCopy">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <span>Copy citation</span>
+    </button>
+    <div class="d-cite-preview">${esc(citation)}</div>
+  `;
+
+  document.getElementById('dCopy').addEventListener('click', e=> copyCitation(e.currentTarget, citation));
+
+  backdrop.classList.add('open');
+  drawer.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(()=> document.getElementById('drawerClose').focus(), 50);
+}
+
+function closeDrawer(){
+  drawer.classList.remove('open');
+  backdrop.classList.remove('open');
+  document.body.style.overflow = '';
+  if(copyResetTimer){ clearTimeout(copyResetTimer); copyResetTimer=null; }
+  if(lastFocused && lastFocused.focus) lastFocused.focus();
+}
+
+function copyCitation(btn, text){
+  const done = ()=>{
+    btn.classList.add('copied');
+    btn.querySelector('span').textContent = 'Copied!';
+    if(copyResetTimer) clearTimeout(copyResetTimer);
+    copyResetTimer = setTimeout(()=>{
+      btn.classList.remove('copied');
+      btn.querySelector('span').textContent = 'Copy citation';
+    }, 1800);
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text, done));
+  }else{
+    fallbackCopy(text, done);
+  }
+}
+function fallbackCopy(text, cb){
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); cb(); }catch(e){}
+  document.body.removeChild(ta);
+}
+
+document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+backdrop.addEventListener('click', closeDrawer);
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape' && drawer.classList.contains('open')) closeDrawer();
+});
+
+// ---- Init ----
+renderList();
+</script>
+</body>
+</html>

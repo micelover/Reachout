@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ReachOut — Resume Analysis Workspace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,800;9..144,900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    /* Backgrounds */
+    --base: #071712;
+    --panel: rgba(255, 255, 255, 0.04);
+    --panel-2: rgba(255, 255, 255, 0.06);
+    /* Greens */
+    --g900: #0D2B1E;
+    --g700: #1F5C49;
+    --g600: #2D7A5F;
+    --mint: #6EE7B7;
+    /* Text */
+    --text: #E7F0EC;
+    --cream: #F4F1E8;
+    --muted: #9FBBB0;
+    /* Fonts */
+    --font-d: 'Fraunces', Georgia, serif;
+    --font-b: 'DM Sans', system-ui, sans-serif;
+    /* Glow */
+    --mint-glow: rgba(110, 231, 183, 0.35);
+    --mint-line: rgba(110, 231, 183, 0.5);
+    --radius: 18px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-b);
+    background: var(--base);
+    color: var(--text);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* ===== ATMOSPHERE LAYERS ===== */
+  .atmosphere {
+    position: fixed;
+    inset: 0;
+    z-index: -3;
+    background:
+      radial-gradient(60% 50% at 50% -5%, rgba(110, 231, 183, 0.16), transparent 60%),
+      radial-gradient(45% 40% at 100% 0%, rgba(45, 122, 95, 0.18), transparent 65%),
+      radial-gradient(50% 45% at 0% 100%, rgba(31, 92, 73, 0.16), transparent 65%),
+      radial-gradient(40% 40% at 85% 90%, rgba(110, 231, 183, 0.08), transparent 60%),
+      linear-gradient(165deg, #061611 0%, #071712 45%, #04110C 100%);
+  }
+
+  /* Faint floating ghost documents for depth */
+  .ghost-docs {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .ghost {
+    position: absolute;
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.005));
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    opacity: 0.5;
+    animation: floatGhost 22s ease-in-out infinite;
+  }
+  .ghost::before, .ghost::after {
+    content: "";
+    position: absolute;
+    left: 16%; right: 16%;
+    height: 4px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.04);
+  }
+  .ghost::before { top: 24%; }
+  .ghost::after { top: 40%; right: 40%; }
+  .ghost.g1 { width: 220px; height: 290px; top: 12%; left: 8%; transform: rotate(-12deg); animation-delay: 0s; }
+  .ghost.g2 { width: 180px; height: 240px; top: 58%; left: 78%; transform: rotate(10deg); animation-delay: -7s; }
+  .ghost.g3 { width: 150px; height: 200px; top: 70%; left: 14%; transform: rotate(-6deg); animation-delay: -14s; }
+
+  @keyframes floatGhost {
+    0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+    50% { transform: translateY(-26px) rotate(var(--r, 0deg)); }
+  }
+  .ghost.g1 { --r: -12deg; }
+  .ghost.g2 { --r: 10deg; }
+  .ghost.g3 { --r: -6deg; }
+
+  /* Grain overlay */
+  .grain {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.5;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  }
+
+  /* ===== LAYOUT ===== */
+  .shell {
+    position: relative;
+    z-index: 1;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 40px 80px;
+  }
+
+  /* ===== NAV ===== */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 0 12px;
+  }
+  .wordmark {
+    font-family: var(--font-d);
+    font-weight: 800;
+    font-size: 24px;
+    letter-spacing: -0.02em;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .wordmark .dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--mint);
+    box-shadow: 0 0 12px var(--mint-glow), 0 0 4px var(--mint);
+  }
+  .account-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 18px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.25s, border-color 0.25s;
+  }
+  .account-pill:hover { background: rgba(255, 255, 255, 0.09); border-color: rgba(110, 231, 183, 0.3); }
+  .account-pill .av {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--mint), var(--g600));
+    display: grid; place-items: center;
+    font-size: 11px; font-weight: 700; color: var(--g900);
+  }
+
+  /* ===== HEADER ===== */
+  header.hero {
+    padding: 46px 0 40px;
+    max-width: 760px;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 16px 7px 12px;
+    border-radius: 999px;
+    background: rgba(110, 231, 183, 0.08);
+    border: 1px solid rgba(110, 231, 183, 0.22);
+    color: var(--mint);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    margin-bottom: 26px;
+  }
+  .eyebrow .pulse-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--mint);
+    box-shadow: 0 0 10px var(--mint);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.45; transform: scale(0.8); }
+  }
+  h1.title {
+    font-family: var(--font-d);
+    font-weight: 800;
+    font-size: clamp(40px, 6vw, 68px);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    color: var(--cream);
+    margin-bottom: 20px;
+  }
+  h1.title em {
+    font-style: italic;
+    font-weight: 700;
+    color: var(--mint);
+  }
+  .subtitle {
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--muted);
+    max-width: 540px;
+    font-weight: 300;
+  }
+
+  /* ===== WORKSPACE GRID ===== */
+  .workspace {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 36px;
+    margin-top: 12px;
+    align-items: start;
+  }
+
+  /* ===== LEFT: SCAN STAGE ===== */
+  .stage-col { position: sticky; top: 28px; }
+
+  .scan-stage {
+    position: relative;
+    border-radius: 26px;
+    padding: 34px 30px 38px;
+    background:
+      radial-gradient(120% 80% at 50% 0%, rgba(110, 231, 183, 0.1), transparent 60%),
+      linear-gradient(180deg, rgba(13, 43, 30, 0.6), rgba(4, 14, 10, 0.7));
+    border: 1px solid rgba(110, 231, 183, 0.14);
+    box-shadow:
+      0 40px 90px rgba(0, 0, 0, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 0 0 1px rgba(255, 255, 255, 0.02);
+    overflow: hidden;
+  }
+  /* glowing stage floor */
+  .scan-stage::after {
+    content: "";
+    position: absolute;
+    left: 50%; bottom: -40px;
+    width: 80%; height: 80px;
+    transform: translateX(-50%);
+    background: radial-gradient(ellipse at center, rgba(110, 231, 183, 0.22), transparent 70%);
+    filter: blur(14px);
+    pointer-events: none;
+  }
+
+  .doc-wrap {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 24px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.04);
+    transform: perspective(1400px) rotateX(2deg);
+  }
+
+  /* THE RESUME DOCUMENT */
+  .resume {
+    display: grid;
+    grid-template-columns: 38% 62%;
+    background: #fff;
+    color: #1a1a1a;
+    font-size: 6.5px;
+    line-height: 1.45;
+    aspect-ratio: 1 / 1.3;
+  }
+  .resume .side {
+    background: #14201a;
+    color: #d8e4dd;
+    padding: 14px 11px;
+  }
+  .resume .photo {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    margin: 0 auto 12px;
+    background: linear-gradient(135deg, #2D7A5F, #1F5C49);
+    display: grid; place-items: center;
+    font-family: var(--font-d);
+    font-weight: 800;
+    font-size: 15px;
+    color: #fff;
+    border: 2px solid rgba(255,255,255,0.18);
+  }
+  .resume .side h3 {
+    font-size: 6.5px;
+    letter-spacing: 0.12em;
+    color: var(--mint);
+    margin: 13px 0 5px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .resume .side h3:first-of-type { margin-top: 4px; }
+  .resume .side p { color: #b7c8c0; margin-bottom: 2px; word-break: break-word; }
+  .resume .side .edu strong { color: #eef4f1; display: block; }
+  .resume .bar-row { display: flex; align-items: center; gap: 4px; margin-bottom: 4px; }
+  .resume .bar-row span { flex: 0 0 30px; color: #b7c8c0; }
+  .resume .bar { flex: 1; height: 2.5px; background: rgba(255,255,255,0.12); border-radius: 3px; overflow: hidden; }
+  .resume .bar i { display: block; height: 100%; background: var(--mint); border-radius: 3px; }
+
+  .resume .main { padding: 15px 14px; background: #fff; }
+  .resume .main .name {
+    font-family: var(--font-d);
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+    color: #11261c;
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+  .resume .main .role { color: #2D7A5F; font-weight: 600; font-size: 6.5px; letter-spacing: 0.08em; margin-bottom: 9px; }
+  .resume .main h4 {
+    font-size: 6.5px;
+    letter-spacing: 0.1em;
+    color: #1F5C49;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin: 9px 0 4px;
+    padding-bottom: 2px;
+    border-bottom: 1px solid #e4ece8;
+  }
+  .resume .main p { color: #444; margin-bottom: 2px; }
+  .resume .skills { display: flex; flex-wrap: wrap; gap: 3px; }
+  .resume .skills span {
+    background: #eef5f1;
+    color: #1F5C49;
+    padding: 1.5px 5px;
+    border-radius: 6px;
+    font-size: 5.5px;
+    font-weight: 500;
+  }
+  .resume .exp { margin-bottom: 5px; }
+  .resume .exp strong { color: #11261c; display: block; font-size: 6.5px; }
+  .resume .exp em { color: #2D7A5F; font-style: normal; font-weight: 600; }
+
+  /* SCAN OVERLAY ELEMENTS */
+  .doc-scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(7,23,18,0.18), rgba(7,23,18,0.05) 30%, rgba(7,23,18,0.05) 70%, rgba(7,23,18,0.22));
+    pointer-events: none;
+  }
+  .grid-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(110,231,183,0.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(110,231,183,0.07) 1px, transparent 1px);
+    background-size: 22px 22px;
+    mix-blend-mode: screen;
+    opacity: 0.6;
+  }
+  .scan-beam {
+    position: absolute;
+    left: 0; right: 0;
+    top: 0;
+    height: 90px;
+    pointer-events: none;
+    background: linear-gradient(180deg,
+      transparent,
+      rgba(110, 231, 183, 0.05) 30%,
+      rgba(110, 231, 183, 0.22) 75%,
+      rgba(110, 231, 183, 0.55) 92%,
+      rgba(180, 255, 220, 0.9) 100%);
+    animation: scanMove 4.2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  }
+  .scan-beam::after {
+    content: "";
+    position: absolute;
+    left: -4%; right: -4%; bottom: 0;
+    height: 2.5px;
+    background: linear-gradient(90deg, transparent, var(--mint), #ddfff0, var(--mint), transparent);
+    box-shadow: 0 0 14px 3px var(--mint-glow), 0 0 30px 6px rgba(110,231,183,0.3);
+    filter: blur(0.2px);
+  }
+  @keyframes scanMove {
+    0% { top: -90px; opacity: 0; }
+    12% { opacity: 1; }
+    88% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+  }
+
+  /* status chips over document */
+  .doc-status {
+    position: absolute;
+    left: 14px; bottom: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 13px;
+    border-radius: 999px;
+    background: rgba(7, 23, 18, 0.72);
+    border: 1px solid rgba(110, 231, 183, 0.28);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: var(--text);
+    font-size: 11px;
+    font-weight: 500;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .doc-status .sdot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--mint);
+    box-shadow: 0 0 9px var(--mint);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  .analyzed-pill {
+    position: absolute;
+    right: 14px; top: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(110, 231, 183, 0.14);
+    border: 1px solid rgba(110, 231, 183, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: var(--mint);
+    font-size: 11px;
+    font-weight: 600;
+    box-shadow: 0 0 18px rgba(110,231,183,0.18);
+  }
+
+  /* GLOWING BUTTON */
+  .analyze-btn {
+    margin-top: 26px;
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 11px;
+    padding: 17px 24px;
+    border: none;
+    border-radius: 15px;
+    background: linear-gradient(135deg, var(--mint) 0%, #3FCB96 55%, var(--g600) 100%);
+    color: #042016;
+    font-family: var(--font-b);
+    font-size: 15.5px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    position: relative;
+    box-shadow:
+      0 10px 30px rgba(110, 231, 183, 0.28),
+      0 0 0 1px rgba(255,255,255,0.1) inset;
+    transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s;
+  }
+  .analyze-btn:hover {
+    transform: translateY(-3px);
+    box-shadow:
+      0 16px 44px rgba(110, 231, 183, 0.5),
+      0 0 28px rgba(110, 231, 183, 0.3),
+      0 0 0 1px rgba(255,255,255,0.18) inset;
+  }
+  .analyze-btn svg { width: 19px; height: 19px; }
+
+  /* ===== RIGHT: MATCHES PANEL ===== */
+  .matches-panel {
+    border-radius: 26px;
+    padding: 30px 30px 34px;
+    background:
+      radial-gradient(120% 60% at 100% 0%, rgba(110, 231, 183, 0.07), transparent 55%),
+      var(--panel);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow:
+      0 40px 90px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+  .panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 22px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .panel-head h2 {
+    font-family: var(--font-d);
+    font-weight: 700;
+    font-size: 27px;
+    letter-spacing: -0.02em;
+    color: var(--cream);
+  }
+  .count-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(110, 231, 183, 0.12);
+    border: 1px solid rgba(110, 231, 183, 0.32);
+    color: var(--mint);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  /* interests strip */
+  .interests { margin-bottom: 28px; }
+  .interests .lbl {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+  .interest-pills { display: flex; flex-wrap: wrap; gap: 9px; }
+  .interest-pills .chip {
+    padding: 7px 15px;
+    border-radius: 999px;
+    background: rgba(110, 231, 183, 0.05);
+    border: 1px solid rgba(110, 231, 183, 0.3);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.25s, transform 0.25s;
+  }
+  .interest-pills .chip:hover { background: rgba(110, 231, 183, 0.12); transform: translateY(-2px); }
+
+  /* professor grid */
+  .prof-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  .prof-card {
+    position: relative;
+    border-radius: var(--radius);
+    padding: 22px 20px 18px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+    border: 1px solid rgba(110, 231, 183, 0.14);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 12px 30px rgba(0,0,0,0.25);
+    transition: transform 0.3s cubic-bezier(0.34,1.2,0.64,1), border-color 0.3s, box-shadow 0.3s;
+    overflow: hidden;
+  }
+  .prof-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius);
+    background: radial-gradient(80% 50% at 50% 0%, rgba(110,231,183,0.08), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  .prof-card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(110, 231, 183, 0.45);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.1),
+      0 22px 50px rgba(0,0,0,0.4),
+      0 0 30px rgba(110,231,183,0.16);
+  }
+  .prof-card:hover::before { opacity: 1; }
+
+  .pc-top { display: flex; align-items: flex-start; gap: 13px; margin-bottom: 14px; }
+  .pc-avatar {
+    flex: 0 0 auto;
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-family: var(--font-d);
+    font-weight: 800;
+    font-size: 18px;
+    color: #042016;
+    background: linear-gradient(135deg, var(--mint), var(--g600));
+    box-shadow: 0 0 18px rgba(110,231,183,0.28), inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  .pc-id { flex: 1; min-width: 0; }
+  .pc-name {
+    font-family: var(--font-d);
+    font-weight: 700;
+    font-size: 17px;
+    color: var(--cream);
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    margin-bottom: 4px;
+  }
+  .pc-uni {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted);
+    font-size: 12.5px;
+  }
+  .pc-uni svg { width: 13px; height: 13px; flex: 0 0 auto; opacity: 0.75; }
+
+  /* match ring badge */
+  .match-badge {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    width: 50px; height: 50px;
+    border-radius: 50%;
+    position: relative;
+  }
+  .match-badge .ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+  }
+  .match-badge .inner {
+    position: absolute;
+    inset: 4px;
+    border-radius: 50%;
+    background: rgba(7, 23, 18, 0.85);
+    display: grid;
+    place-items: center;
+    text-align: center;
+  }
+  .match-badge .pct {
+    font-family: var(--font-d);
+    font-weight: 800;
+    font-size: 13px;
+    color: var(--mint);
+    line-height: 1;
+  }
+  .match-badge .mlbl {
+    font-size: 6.5px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-top: 1px;
+  }
+
+  .pc-desc {
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--muted);
+    margin-bottom: 14px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .pc-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .pc-tags span {
+    padding: 4px 10px;
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text);
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .pc-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+  }
+  .pc-loc {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .pc-loc svg { width: 13px; height: 13px; opacity: 0.7; }
+  .view-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 15px;
+    border-radius: 9px;
+    background: transparent;
+    border: 1px solid rgba(110, 231, 183, 0.4);
+    color: var(--mint);
+    font-family: var(--font-b);
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.25s, box-shadow 0.25s, transform 0.2s;
+  }
+  .view-btn:hover {
+    background: rgba(110, 231, 183, 0.12);
+    box-shadow: 0 0 16px rgba(110, 231, 183, 0.25);
+    transform: translateY(-1px);
+  }
+  .view-btn svg { width: 13px; height: 13px; }
+
+  /* ===== LOAD STAGGER ===== */
+  .anim { opacity: 0; transform: translateY(18px); animation: rise 0.8s cubic-bezier(0.22,1,0.36,1) forwards; }
+  .d1 { animation-delay: 0.05s; }
+  .d2 { animation-delay: 0.15s; }
+  .d3 { animation-delay: 0.28s; }
+  .d4 { animation-delay: 0.4s; }
+  .d5 { animation-delay: 0.5s; }
+  .d6 { animation-delay: 0.6s; }
+  .d7 { animation-delay: 0.7s; }
+  .d8 { animation-delay: 0.8s; }
+  @keyframes rise {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 1080px) {
+    .prof-grid { gap: 14px; }
+  }
+  @media (max-width: 900px) {
+    .shell { padding: 0 22px 60px; }
+    .workspace { grid-template-columns: 1fr; gap: 28px; }
+    .stage-col { position: static; max-width: 420px; margin: 0 auto; width: 100%; }
+    .prof-grid { grid-template-columns: 1fr; }
+    .ghost-docs, .grain { display: none; }
+    h1.title { font-size: clamp(34px, 9vw, 48px); }
+  }
+  @media (max-width: 520px) {
+    .shell { padding: 0 16px 50px; }
+    .matches-panel, .scan-stage { padding-left: 18px; padding-right: 18px; }
+    .pc-top { flex-wrap: wrap; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scan-beam, .ghost, .eyebrow .pulse-dot, .doc-status .sdot, .anim { animation: none; }
+    .anim { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="atmosphere"></div>
+  <div class="ghost-docs" aria-hidden="true">
+    <div class="ghost g1"></div>
+    <div class="ghost g2"></div>
+    <div class="ghost g3"></div>
+  </div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <div class="shell">
+    <!-- NAV -->
+    <nav class="anim d1">
+      <div class="wordmark"><span class="dot"></span>ReachOut</div>
+      <button class="account-pill">
+        <span class="av">GL</span>
+        Account
+      </button>
+    </nav>
+
+    <!-- HEADER -->
+    <header class="hero">
+      <div class="eyebrow anim d2"><span class="pulse-dot"></span>ANALYSIS COMPLETE</div>
+      <h1 class="title anim d2">Your resume, <em>decoded</em></h1>
+      <p class="subtitle anim d3">We scanned your experience, surfaced the research themes that define you, and matched them against thousands of faculty profiles.</p>
+    </header>
+
+    <!-- WORKSPACE -->
+    <div class="workspace">
+      <!-- LEFT: SCAN STAGE -->
+      <div class="stage-col anim d4">
+        <div class="scan-stage">
+          <div class="doc-wrap">
+            <!-- RESUME DOC -->
+            <div class="resume" aria-label="Resume preview for Gladwyn Li">
+              <div class="side">
+                <div class="photo">GL</div>
+                <p style="word-break:break-all;">gladwyn504@gmail.com</p>
+                <p>925 315 5548</p>
+                <p>San Ramon, CA</p>
+
+                <h3>Education</h3>
+                <div class="edu">
+                  <strong>High School Diploma</strong>
+                  <p>Dougherty Valley HS</p>
+                  <p>Expected June 2027</p>
+                  <p>GPA 3.53</p>
+                </div>
+
+                <h3>Languages</h3>
+                <div class="bar-row"><span>Spanish</span><div class="bar"><i style="width:70%"></i></div></div>
+                <div class="bar-row"><span>Chinese</span><div class="bar"><i style="width:85%"></i></div></div>
+                <div class="bar-row"><span>English</span><div class="bar"><i style="width:100%"></i></div></div>
+              </div>
+              <div class="main">
+                <div class="name">GLADWYN LI</div>
+                <div class="role">STUDENT · FOUNDER · RESEARCHER</div>
+
+                <h4>Professional Summary</h4>
+                <p>Driven high-school founder building AI-powered products.</p>
+                <p>Strong in research, strategy, and data-driven execution.</p>
+
+                <h4>Skills</h4>
+                <div class="skills">
+                  <span>Strategic thinking</span><span>Delegation</span><span>Python</span>
+                  <span>Web development</span><span>Adaptability</span>
+                  <span>Data-driven decisions</span><span>AI research</span>
+                </div>
+
+                <h4>Experience</h4>
+                <div class="exp"><strong>Startup Founder</strong><p><em>LocalCrate</em> · Led product & growth</p></div>
+                <div class="exp"><strong>Teacher's Assistant</strong><p><em>DVHS</em> · Mentored students in CS</p></div>
+
+                <h4>Projects</h4>
+                <div class="exp"><strong>LocalCrate</strong><p>Local marketplace platform</p></div>
+                <div class="exp"><strong>Automated YouTube Channel</strong><p>AI content pipeline</p></div>
+              </div>
+            </div>
+
+            <!-- SCAN OVERLAYS -->
+            <div class="grid-overlay"></div>
+            <div class="doc-scrim"></div>
+            <div class="scan-beam"></div>
+            <div class="analyzed-pill">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg>
+              Analyzed
+            </div>
+            <div class="doc-status">
+              <span class="sdot"></span>
+              Scanning… extracting skills &amp; interests
+            </div>
+          </div>
+
+          <!-- GLOWING BUTTON -->
+          <button class="analyze-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Find matching professors
+          </button>
+        </div>
+      </div>
+
+      <!-- RIGHT: MATCHES PANEL -->
+      <div class="matches-panel anim d5">
+        <div class="panel-head">
+          <h2>Suggested professors</h2>
+          <span class="count-chip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>
+            4 matches
+          </span>
+        </div>
+
+        <!-- INTERESTS -->
+        <div class="interests anim d6">
+          <div class="lbl">Research interests extracted</div>
+          <div class="interest-pills">
+            <span class="chip">Machine Learning</span>
+            <span class="chip">Web Development</span>
+            <span class="chip">Market Research</span>
+            <span class="chip">Data-Driven Decision Making</span>
+            <span class="chip">Entrepreneurship</span>
+          </div>
+        </div>
+
+        <!-- PROFESSOR GRID -->
+        <div class="prof-grid">
+          <!-- Card 1 -->
+          <article class="prof-card anim d6">
+            <div class="pc-top">
+              <div class="pc-avatar">SC</div>
+              <div class="pc-id">
+                <div class="pc-name">Dr. Sarah Chen</div>
+                <div class="pc-uni">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
+                  Stanford University
+                </div>
+              </div>
+              <div class="match-badge">
+                <svg class="ring" viewBox="0 0 50 50"><circle cx="25" cy="25" r="22" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="4"/><circle cx="25" cy="25" r="22" fill="none" stroke="#6EE7B7" stroke-width="4" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="8.3" transform="rotate(-90 25 25)"/></svg>
+                <div class="inner"><div><div class="pct">94%</div><div class="mlbl">Match</div></div></div>
+              </div>
+            </div>
+            <p class="pc-desc">Builds reinforcement-learning systems for dexterous robotic manipulation.</p>
+            <div class="pc-tags"><span>Robotics</span><span>Reinforcement Learning</span><span>Manipulation</span></div>
+            <div class="pc-foot">
+              <span class="pc-loc">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                San Jose, CA
+              </span>
+              <button class="view-btn">View Profile
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </button>
+            </div>
+          </article>
+
+          <!-- Card 2 -->
+          <article class="prof-card anim d7">
+            <div class="pc-top">
+              <div class="pc-avatar">MR</div>
+              <div class="pc-id">
+                <div class="pc-name">Dr. Marcus Reed</div>
+                <div class="pc-uni">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
+                  MIT
+                </div>
+              </div>
+              <div class="match-badge">
+                <svg class="ring" viewBox="0 0 50 50"><circle cx="25" cy="25" r="22" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="4"/><circle cx="25" cy="25" r="22" fill="none" stroke="#6EE7B7" stroke-width="4" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="12.4" transform="rotate(-90 25 25)"/></svg>
+                <div class="inner"><div><div class="pct">91%</div><div class="mlbl">Match</div></div></div>
+              </div>
+            </div>
+            <p class="pc-desc">Studies data-driven decision making and human–AI collaboration in teams.</p>
+            <div class="pc-tags"><span>HCI</span><span>Decision Science</span><span>AI</span></div>
+            <div class="pc-foot">
+              <span class="pc-loc">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                Cambridge, MA
+              </span>
+              <button class="view-btn">View Profile
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </button>
+            </div>
+          </article>
+
+          <!-- Card 3 -->
+          <article class="prof-card anim d7">
+            <div class="pc-top">
+              <div class="pc-avatar">EV</div>
+              <div class="pc-id">
+                <div class="pc-name">Dr. Elena Vasquez</div>
+                <div class="pc-uni">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
+                  UC Berkeley
+                </div>
+              </div>
+              <div class="match-badge">
+                <svg class="ring" viewBox="0 0 50 50"><circle cx="25" cy="25" r="22" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="4"/><circle cx="25" cy="25" r="22" fill="none" stroke="#6EE7B7" stroke-width="4" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="16.6" transform="rotate(-90 25 25)"/></svg>
+                <div class="inner"><div><div class="pct">88%</div><div class="mlbl">Match</div></div></div>
+              </div>
+            </div>
+            <p class="pc-desc">Works on adaptive web systems and large-scale market platforms.</p>
+            <div class="pc-tags"><span>Web Systems</span><span>Marketplaces</span></div>
+            <div class="pc-foot">
+              <span class="pc-loc">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                Berkeley, CA
+              </span>
+              <button class="view-btn">View Profile
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </button>
+            </div>
+          </article>
+
+          <!-- Card 4 -->
+          <article class="prof-card anim d8">
+            <div class="pc-top">
+              <div class="pc-avatar">DP</div>
+              <div class="pc-id">
+                <div class="pc-name">Dr. David Park</div>
+                <div class="pc-uni">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
+                  Carnegie Mellon
+                </div>
+              </div>
+              <div class="match-badge">
+                <svg class="ring" viewBox="0 0 50 50"><circle cx="25" cy="25" r="22" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="4"/><circle cx="25" cy="25" r="22" fill="none" stroke="#6EE7B7" stroke-width="4" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="20.7" transform="rotate(-90 25 25)"/></svg>
+                <div class="inner"><div><div class="pct">85%</div><div class="mlbl">Match</div></div></div>
+              </div>
+            </div>
+            <p class="pc-desc">Researches strategic partnerships and innovation in entrepreneurial ecosystems.</p>
+            <div class="pc-tags"><span>Strategy</span><span>Entrepreneurship</span></div>
+            <div class="pc-foot">
+              <span class="pc-loc">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                Pittsburgh, PA
+              </span>
+              <button class="view-btn">View Profile
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </button>
+            </div>
+          </article>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

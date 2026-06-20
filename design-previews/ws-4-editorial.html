@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReachOut — Resume Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,700;0,9..144,800;1,9..144,400;1,9..144,500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --g900:#0D2B1E;--g800:#1B4D3E;--g700:#1F5C49;--g600:#2D7A5F;--g50:#ECFDF5;
+    --ink:#1A1714;--n700:#4A453E;--n500:#7A736A;--n300:#C9C2B6;--n200:#E7E2D8;
+    --paper:#FBFAF7;--white:#fff;
+    --font-d:'Fraunces',Georgia,serif;
+    --font-b:'DM Sans',system-ui,sans-serif;
+    --mx:clamp(1.5rem,6vw,7rem);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--font-b);
+    line-height:1.5;
+    font-size:16px;
+  }
+  a{color:inherit;text-decoration:none}
+
+  /* ---------- entrance ---------- */
+  @keyframes rise{
+    from{opacity:0;transform:translateY(14px)}
+    to{opacity:1;transform:translateY(0)}
+  }
+  .fade{opacity:0;animation:rise .9s cubic-bezier(.2,.7,.2,1) forwards}
+  .d1{animation-delay:.05s}.d2{animation-delay:.15s}.d3{animation-delay:.28s}
+  .d4{animation-delay:.4s}.d5{animation-delay:.5s}.d6{animation-delay:.6s}
+  .d7{animation-delay:.7s}.d8{animation-delay:.8s}.d9{animation-delay:.9s}
+
+  @media (prefers-reduced-motion: reduce){
+    .fade{animation:none;opacity:1}
+  }
+
+  /* ---------- masthead ---------- */
+  .masthead{
+    padding:1.6rem var(--mx) 1.2rem;
+    display:flex;align-items:baseline;justify-content:space-between;
+    border-bottom:1px solid var(--ink);
+  }
+  .brand{
+    font-family:var(--font-d);
+    font-weight:800;
+    font-size:1.55rem;
+    letter-spacing:-.01em;
+    font-optical-sizing:auto;
+  }
+  .brand .dot{color:var(--g700)}
+  .acct{
+    font-family:var(--font-b);
+    font-size:.72rem;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--n700);
+    display:inline-flex;align-items:center;gap:.5rem;
+    transition:color .25s;
+  }
+  .acct:hover{color:var(--g700)}
+  .acct svg{width:14px;height:14px}
+
+  /* ---------- editorial header ---------- */
+  .header{
+    padding:clamp(2.5rem,7vw,5rem) var(--mx) clamp(2rem,4vw,3rem);
+    max-width:1000px;
+  }
+  .kicker{
+    font-family:var(--font-b);
+    font-size:.72rem;
+    font-weight:600;
+    letter-spacing:.32em;
+    text-transform:uppercase;
+    color:var(--g700);
+    margin-bottom:1.4rem;
+    display:flex;align-items:center;gap:.9rem;
+  }
+  .kicker::after{
+    content:"";flex:0 0 56px;height:1px;background:var(--n300);
+  }
+  h1.head{
+    font-family:var(--font-d);
+    font-optical-sizing:auto;
+    font-weight:500;
+    font-size:clamp(2.8rem,7vw,5.4rem);
+    line-height:1.02;
+    letter-spacing:-.02em;
+    color:var(--ink);
+  }
+  h1.head em{
+    font-style:italic;
+    font-weight:500;
+    color:var(--g800);
+  }
+  .standfirst{
+    font-family:var(--font-d);
+    font-weight:400;
+    font-style:italic;
+    font-size:clamp(1.05rem,2.2vw,1.4rem);
+    color:var(--n700);
+    line-height:1.5;
+    margin-top:1.6rem;
+    max-width:46ch;
+  }
+
+  /* ---------- workspace ---------- */
+  .workspace{
+    padding:clamp(1.5rem,3vw,2.5rem) var(--mx) clamp(4rem,8vw,7rem);
+    display:grid;
+    grid-template-columns:minmax(280px,5fr) 1px minmax(0,7fr);
+    gap:clamp(2rem,5vw,4.5rem);
+    align-items:start;
+    border-top:1px solid var(--n200);
+  }
+  .rule-v{
+    align-self:stretch;
+    background:var(--n200);
+    width:1px;
+  }
+
+  /* ---------- left: the plate ---------- */
+  .plate-cap-top{
+    font-family:var(--font-b);
+    font-size:.68rem;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--n500);margin-bottom:1.1rem;
+  }
+  .plate{
+    background:linear-gradient(180deg,#fff,#fcfbf8);
+    border:1px solid var(--n200);
+    padding:1.1rem;
+    box-shadow:0 1px 0 rgba(26,23,20,.02);
+    position:relative;
+  }
+  .analyzed{
+    display:inline-flex;align-items:center;gap:.5rem;
+    font-family:var(--font-d);font-style:italic;font-size:.92rem;
+    color:var(--g800);
+    margin-bottom:.9rem;
+  }
+  .analyzed .gdot{
+    width:7px;height:7px;border-radius:50%;background:var(--g600);
+    box-shadow:0 0 0 4px rgba(45,122,95,.14);
+    animation:pulse 2.6s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 4px rgba(45,122,95,.14)}50%{box-shadow:0 0 0 6px rgba(45,122,95,.05)}}
+
+  /* the resume document mock */
+  .resume{
+    display:grid;
+    grid-template-columns:38% 1fr;
+    background:#fff;
+    border:1px solid var(--n200);
+    overflow:hidden;
+    font-size:9px;
+    line-height:1.45;
+    position:relative;
+    aspect-ratio:8.5/11;
+  }
+  /* scan sweep */
+  .resume::after{
+    content:"";position:absolute;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,transparent,var(--g600),transparent);
+    opacity:.55;
+    top:0;
+    animation:scan 5.5s cubic-bezier(.6,0,.4,1) infinite;
+  }
+  @keyframes scan{
+    0%{top:2%;opacity:0}
+    8%{opacity:.6}
+    50%{top:97%;opacity:.6}
+    60%,100%{opacity:0}
+  }
+  .r-side{
+    background:#16140f;
+    color:#e9e5dd;
+    padding:13px 11px;
+  }
+  .r-photo{
+    width:46px;height:46px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,#3a352d,#1f1c16);
+    border:1px solid rgba(255,255,255,.16);
+    margin:0 auto 11px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-d);font-size:15px;font-weight:500;
+    color:#cfc8bb;letter-spacing:.04em;
+  }
+  .r-side .lbl{
+    font-family:var(--font-b);
+    font-size:7px;letter-spacing:.18em;text-transform:uppercase;
+    color:#9d9488;margin:12px 0 5px;
+    border-bottom:1px solid rgba(255,255,255,.12);padding-bottom:3px;
+  }
+  .r-side .lbl:first-of-type{margin-top:4px}
+  .r-side .contact div{margin-bottom:3px;color:#cabfae;word-break:break-all}
+  .r-side .edu strong{color:#fff;font-weight:600}
+  .r-side .edu div{color:#b7ad9e;margin-bottom:1px}
+  .bar{height:3px;background:rgba(255,255,255,.14);border-radius:2px;margin:3px 0 6px;overflow:hidden}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,#2D7A5F,#1F5C49);border-radius:2px}
+  .lang{font-size:8px;color:#d3c9ba;margin-bottom:1px}
+  .r-main{padding:14px 14px;color:#2a2620;background:#fff}
+  .r-name{
+    font-family:var(--font-d);font-weight:700;
+    font-size:18px;letter-spacing:.02em;line-height:1;
+    color:#16140f;margin-bottom:2px;
+  }
+  .r-name + .role{font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--g700);margin-bottom:10px;font-weight:600;font-family:var(--font-b)}
+  .r-main .h{
+    font-family:var(--font-b);
+    font-size:8px;letter-spacing:.16em;text-transform:uppercase;
+    color:#16140f;font-weight:700;
+    margin:11px 0 5px;
+    position:relative;padding-bottom:4px;
+  }
+  .r-main .h::after{content:"";position:absolute;left:0;bottom:0;width:26px;height:1.5px;background:var(--g600)}
+  .r-main p{color:#54four;color:#544d44;margin-bottom:2px}
+  .chips{display:flex;flex-wrap:wrap;gap:3px}
+  .chips span{
+    background:var(--g50);color:var(--g800);
+    border:1px solid #d6ece2;
+    padding:1.5px 5px;border-radius:20px;font-size:7.5px;
+    font-family:var(--font-b);font-weight:500;
+  }
+  .xp{margin-bottom:6px}
+  .xp b{color:#16140f;font-weight:600;display:block;font-size:9px}
+  .xp em{color:var(--n500);font-style:normal;font-size:7.5px;font-family:var(--font-b);letter-spacing:.04em}
+
+  figcaption{
+    font-family:var(--font-d);font-style:italic;
+    font-size:.86rem;color:var(--n500);
+    margin-top:1rem;text-align:center;line-height:1.5;
+  }
+  figcaption b{font-style:normal;font-weight:500;color:var(--n700)}
+
+  .cta{
+    margin-top:1.8rem;
+    width:100%;
+    display:inline-flex;align-items:center;justify-content:center;gap:.7rem;
+    background:var(--g800);
+    color:#f6f3ec;
+    font-family:var(--font-d);
+    font-size:1.08rem;font-weight:500;
+    padding:1rem 1.4rem;
+    border:1px solid var(--g900);
+    cursor:pointer;
+    transition:background .3s,transform .3s;
+  }
+  .cta:hover{background:var(--g900)}
+  .cta .arr{transition:transform .3s}
+  .cta:hover .arr{transform:translateX(5px)}
+
+  /* ---------- right: the matches ---------- */
+  .section-open{
+    border-top:2px solid var(--ink);
+    padding-top:1.1rem;
+    margin-bottom:1.8rem;
+  }
+  .section-open .kicker{margin-bottom:.6rem}
+  .section-open .kicker::after{display:none}
+  .subhead{
+    font-family:var(--font-d);
+    font-weight:500;
+    font-size:clamp(1.6rem,3vw,2.3rem);
+    line-height:1.1;letter-spacing:-.015em;
+    color:var(--ink);
+  }
+  .subhead em{font-style:italic;color:var(--g800)}
+
+  .interests{
+    margin:1.6rem 0 2.4rem;
+    font-family:var(--font-d);
+    font-style:italic;
+    font-size:clamp(1.02rem,1.8vw,1.22rem);
+    color:var(--n700);
+    line-height:1.7;
+    max-width:60ch;
+  }
+  .interests .mid{color:var(--n300);font-style:normal;margin:0 .35rem;font-weight:400}
+  .interests b{font-style:normal;color:var(--ink);font-weight:500}
+  .interests .pre{
+    display:block;
+    font-family:var(--font-b);font-style:normal;
+    font-size:.68rem;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--n500);margin-bottom:.7rem;
+  }
+
+  .matches{list-style:none}
+  .match{
+    display:grid;
+    grid-template-columns:auto 1fr;
+    gap:1.3rem clamp(1.2rem,2.5vw,2.2rem);
+    padding:1.7rem 0;
+    border-top:1px solid var(--n200);
+    transition:background .3s;
+    position:relative;
+  }
+  .match:last-child{border-bottom:1px solid var(--n200)}
+  .match::before{
+    content:"";position:absolute;left:-1.4rem;right:-1.4rem;top:0;bottom:0;
+    background:transparent;transition:background .35s;z-index:-1;
+  }
+  .match:hover::before{background:rgba(27,77,62,.035)}
+  .num{
+    font-family:var(--font-d);
+    font-weight:400;
+    font-size:clamp(2.1rem,4vw,3rem);
+    line-height:.85;
+    color:var(--n300);
+    font-feature-settings:"tnum";
+    transition:color .35s,transform .35s;
+  }
+  .match:hover .num{color:var(--g700)}
+  .m-body{min-width:0}
+  .m-name{
+    font-family:var(--font-d);
+    font-weight:500;
+    font-size:clamp(1.4rem,2.6vw,1.85rem);
+    line-height:1.1;letter-spacing:-.01em;
+    color:var(--ink);
+    margin-bottom:.45rem;
+  }
+  .m-meta{
+    font-family:var(--font-b);
+    font-size:.74rem;
+    letter-spacing:.04em;
+    color:var(--n500);
+    display:flex;flex-wrap:wrap;align-items:center;gap:.55rem;
+    margin-bottom:.7rem;
+  }
+  .m-meta .uni{color:var(--n700);font-weight:600}
+  .m-meta .sep{color:var(--n300)}
+  .m-meta .pct{
+    color:var(--g700);font-weight:700;
+    font-variant-numeric:tabular-nums;
+  }
+  .m-meta .loc{color:var(--n500)}
+  .m-desc{
+    font-family:var(--font-d);
+    font-size:1.04rem;
+    line-height:1.55;
+    color:var(--n700);
+    max-width:52ch;
+    margin-bottom:.85rem;
+  }
+  .m-tags{
+    font-family:var(--font-b);
+    font-size:.72rem;
+    letter-spacing:.05em;
+    color:var(--n500);
+    margin-bottom:1rem;
+  }
+  .m-tags span{color:var(--g800)}
+  .m-tags .dot{color:var(--n300);margin:0 .45rem}
+  .view{
+    font-family:var(--font-b);
+    font-size:.74rem;font-weight:600;
+    letter-spacing:.1em;text-transform:uppercase;
+    color:var(--g800);
+    display:inline-flex;align-items:center;gap:.5rem;
+    border-bottom:1px solid transparent;
+    padding-bottom:2px;
+    transition:gap .3s,border-color .3s;
+  }
+  .view:hover{gap:.85rem;border-color:var(--g600)}
+  .view .arr{transition:transform .3s}
+  .match:hover .view .arr{transform:translateX(3px)}
+
+  /* footer note */
+  .foot{
+    padding:2rem var(--mx) 3rem;
+    border-top:1px solid var(--n200);
+    font-family:var(--font-d);font-style:italic;
+    font-size:.86rem;color:var(--n500);
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:.8rem;
+  }
+
+  /* ---------- responsive ---------- */
+  @media (max-width:900px){
+    .workspace{grid-template-columns:1fr;gap:3rem}
+    .rule-v{display:none}
+    .plate{max-width:420px}
+    .cta{width:auto}
+  }
+  @media (max-width:560px){
+    :root{--mx:1.25rem}
+    .masthead{padding:1.2rem var(--mx)}
+    .resume{font-size:8px}
+  }
+</style>
+</head>
+<body>
+
+  <header class="masthead fade d1">
+    <a class="brand" href="#">ReachOut<span class="dot">.</span></a>
+    <a class="acct" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+      Account
+    </a>
+  </header>
+
+  <section class="header">
+    <div class="kicker fade d2">Resume Analysis</div>
+    <h1 class="head fade d2">Your résumé, <em>read&nbsp;closely.</em></h1>
+    <p class="standfirst fade d3">We read every line — the projects, the skills, the quiet ambitions — and set them against the work of researchers who would want to hear from you.</p>
+  </section>
+
+  <main class="workspace">
+
+    <!-- LEFT: the plate -->
+    <section class="left fade d4">
+      <div class="plate-cap-top">The Document</div>
+      <figure class="plate">
+        <div class="analyzed"><span class="gdot"></span> Analyzed &amp; understood</div>
+        <div class="resume" role="img" aria-label="Gladwyn Li's résumé">
+          <aside class="r-side">
+            <div class="r-photo">GL</div>
+            <div class="lbl">Contact</div>
+            <div class="contact">
+              <div>gladwyn504@gmail.com</div>
+              <div>925 315 5548</div>
+              <div>San Ramon, CA</div>
+            </div>
+            <div class="lbl">Education</div>
+            <div class="edu">
+              <strong>High School Diploma</strong>
+              <div>Dougherty Valley HS</div>
+              <div>Expected June 2027</div>
+              <div>GPA 3.53</div>
+            </div>
+            <div class="lbl">Languages</div>
+            <div class="lang">Spanish</div><div class="bar"><i style="width:65%"></i></div>
+            <div class="lang">Chinese</div><div class="bar"><i style="width:80%"></i></div>
+            <div class="lang">English</div><div class="bar"><i style="width:100%"></i></div>
+          </aside>
+          <div class="r-main">
+            <div class="r-name">GLADWYN LI</div>
+            <div class="role">Founder · Researcher</div>
+            <div class="h">Professional Summary</div>
+            <p>Self-directed builder pairing AI research with real products. Founded a local marketplace and an automated media channel before age 18.</p>
+            <div class="h">Skills</div>
+            <div class="chips">
+              <span>Strategic thinking</span><span>Delegation</span><span>Python</span>
+              <span>Web development</span><span>Adaptability</span>
+              <span>Data-driven decisions</span><span>AI research</span>
+            </div>
+            <div class="h">Experience</div>
+            <div class="xp"><b>Startup Founder</b><em>LocalCrate — 2024–present</em></div>
+            <div class="xp"><b>Teacher's Assistant</b><em>Dougherty Valley HS — 2023</em></div>
+            <div class="h">Projects</div>
+            <div class="xp"><b>LocalCrate</b><em>Hyperlocal marketplace platform</em></div>
+            <div class="xp"><b>Automated YouTube Channel</b><em>AI-generated media pipeline</em></div>
+          </div>
+        </div>
+        <figcaption><b>Fig. 1</b> — Gladwyn's résumé, as read by our model.</figcaption>
+      </figure>
+      <button class="cta">Find matching professors <span class="arr">→</span></button>
+    </section>
+
+    <div class="rule-v" aria-hidden="true"></div>
+
+    <!-- RIGHT: the matches -->
+    <section class="right">
+      <div class="section-open fade d5">
+        <div class="kicker">The Matches</div>
+        <h2 class="subhead">Five interests, <em>four labs.</em></h2>
+      </div>
+
+      <p class="interests fade d5">
+        <span class="pre">Detected interests</span>
+        <b>Machine Learning</b><span class="mid">·</span>
+        <b>Web Development</b><span class="mid">·</span>
+        <b>Market Research</b><span class="mid">·</span>
+        <b>Data-Driven Decision Making</b><span class="mid">·</span>
+        <b>Entrepreneurship</b>
+      </p>
+
+      <ol class="matches">
+
+        <li class="match fade d6">
+          <div class="num">01</div>
+          <div class="m-body">
+            <div class="m-name">Dr. Sarah Chen</div>
+            <div class="m-meta"><span class="uni">Stanford University</span><span class="sep">—</span><span class="pct">94% match</span><span class="sep">·</span><span class="loc">San Jose, CA</span></div>
+            <p class="m-desc">Builds reinforcement-learning systems for dexterous robotic manipulation.</p>
+            <div class="m-tags"><span>Robotics</span><span class="dot">·</span><span>Reinforcement Learning</span><span class="dot">·</span><span>Manipulation</span></div>
+            <a class="view" href="#">View profile <span class="arr">→</span></a>
+          </div>
+        </li>
+
+        <li class="match fade d7">
+          <div class="num">02</div>
+          <div class="m-body">
+            <div class="m-name">Dr. Marcus Reed</div>
+            <div class="m-meta"><span class="uni">MIT</span><span class="sep">—</span><span class="pct">91% match</span><span class="sep">·</span><span class="loc">Cambridge, MA</span></div>
+            <p class="m-desc">Studies data-driven decision making and human–AI collaboration in teams.</p>
+            <div class="m-tags"><span>HCI</span><span class="dot">·</span><span>Decision Science</span><span class="dot">·</span><span>AI</span></div>
+            <a class="view" href="#">View profile <span class="arr">→</span></a>
+          </div>
+        </li>
+
+        <li class="match fade d8">
+          <div class="num">03</div>
+          <div class="m-body">
+            <div class="m-name">Dr. Elena Vasquez</div>
+            <div class="m-meta"><span class="uni">UC Berkeley</span><span class="sep">—</span><span class="pct">88% match</span><span class="sep">·</span><span class="loc">Berkeley, CA</span></div>
+            <p class="m-desc">Works on adaptive web systems and large-scale market platforms.</p>
+            <div class="m-tags"><span>Web Systems</span><span class="dot">·</span><span>Marketplaces</span></div>
+            <a class="view" href="#">View profile <span class="arr">→</span></a>
+          </div>
+        </li>
+
+        <li class="match fade d9">
+          <div class="num">04</div>
+          <div class="m-body">
+            <div class="m-name">Dr. David Park</div>
+            <div class="m-meta"><span class="uni">Carnegie Mellon</span><span class="sep">—</span><span class="pct">85% match</span><span class="sep">·</span><span class="loc">Pittsburgh, PA</span></div>
+            <p class="m-desc">Researches strategic partnerships and innovation in entrepreneurial ecosystems.</p>
+            <div class="m-tags"><span>Strategy</span><span class="dot">·</span><span>Entrepreneurship</span></div>
+            <a class="view" href="#">View profile <span class="arr">→</span></a>
+          </div>
+        </li>
+
+      </ol>
+    </section>
+
+  </main>
+
+  <footer class="foot fade d9">
+    <span>ReachOut — Professor Discovery Engine</span>
+    <span>Matches generated from your résumé · June 2026</span>
+  </footer>
+
+</body>
+</html>

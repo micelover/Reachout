@@ -129,42 +129,69 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
 /* ═══════════════════════════
    PAGE: BROWSE
 ═══════════════════════════ */
-.browse-wrap{max-width:1100px;margin:0 auto;padding:48px 40px}
-.browse-hero{margin-bottom:32px}
-.browse-hero h1{font-family:var(--font-d);font-size:36px;font-weight:800;color:var(--n900);letter-spacing:-.8px;margin-bottom:8px}
-.browse-hero p{font-size:14.5px;color:var(--n500);line-height:1.7}
+#page-browse{background:var(--bg);min-height:100vh}
+.browse-wrap{max-width:1120px;margin:0 auto;padding:60px 40px}
+.browse-hero{margin-bottom:0}
+.browse-hero h1{font-family:var(--font-d);font-size:clamp(34px,3vw,46px);font-weight:900;color:var(--n900);letter-spacing:-1.2px;margin-bottom:10px;line-height:1.12}
+.browse-hero p{font-size:15px;color:var(--n500);line-height:1.7;max-width:520px}
+.browse-sep{height:1px;background:var(--n200);margin:36px 0}
 
-.browse-controls{display:flex;gap:10px;margin-bottom:30px;align-items:center}
-.browse-search{flex:1;display:flex;align-items:center;gap:10px;background:var(--white);border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:11px 18px}
+.browse-controls{display:flex;gap:10px;margin-bottom:32px;align-items:center}
+.browse-search{flex:1;display:flex;align-items:center;gap:10px;background:var(--white);border:1.5px solid var(--n200);border-radius:100px;padding:13px 22px;box-shadow:var(--sh-sm);transition:box-shadow .2s,border-color .2s}
+.browse-search:focus-within{border-color:var(--n300);box-shadow:0 0 0 3px rgba(0,0,0,.06),var(--sh-sm)}
 .browse-search input{flex:1;border:none;outline:none;font-family:var(--font-b);font-size:14px;color:var(--n700);background:none}
 .browse-search input::placeholder{color:var(--n400)}
-.filter-btn{display:flex;align-items:center;gap:6px;padding:10px 16px;border:1.5px solid var(--n200);border-radius:var(--r-lg);background:var(--white);font-family:var(--font-b);font-size:13.5px;font-weight:500;color:var(--n700);cursor:pointer;transition:all .15s;white-space:nowrap}
-.filter-btn:hover{border-color:var(--n400);background:var(--n50)}
+.filter-btn{display:flex;align-items:center;gap:7px;padding:11px 18px;border:1.5px solid var(--n200);border-radius:100px;background:var(--white);font-family:var(--font-b);font-size:13.5px;font-weight:500;color:var(--n700);cursor:pointer;transition:all .18s;white-space:nowrap;box-shadow:var(--sh-sm)}
+.filter-btn:hover{border-color:var(--n300);background:var(--n50);box-shadow:var(--sh-md)}
+.filter-btn.has-active{border-color:var(--g700);color:var(--g800)}
+.filter-count{background:var(--g800);color:var(--white);font-size:10px;font-weight:700;width:16px;height:16px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center}
+.filter-wrap{position:relative}
+.filter-dropdown{position:absolute;top:calc(100% + 8px);right:0;width:252px;background:var(--white);border:1.5px solid var(--n200);border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.1),0 2px 6px rgba(0,0,0,.06);z-index:200;display:none;overflow:hidden}
+.filter-dropdown.open{display:block;animation:fadeUp .16s ease}
+.fd-section-label{font-size:11px;font-weight:700;color:var(--n400);letter-spacing:.6px;text-transform:uppercase;padding:16px 16px 8px}
+.fd-sort-group{display:flex;gap:6px;padding:0 16px 14px}
+.fd-sort-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:8px 10px;border:1.5px solid var(--n200);border-radius:100px;background:var(--white);font-family:var(--font-b);font-size:12.5px;font-weight:500;color:var(--n600);cursor:pointer;transition:all .15s}
+.fd-sort-btn:hover{border-color:var(--n300);background:var(--n50)}
+.fd-sort-btn.active{background:var(--g800);border-color:var(--g800);color:var(--white)}
+.fd-divider{height:1px;background:var(--n100);margin:0 16px}
+.fd-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;transition:background .15s;gap:10px}
+.fd-toggle-row:hover{background:var(--n50)}
+.fd-toggle-info{display:flex;align-items:flex-start;gap:10px;color:var(--n500)}
+.fd-toggle-label{font-size:13.5px;font-weight:600;color:var(--n800);margin-bottom:2px}
+.fd-toggle-sub{font-size:11.5px;color:var(--n500);line-height:1.4}
+.fd-tog{width:40px;height:22px;border-radius:100px;background:var(--n200);position:relative;flex-shrink:0;transition:background .2s}
+.fd-tog.on{background:var(--g700)}
+.fd-tog::after{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:var(--white);top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.fd-tog.on::after{transform:translateX(18px)}
+.fd-footer{padding:10px 16px 14px;border-top:1px solid var(--n100);margin-top:2px}
+.fd-clear{font-size:12.5px;font-weight:600;color:var(--n500);background:none;border:none;cursor:pointer;font-family:var(--font-b);transition:color .15s;padding:0}
+.fd-clear:hover{color:var(--n900)}
 
-.prof-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:36px}
-.prof-card{background:var(--white);border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:22px;position:relative;transition:all .2s;cursor:pointer}
-.prof-card:hover{border-color:var(--n300);box-shadow:var(--sh-md);transform:translateY(-2px)}
+.prof-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-bottom:36px}
+.prof-card{background:var(--white);border:1.5px solid var(--n200);border-radius:18px;padding:26px;position:relative;transition:transform .22s cubic-bezier(.25,.46,.45,.94),box-shadow .22s cubic-bezier(.25,.46,.45,.94),border-color .22s;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.05),0 1px 2px rgba(0,0,0,.04)}
+.prof-card:hover{border-color:var(--n300);box-shadow:0 14px 36px rgba(0,0,0,.1),0 4px 10px rgba(0,0,0,.06);transform:translateY(-5px)}
 
-.pc-head{display:flex;gap:12px;align-items:flex-start;margin-bottom:12px;position:relative}
+.pc-head{display:flex;gap:13px;align-items:flex-start;margin-bottom:14px;position:relative}
 .pc-av{width:50px;height:50px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;background:var(--n100);overflow:hidden}
 .pc-av img{width:100%;height:100%;object-fit:cover}
-.pc-av-init{width:50px;height:50px;border-radius:50%;flex-shrink:0;background:var(--n200);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:var(--n600)}
-.pc-info{flex:1;min-width:0}
-.pc-name{font-size:14.5px;font-weight:700;color:var(--n900);line-height:1.3;margin-bottom:4px}
+.pc-av-init{width:52px;height:52px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;letter-spacing:.3px}
+.pc-info{flex:1;min-width:0;padding-right:108px}
+.pc-name{font-family:var(--font-d);font-size:15.5px;font-weight:700;color:var(--n900);line-height:1.25;margin-bottom:4px;letter-spacing:-.25px}
 .pc-uni{font-size:12px;color:var(--n500);display:flex;align-items:center;gap:4px}
-.match-badge{position:absolute;top:0;right:0;background:var(--g50);border:1px solid var(--g100);color:var(--g800);font-size:11px;font-weight:700;padding:3px 8px;border-radius:100px;display:flex;align-items:center;gap:3px}
-.heart{position:absolute;bottom:0;right:0;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1.5px solid var(--n200);background:var(--white);color:var(--n400);font-size:14px;cursor:pointer;transition:all .15s}
+.match-badge{position:absolute;top:0;right:0;background:var(--n100);border:1.5px solid var(--n200);color:var(--n800);font-size:11px;font-weight:700;padding:4px 10px;border-radius:100px;display:flex;align-items:center;gap:4px;letter-spacing:.1px}
+.match-dot{width:6px;height:6px;border-radius:50%;background:var(--g600);flex-shrink:0;display:inline-block}
+.heart{position:absolute;bottom:0;right:0;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1.5px solid var(--n200);background:var(--white);color:var(--n300);font-size:14px;cursor:pointer;transition:all .15s}
 .heart:hover{border-color:#F43F5E;color:#F43F5E}
 .heart.on{border-color:#F43F5E;color:#F43F5E;background:#FFF1F2}
 
-.pc-desc{font-size:13px;color:var(--n600);line-height:1.6;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.tag-row{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
-.tag{background:var(--n100);color:var(--n700);font-size:11.5px;font-weight:500;padding:3px 9px;border-radius:100px}
-.tag-more{color:var(--n500);font-size:11.5px;font-weight:500;padding:3px 4px}
-.pc-foot{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--n100)}
+.pc-desc{font-size:13px;color:var(--n500);line-height:1.65;margin-bottom:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tag-row{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:16px}
+.tag{background:var(--n100);color:var(--n700);font-size:11.5px;font-weight:500;padding:4px 10px;border-radius:100px;border:none}
+.tag-more{color:var(--n500);font-size:11.5px;font-weight:500;padding:4px 2px}
+.pc-foot{display:flex;align-items:center;justify-content:space-between;margin-top:4px}
 .pc-loc{font-size:12px;color:var(--n500);display:flex;align-items:center;gap:4px}
-.view-btn{background:var(--g800);color:var(--white);font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:var(--r-md);font-family:var(--font-b);cursor:pointer;border:none;transition:background .15s}
-.view-btn:hover{background:var(--g700)}
+.view-btn{background:var(--g800);color:var(--white);font-size:12.5px;font-weight:600;padding:8px 16px;border-radius:10px;font-family:var(--font-b);cursor:pointer;border:none;transition:all .18s;letter-spacing:.1px}
+.view-btn:hover{background:var(--g700);transform:translateY(-1px);box-shadow:0 4px 14px rgba(27,77,62,.3)}
 
 .pagination{display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:24px}
 .pg-btn{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-md);border:1.5px solid var(--n200);background:var(--white);font-size:14px;font-weight:500;color:var(--n700);cursor:pointer;transition:all .15s;font-family:var(--font-b)}
@@ -231,17 +258,6 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
 .ph-tab.active{background:var(--n900);border-color:var(--n900);color:var(--white)}
 
 .sec-head{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:var(--n900);margin-bottom:12px}
-.res-sum{border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:20px;margin-bottom:20px}
-.res-sum p{font-size:13.5px;color:var(--n600);line-height:1.75}
-
-.hook-card{background:var(--g800);border-radius:var(--r-lg);padding:26px;color:var(--white)}
-.hook-pub{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-.hook-pill{background:rgba(255,255,255,.18);color:var(--white);font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:3px 8px;border-radius:var(--r-sm)}
-.hook-venue{font-size:13px;opacity:.65}
-.hook-title{font-family:var(--font-d);font-size:21px;font-weight:800;line-height:1.3;margin-bottom:18px}
-.hook-strat{background:rgba(255,255,255,.1);border-radius:var(--r-md);padding:14px 16px;border-left:3px solid rgba(255,255,255,.35)}
-.hook-strat-lbl{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:.55;display:flex;align-items:center;gap:5px;margin-bottom:7px}
-.hook-strat p{font-size:13px;line-height:1.7;opacity:.88}
 
 /* Sidebar */
 .sb-card{background:var(--white);border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:20px;margin-bottom:14px}
@@ -253,14 +269,70 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
 .ct-item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--n600);margin-bottom:8px}
 .ct-copy{margin-left:auto;color:var(--n400);cursor:pointer;transition:color .15s}
 .ct-copy:hover{color:var(--n700)}
+.ct-spinner{flex:0 0 auto;width:13px;height:13px;border:2px solid var(--n200);border-top-color:var(--g800);border-radius:50%;animation:ctSpin .6s linear infinite}
+@keyframes ctSpin{to{transform:rotate(360deg)}}
+.ct-note{font-size:11.5px;line-height:1.5;color:var(--n500);margin:-2px 0 10px 21px}
+.ct-note a{color:var(--g800);text-decoration:underline}
+.ct-link{color:var(--g800);text-decoration:none}
+.ct-link:hover{text-decoration:underline}
+.act-p:disabled{background:var(--n300);cursor:not-allowed}
 .sb-lbl{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n500);margin-bottom:10px}
 .acc-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--n700)}
 .acc-dot{width:8px;height:8px;border-radius:50%;background:#10B981;flex-shrink:0}
-.proj-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--n100)}
-.proj-item:last-child{border-bottom:none;padding-bottom:0}
-.proj-ic{color:var(--n400);margin-top:1px;flex-shrink:0}
-.proj-name{font-size:13px;font-weight:600;color:var(--n800);margin-bottom:2px}
-.proj-meta{font-size:12px;color:var(--n500)}
+
+/* Research + Publications sections */
+.rsec{border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:18px 20px;margin-bottom:16px}
+.rsec-body{display:flex;flex-direction:column;gap:12px}
+.rs-sub-lbl{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n500);margin-bottom:8px}
+
+/* Research focus band — compact summary + chip row (merges old res-sum + research) */
+.res-band{margin-bottom:16px}
+.res-band .sec-head{margin-bottom:10px}
+.res-summary{font-size:13px;color:var(--n600);line-height:1.6;margin-bottom:12px}
+.rs-chips{display:flex;flex-wrap:wrap;gap:6px}
+.rs-chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--n700);background:var(--n50);border:1px solid var(--n200);padding:4px 10px;border-radius:100px}
+.rs-chip b{color:var(--g700);font-weight:700;font-size:11px}
+.rs-chip.muted{color:var(--n500);font-weight:500;background:transparent}
+
+/* keywords — quiet inline row inside the research band */
+.rs-keywords{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.rs-kw{background:var(--n100);color:var(--n600);font-size:11px;font-weight:500;padding:3px 9px;border-radius:100px}
+
+.pub-loading{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--n500)}
+
+/* dense, hairline-separated paper rows */
+.pub-rows{display:flex;flex-direction:column}
+.pub-row{display:flex;gap:12px;padding:11px 0;border-top:1px solid var(--n100)}
+.pub-row:first-child{border-top:none}
+.pub-row .pub-yr{flex-shrink:0;width:38px;font-size:12px;font-weight:700;color:var(--n400);padding-top:1px;font-variant-numeric:tabular-nums}
+.pub-row.recent{background:linear-gradient(90deg,var(--g50),transparent);margin:0 -10px;padding:11px 10px;border-radius:var(--r-md);border-top:none}
+.pub-row.recent .pub-yr{color:var(--g700)}
+.pub-main{flex:1;min-width:0}
+.pub-title{font-size:13.5px;font-weight:600;color:var(--n900);line-height:1.35}
+.pub-meta{font-size:11.5px;color:var(--n500);margin-top:3px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.pub-meta .dot{color:var(--n300)}
+.pub-meta .pub-cite{color:var(--n600);font-weight:600}
+.pub-badge{font-size:9.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;padding:2px 7px;border-radius:100px}
+.pub-badge.recent{background:var(--g800);color:#fff}
+.pub-badge.cited{background:#FEF3C7;color:#92400E}
+.pub-badge.preprint{background:var(--n100);color:var(--n600)}
+.pub-badge.oa{color:#1D4ED8;border:1px solid #BFDBFE}
+.pub-pdf{font-size:11px;font-weight:600;color:var(--g700);text-decoration:none}
+.pub-pdf:hover{text-decoration:underline}
+
+.pub-list{list-style:none;display:flex;flex-direction:column;gap:8px}
+.pub-list li{font-size:12.5px;color:var(--n600);line-height:1.45;padding-bottom:8px;border-bottom:1px solid var(--n100)}
+.pub-list li:last-child{border-bottom:none;padding-bottom:0}
+.pub-list .pub-li-title{color:var(--n800);font-weight:500}
+.pub-list .pub-li-meta{color:var(--n500)}
+.pub-more-wrap{margin-top:4px;padding-top:12px;border-top:1px solid var(--n100)}
+.pub-more-btn{margin-top:10px;font-size:12.5px;font-weight:600;color:var(--g700);background:none;border:none;cursor:pointer;font-family:var(--font-b);padding:0}
+.pub-more-btn:hover{text-decoration:underline}
+
+.pub-links{display:flex;flex-wrap:wrap;gap:8px;padding-top:12px;margin-top:4px;border-top:1px solid var(--n100)}
+.pub-link{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;color:var(--n700);text-decoration:none;padding:6px 12px;border:1.5px solid var(--n200);border-radius:var(--r-md);transition:all .15s}
+.pub-link:hover{border-color:var(--n400);background:var(--n50)}
+.pub-empty{font-size:13px;color:var(--n500)}
 
 /* ═══════════════════════════
    PAGE: AUTH (Sign in / up)
@@ -303,7 +375,8 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
 .tr-nav .sep a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r-md);font-size:14px;font-weight:500;color:var(--n600)}
 .tr-nav .sep a:hover{background:var(--n50);color:var(--n900)}
 .tr-bottom{padding:16px 20px;border-top:1px solid var(--n200)}
-.tr-user{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.tr-user{display:flex;align-items:center;gap:10px;margin-bottom:14px;border-radius:8px;padding:6px 8px;margin:-6px -8px 14px -8px;transition:background .15s}
+.tr-user:hover{background:var(--n100)}
 .tr-u-av{width:34px;height:34px;border-radius:50%;background:var(--n200);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px}
 .tr-u-name{font-size:13px;font-weight:600;color:var(--n900)}
 .tr-u-role{font-size:12px;color:var(--n500)}
@@ -314,6 +387,15 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
 .tr-signin-btn:hover{background:var(--g700)}
 .tr-signup-btn{display:flex;align-items:center;justify-content:center;width:100%;background:var(--white);color:var(--g800);padding:9px;border-radius:var(--r-md);font-size:13.5px;font-weight:600;font-family:var(--font-b);border:1.5px solid var(--g800);cursor:pointer;transition:background .15s,color .15s}
 .tr-signup-btn:hover{background:var(--g50)}
+/* ── Account page ── */
+.acct-card{display:flex;align-items:center;gap:18px;background:var(--white);border:1px solid var(--n200);border-radius:var(--r-lg);padding:24px 28px;margin-bottom:16px;max-width:480px}
+.acct-avatar{width:56px;height:56px;border-radius:50%;background:var(--n200);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.acct-name{font-size:16px;font-weight:700;color:var(--n900);margin-bottom:4px}
+.acct-email{font-size:13px;color:var(--n500)}
+.acct-actions{max-width:480px}
+.acct-signout-btn{display:flex;align-items:center;gap:8px;padding:11px 20px;background:var(--white);border:1.5px solid #e5e7eb;border-radius:var(--r-md);font-size:14px;font-weight:600;color:#dc2626;cursor:pointer;transition:background .15s,border-color .15s}
+.acct-signout-btn:hover{background:#fef2f2;border-color:#fca5a5}
+/* ───────────────── */
 .grid-gate-wrap{grid-column:1/-1;position:relative}
 .blurred-rows{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;filter:blur(5px);user-select:none;pointer-events:none}
 .grid-gate-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(10,20,35,0) 0%,rgba(10,20,35,.55) 30%,rgba(10,20,35,.72) 100%);border-radius:var(--r-lg);display:flex;align-items:flex-end;justify-content:center;padding-bottom:36px}
@@ -329,84 +411,295 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
 .gate-btn-secondary:hover{background:var(--g50)}
 .gate-note{font-size:11px;color:var(--n400);margin-top:12px}
 
-.tr-main{margin-left:240px;flex:1;padding:36px 40px;background:var(--bg);min-height:100vh}
-.tr-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:26px}
-.tr-head h1{font-family:var(--font-d);font-size:27px;font-weight:800;color:var(--n900);letter-spacing:-.4px;margin-bottom:4px}
-.tr-head p{font-size:13.5px;color:var(--n500)}
-.tr-head-acts{display:flex;gap:8px}
+.tr-main{margin-left:240px;flex:1;padding:40px 44px;background:var(--bg);min-height:100vh}
+.tr-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:32px;padding-bottom:24px;border-bottom:1.5px solid var(--n200)}
+.tr-head h1{font-family:var(--font-d);font-size:34px;font-weight:900;color:var(--n900);letter-spacing:-.8px;margin-bottom:5px;line-height:1.1}
+.tr-head p{font-size:13.5px;color:var(--n500);max-width:360px;line-height:1.6}
+.tr-head-acts{display:flex;gap:8px;align-items:center;margin-top:4px}
 
-.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px}
-.stat-card{background:var(--white);border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:20px 22px;display:flex;align-items:flex-start;justify-content:space-between}
-.stat-lbl{font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n500);margin-bottom:7px}
-.stat-val{font-family:var(--font-d);font-size:34px;font-weight:800;color:var(--n900);line-height:1;margin-bottom:9px}
-.stat-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:100px;font-size:12px;font-weight:600}
-.stat-badge.green{background:var(--g50);color:var(--g800)}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px}
+.stat-card{background:var(--white);border:1.5px solid var(--n200);border-radius:16px;padding:22px 24px;display:flex;align-items:flex-start;justify-content:space-between;position:relative;overflow:hidden;transition:all .22s cubic-bezier(.25,.46,.45,.94)}
+.stat-card:hover{border-color:var(--n300);box-shadow:0 8px 24px rgba(0,0,0,.08);transform:translateY(-2px)}
+.stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.stat-card:nth-child(1)::after{background:linear-gradient(90deg,var(--g800),#3DAE7A)}
+.stat-card:nth-child(2)::after{background:linear-gradient(90deg,#2563EB,#60A5FA)}
+.stat-card:nth-child(3)::after{background:linear-gradient(90deg,#7C3AED,#A78BFA)}
+.stat-lbl{font-size:10.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--n400);margin-bottom:10px}
+.stat-val{font-family:var(--font-d);font-size:42px;font-weight:900;color:var(--n900);line-height:1;margin-bottom:10px;letter-spacing:-1.5px}
+.stat-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:100px;font-size:11.5px;font-weight:600}
+.stat-badge.green{background:var(--g50);color:var(--g800);border:1px solid var(--g100)}
 .stat-badge.dark{background:var(--g800);color:var(--white)}
-.stat-badge.gray{background:var(--n100);color:var(--n600)}
-.stat-icon{font-size:26px;opacity:.1;margin-top:4px}
+.stat-badge.gray{background:var(--n100);color:var(--n600);border:1px solid var(--n200)}
+.stat-badge.blue{background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE}
+.stat-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:4px}
+.stat-icon-1{background:#F0FDF4;color:var(--g700)}
+.stat-icon-2{background:#EFF6FF;color:#2563EB}
+.stat-icon-3{background:#F5F3FF;color:#7C3AED}
 
-.tr-controls{display:flex;gap:12px;align-items:center;background:var(--white);border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:14px 18px;margin-bottom:18px}
-.tr-search{display:flex;align-items:center;gap:8px;background:var(--n50);border:1.5px solid var(--n200);border-radius:var(--r-md);padding:7px 12px;flex:1}
-.tr-search input{flex:1;border:none;outline:none;font-family:var(--font-b);font-size:13.5px;color:var(--n700);background:none}
+.tr-controls{display:flex;gap:10px;align-items:center;margin-bottom:18px}
+.tr-search{display:flex;align-items:center;gap:10px;background:var(--white);border:1.5px solid var(--n200);border-radius:100px;padding:11px 20px;flex:1;box-shadow:var(--sh-sm);transition:all .2s}
+.tr-search:focus-within{border-color:var(--n300);box-shadow:0 0 0 3px rgba(0,0,0,.06),var(--sh-sm)}
+.tr-search input{flex:1;border:none;outline:none;font-family:var(--font-b);font-size:14px;color:var(--n700);background:none}
 .tr-search input::placeholder{color:var(--n400)}
-.sf-btns{display:flex;gap:5px}
-.sf-btn{padding:6px 13px;border-radius:100px;border:1.5px solid var(--n200);background:var(--white);font-size:13px;font-weight:500;color:var(--n600);cursor:pointer;font-family:var(--font-b);transition:all .15s;white-space:nowrap}
-.sf-btn:hover{border-color:var(--n400)}
-.sf-btn.active{background:var(--n900);border-color:var(--n900);color:var(--white)}
+.sf-btns{display:flex;gap:3px;background:var(--white);border:1.5px solid var(--n200);border-radius:100px;padding:4px;box-shadow:var(--sh-sm)}
+.sf-btn{padding:7px 16px;border-radius:100px;border:none;background:transparent;font-size:13px;font-weight:500;color:var(--n600);cursor:pointer;font-family:var(--font-b);transition:all .18s;white-space:nowrap}
+.sf-btn:hover{color:var(--n900)}
+.sf-btn.active{background:var(--n900);color:var(--white);box-shadow:0 2px 6px rgba(0,0,0,.15)}
 
-.tbl-wrap{background:var(--white);border:1.5px solid var(--n200);border-radius:var(--r-lg);overflow:hidden}
+.tbl-wrap{background:var(--white);border:1.5px solid var(--n200);border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.04)}
 .tbl{width:100%;border-collapse:collapse}
-.tbl thead th{font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n500);padding:13px 18px;text-align:left;border-bottom:1.5px solid var(--n200);background:var(--n50);white-space:nowrap}
-.tbl tbody td{padding:15px 18px;border-bottom:1px solid var(--n100);vertical-align:middle}
+.tbl thead th{font-size:10.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--n400);padding:14px 20px;text-align:left;border-bottom:1.5px solid var(--n200);background:var(--n50);white-space:nowrap}
+.tbl tbody td{padding:16px 20px;border-bottom:1px solid var(--n100);vertical-align:middle;transition:background .12s}
 .tbl tbody tr:last-child td{border-bottom:none}
-.tbl tbody tr:hover{background:var(--n50)}
-.tbl-av{width:34px;height:34px;border-radius:50%;background:var(--n200);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:var(--n600);flex-shrink:0;overflow:hidden}
+.tbl tbody tr:hover td{background:#F8F9FA}
+.tbl tbody tr:hover td:first-child{box-shadow:inset 3px 0 0 var(--g700)}
+.tbl-av{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;overflow:hidden;letter-spacing:.3px}
 .tbl-av img{width:100%;height:100%;object-fit:cover}
-.tbl-pname{font-size:13px;font-weight:600;color:var(--n900);margin-bottom:2px}
+.tbl-pname{font-size:13.5px;font-weight:600;color:var(--n900);margin-bottom:2px}
 .tbl-pfield{font-size:11.5px;color:var(--n500)}
 .tbl-uni{font-size:13px;font-weight:600;color:var(--n800);margin-bottom:2px}
 .tbl-lab{font-size:11.5px;color:var(--n500)}
-.spill{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:100px;font-size:11.5px;font-weight:600}
-.spill::before{content:'';width:6px;height:6px;border-radius:50%}
-.spill.replied{background:var(--g50);color:var(--g800);border:1px solid var(--g100)}
-.spill.replied::before{background:#10B981}
-.spill.emailed{background:var(--n100);color:var(--n700);border:1px solid var(--n200)}
-.spill.emailed::before{background:var(--n400)}
-.spill.toemail{background:var(--n50);color:var(--n600);border:1px solid var(--n200)}
+.spill{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:100px;font-size:11.5px;font-weight:600}
+.spill::before{content:'';width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.spill.replied{background:#DCFCE7;color:#166534}
+.spill.replied::before{background:#22C55E}
+.spill.emailed{background:#EFF6FF;color:#1E40AF}
+.spill.emailed::before{background:#3B82F6}
+.spill.toemail{background:var(--n100);color:var(--n600)}
 .spill.toemail::before{background:var(--n300)}
-.nact{display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:500;color:var(--n700)}
-.nact.over{color:#DC2626}
-.mnu-btn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-sm);cursor:pointer;color:var(--n400);transition:all .15s}
+.nact{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;color:var(--n700)}
+.nact.over{color:#B91C1C;background:#FEF2F2;padding:5px 10px;border-radius:8px;font-weight:600}
+.tr-overdue>td{background:#FFFBFB !important}
+.mnu-btn{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;color:var(--n300);transition:all .15s;font-size:18px;line-height:1}
 .mnu-btn:hover{background:var(--n100);color:var(--n700)}
-.tbl-foot{padding:13px 18px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--n200)}
-.tbl-foot-txt{font-size:13px;color:var(--n500)}
+.tbl-foot{padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-top:1.5px solid var(--n200);background:var(--n50)}
+.tbl-foot-txt{font-size:12.5px;color:var(--n500);font-weight:500}
 .tbl-pag{display:flex;gap:4px}
-.tp-btn{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-sm);border:1.5px solid var(--n200);background:var(--white);font-size:13px;font-weight:500;color:var(--n700);cursor:pointer;font-family:var(--font-b);transition:all .15s}
+.tp-btn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;border:1.5px solid var(--n200);background:var(--white);font-size:13px;font-weight:500;color:var(--n700);cursor:pointer;font-family:var(--font-b);transition:all .15s}
 .tp-btn:hover{border-color:var(--n400)}
 .tp-btn.active{background:var(--g800);border-color:var(--g800);color:var(--white)}
+
+/* ═══════════════════════════════════════════════════════════════
+   PAGE: RESUME UPLOAD
+═══════════════════════════════════════════════════════════════ */
+.resume-wrap{max-width:1140px;margin:0 auto;padding:44px 28px 80px}
+#resumeUploadView{margin:32px auto 0}
+.hero-accent{background:linear-gradient(110deg,var(--g600),var(--g900));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+
+/* ── Editorial-split upload (Approach A) ── */
+.ru-split{display:grid;grid-template-columns:1.05fr .95fr;gap:72px;align-items:center;min-height:min(calc(100vh - 220px),680px)}
+/* left column — the pitch */
+.resume-eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--g50);border:1px solid var(--g100);color:var(--g700);font-size:11.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;padding:6px 13px;border-radius:100px;margin-bottom:26px}
+.resume-eyebrow svg{color:var(--g600)}
+.ru-pitch h1{font-family:var(--font-d);font-size:clamp(40px,4.6vw,62px);font-weight:800;color:var(--n950);letter-spacing:-2px;line-height:1.0;margin-bottom:22px}
+.ru-lede{font-size:17px;color:var(--n500);line-height:1.6;max-width:420px;margin-bottom:38px}
+.ru-props{display:flex;flex-direction:column;gap:18px;max-width:430px}
+.ru-prop{display:flex;gap:14px;align-items:flex-start}
+.ru-prop-ic{flex-shrink:0;width:38px;height:38px;border-radius:11px;background:var(--white);border:1px solid var(--n200);box-shadow:var(--sh-sm);display:flex;align-items:center;justify-content:center;color:var(--g700)}
+.ru-prop-tx b{display:block;font-size:14.5px;font-weight:700;color:var(--n800);margin-bottom:2px}
+.ru-prop-tx span{font-size:13.5px;color:var(--n500);line-height:1.5}
+.ru-trust{margin-top:36px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--n500)}
+.ru-trust-dot{width:7px;height:7px;border-radius:50%;background:var(--g600);box-shadow:0 0 0 4px var(--g50)}
+/* right column — the upload card */
+.ru-card{position:relative;background:var(--white);border:1px solid var(--n200);border-radius:26px;padding:14px;box-shadow:0 30px 70px -28px rgba(13,43,30,.4),var(--sh-md)}
+.ru-card::before{content:'';position:absolute;inset:0;border-radius:26px;padding:1px;pointer-events:none;background:linear-gradient(160deg,var(--g100),transparent 40%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+.ru-card-foot{display:flex;align-items:center;gap:14px;padding:16px 12px 8px;color:var(--n400);font-size:13px}
+.ru-card-foot .ru-ln{flex:1;height:1px;background:var(--n200)}
+.ru-alt-btn{display:block;width:100%;margin-top:6px;padding:13px;border-radius:12px;border:1.5px solid var(--n200);background:var(--white);font-family:var(--font-b);font-size:14px;font-weight:600;color:var(--n700);cursor:pointer;transition:border-color .15s,background .15s}
+.ru-alt-btn:hover{border-color:var(--n400);background:var(--n50)}
+.ru-alt-btn:focus-visible{outline:2px solid var(--g600);outline-offset:2px}
+
+/* Upload area (dropzone — JS keys off #resumeDropZone + .drag-over) */
+.upload-area{position:relative;overflow:hidden;border:2px dashed var(--n300);border-radius:18px;padding:54px 36px;text-align:center;background:linear-gradient(180deg,var(--white),var(--n50));cursor:pointer;transition:transform .25s cubic-bezier(.22,1,.36,1),box-shadow .25s,border-color .25s,background .25s}
+.upload-area::before{content:'';position:absolute;left:50%;top:-40%;width:380px;height:240px;transform:translateX(-50%);background:radial-gradient(closest-side,var(--g50),transparent);opacity:.8;pointer-events:none}
+.upload-area:hover,.upload-area.drag-over{border-color:var(--g600);background:linear-gradient(180deg,var(--g50),var(--white))}
+.upload-area.drag-over{border-style:solid}
+.upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:2}
+.upload-icon{position:relative;width:64px;height:64px;border-radius:18px;background:linear-gradient(150deg,var(--g600),var(--g900));color:var(--white);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 12px 28px rgba(27,77,62,.34);animation:uploadFloat 3.4s ease-in-out infinite}
+.upload-icon::after{content:'';position:absolute;inset:-7px;border-radius:22px;border:2px solid var(--g100);animation:uploadRing 2.8s ease-out infinite}
+.upload-icon svg{width:25px;height:25px}
+.upload-area:hover .upload-icon{box-shadow:0 16px 34px rgba(27,77,62,.42)}
+.upload-title{position:relative;z-index:1;font-family:var(--font-d);font-size:20px;font-weight:800;color:var(--n900);letter-spacing:-.4px;margin-bottom:8px}
+.ru-drop-sub{position:relative;z-index:1;font-size:13.5px;color:var(--n500);margin-bottom:16px}
+.upload-sub{position:relative;z-index:1;display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--n500);background:var(--white);border:1px solid var(--n200);padding:5px 13px;border-radius:100px;box-shadow:var(--sh-sm)}
+@keyframes uploadFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes uploadRing{0%{transform:scale(1);opacity:.8}70%,100%{transform:scale(1.18);opacity:0}}
+@media (max-width:900px){.ru-split{grid-template-columns:1fr;gap:44px;min-height:0}.ru-pitch h1{font-size:46px}}
+
+/* ── Workspace split view (document left, matches right) ── */
+.rw-topbar{margin-bottom:32px;animation:fadeUp .4s ease}
+.rw-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--g600);margin-bottom:12px}
+.rw-eyebrow .rw-pulse{width:7px;height:7px;border-radius:50%;background:var(--g600);box-shadow:0 0 0 0 rgba(45,122,95,.45);animation:rwPulse 2.2s infinite}
+@keyframes rwPulse{0%{box-shadow:0 0 0 0 rgba(45,122,95,.45)}70%{box-shadow:0 0 0 9px rgba(45,122,95,0)}100%{box-shadow:0 0 0 0 rgba(45,122,95,0)}}
+.rw-title{font-family:var(--font-d);font-size:clamp(28px,3.4vw,40px);font-weight:800;color:var(--n900);letter-spacing:-.025em;line-height:1.08}
+.rw-sub{font-size:16px;color:var(--n600);margin-top:10px;max-width:560px;line-height:1.55}
+.resume-split{display:grid;grid-template-columns:380px 1fr;gap:32px;align-items:start;animation:fadeUp .45s ease}
+.resume-left{position:sticky;top:80px;display:flex;flex-direction:column;gap:16px}
+.resume-left .analyze-btn{margin-top:0}
+.resume-right{min-height:420px}
+.resume-right .prof-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-bottom:0}
+.resume-right .interests-wrap{margin:0 0 30px}
+.resume-right .resume-results-head{margin:0 0 18px}
+@media (max-width:1180px){.resume-right .prof-grid{grid-template-columns:1fr}}
+/* Resume match cards — re-laid-out for the narrower 2-col workspace grid so names never wrap.
+   Row 1: avatar + match badge · Row 2: name + university (full width). Scoped to .resume-right. */
+.resume-right .prof-card{padding:22px;border-radius:16px;display:flex;flex-direction:column}
+.resume-right .pc-head{flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:14px}
+.resume-right .pc-av-init{width:46px;height:46px;font-size:14px}
+.resume-right .pc-info{order:3;flex-basis:100%;padding-right:0;min-width:0}
+.resume-right .pc-name{font-size:16.5px;line-height:1.2;margin-bottom:4px}
+.resume-right .pc-uni{font-size:12.5px;margin-top:0}
+.resume-right .match-badge{position:static;order:2;margin-left:auto;flex-shrink:0;background:var(--g50);border-color:var(--g100);color:var(--g700);font-size:12px;padding:5px 11px}
+.resume-right .heart{display:none}
+.resume-right .pc-desc{font-size:13px;line-height:1.6;margin-bottom:14px}
+.resume-right .tag-row{margin-bottom:14px}
+.resume-right .pc-foot{margin-top:auto;padding-top:14px;border-top:1px solid var(--n100)}
+/* blank-right placeholder */
+.rw-placeholder{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:480px;border:1.5px dashed var(--n200);border-radius:var(--r-xl);background:linear-gradient(180deg,var(--white),var(--n50));padding:48px 32px}
+.rw-placeholder::before{content:'';position:absolute;left:50%;top:-18%;width:420px;height:300px;transform:translateX(-50%);background:radial-gradient(closest-side,var(--g50),transparent);opacity:.7;pointer-events:none}
+.rw-ph-icon{position:relative;width:60px;height:60px;border-radius:18px;background:var(--white);border:1px solid var(--g100);color:var(--g600);display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:0 10px 24px rgba(27,77,62,.12);animation:uploadFloat 3.4s ease-in-out infinite}
+.rw-ph-title{position:relative;font-family:var(--font-d);font-size:20px;font-weight:800;color:var(--n800);letter-spacing:-.2px;margin-bottom:9px}
+.rw-ph-sub{position:relative;font-size:14px;color:var(--n500);line-height:1.6;max-width:320px}
+.rw-ph-sub strong{color:var(--g700);font-weight:700}
+.rw-ph-ghosts{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:430px;margin-top:32px;opacity:.6}
+.rw-ph-ghost{height:74px;border-radius:var(--r-lg);border:1px solid var(--n200);background:linear-gradient(180deg,var(--white),var(--n50));position:relative;overflow:hidden}
+.rw-ph-ghost::before{content:'';position:absolute;left:14px;top:14px;width:34px;height:34px;border-radius:10px;background:var(--n100)}
+.rw-ph-ghost::after{content:'';position:absolute;left:58px;right:14px;top:18px;height:9px;border-radius:5px;background:var(--n100);box-shadow:0 16px 0 var(--n100)}
+@media (max-width:560px){.rw-ph-ghosts{grid-template-columns:1fr}}
+@media (max-width:880px){.resume-split{grid-template-columns:1fr}.resume-left{position:static}.rw-placeholder{min-height:280px}}
+
+.upload-file-name{display:none;margin-top:14px;font-size:13px;font-weight:500;color:var(--g800);background:var(--g50);border:1px solid var(--g100);padding:6px 14px;border-radius:100px;display:none;align-items:center;gap:6px;justify-content:center}
+
+/* ── Resume ready state (replaces dropzone once a file is chosen) ── */
+.resume-ready{position:relative;overflow:hidden;background:var(--white);border:1px solid var(--g100);border-radius:var(--r-xl);padding:30px 28px;box-shadow:var(--sh-md);animation:readyPop .5s cubic-bezier(.22,1,.36,1)}
+.resume-ready::before{content:'';position:absolute;inset:0;background:radial-gradient(120% 80% at 50% -20%,var(--g50),transparent 60%);pointer-events:none}
+@keyframes readyPop{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+.rr-top{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:24px}
+.rr-check{width:60px;height:60px;border-radius:50%;background:var(--g800);display:flex;align-items:center;justify-content:center;color:var(--white);margin-bottom:16px;box-shadow:0 8px 22px rgba(27,77,62,.32);position:relative}
+.rr-check::after{content:'';position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--g100);animation:rrRing 2.4s ease-out infinite}
+@keyframes rrRing{0%{transform:scale(1);opacity:.7}70%,100%{transform:scale(1.35);opacity:0}}
+.rr-check svg{stroke-dasharray:24;stroke-dashoffset:24;animation:rrDraw .5s .25s ease forwards}
+@keyframes rrDraw{to{stroke-dashoffset:0}}
+.rr-title{font-family:var(--font-d);font-size:21px;font-weight:800;color:var(--n900);letter-spacing:-.3px;margin-bottom:5px}
+.rr-subtitle{font-size:13.5px;color:var(--n500)}
+.rr-file{position:relative;display:flex;align-items:center;gap:15px;background:var(--white);border:1px solid var(--n200);border-radius:var(--r-lg);padding:13px 15px;box-shadow:var(--sh-sm);transition:border-color .2s,box-shadow .2s}
+.rr-file:hover{border-color:var(--g100);box-shadow:var(--sh-md)}
+.rr-file-icon{position:relative;flex-shrink:0;width:46px;height:54px;border-radius:8px;background:linear-gradient(155deg,var(--g600),var(--g900));color:var(--white);display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;box-shadow:0 6px 16px rgba(27,77,62,.3)}
+.rr-file-icon::before{content:'';position:absolute;top:0;right:0;border-width:0 12px 12px 0;border-style:solid;border-color:rgba(255,255,255,.55) var(--white);border-top-right-radius:8px}
+.rr-file-icon span{font-size:9.5px;font-weight:800;letter-spacing:.6px}
+.rr-file-info{flex:1;min-width:0;text-align:left}
+.rr-file-name{font-size:14.5px;font-weight:700;color:var(--n900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.1px}
+.rr-file-meta{font-size:12.5px;color:var(--n500);margin-top:3px;font-variant-numeric:tabular-nums}
+.rr-status{flex-shrink:0;display:inline-flex;align-items:center;gap:6px;background:var(--g50);border:1px solid var(--g100);color:var(--g700);font-size:11.5px;font-weight:700;letter-spacing:.1px;padding:5px 11px 5px 9px;border-radius:100px}
+.rr-ready-dot{width:6px;height:6px;border-radius:50%;background:var(--g600);box-shadow:0 0 0 0 rgba(45,122,95,.55);animation:rrPulse 1.8s ease-out infinite}
+@keyframes rrPulse{0%{box-shadow:0 0 0 0 rgba(45,122,95,.5)}70%,100%{box-shadow:0 0 0 6px rgba(45,122,95,0)}}
+.rr-remove{flex-shrink:0;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--n400);background:transparent;transition:all .15s}
+.rr-remove:hover{background:#fef2f2;color:#dc2626;transform:rotate(90deg)}
+
+/* ── Document stage + AI scan animation ── */
+.doc-stage{position:relative;overflow:hidden;background:var(--white);border:1px solid var(--n200);border-radius:var(--r-xl);box-shadow:var(--sh-lg);margin-top:16px;animation:readyPop .5s cubic-bezier(.22,1,.36,1)}
+.doc-page-wrap{position:relative;display:flex;align-items:center;justify-content:center;background:var(--n100);padding:22px;overflow:hidden;transition:padding .5s ease}
+.doc-page{display:block;width:auto;height:auto;max-width:100%;max-height:420px;border-radius:5px;box-shadow:0 6px 20px rgba(0,0,0,.14);transition:max-height .5s cubic-bezier(.22,1,.36,1)}
+.doc-skeleton{width:100%;max-width:340px;max-height:420px;overflow:hidden;padding:40px 44px;background:var(--white);border-radius:5px;box-shadow:0 6px 20px rgba(0,0,0,.14)}
+.doc-skeleton .sk-line{height:11px;border-radius:4px;background:linear-gradient(90deg,var(--n200),var(--n100),var(--n200));background-size:200% 100%;animation:skShimmer 1.6s linear infinite;margin-bottom:14px}
+.doc-skeleton .sk-h{height:20px;width:46%;margin-bottom:22px}
+@keyframes skShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.doc-analyzed-badge{position:absolute;top:14px;right:14px;z-index:4;display:none;align-items:center;gap:6px;background:var(--g800);color:var(--white);font-size:12px;font-weight:700;padding:6px 12px;border-radius:100px;box-shadow:0 4px 14px rgba(27,77,62,.32);animation:chipIn .4s ease both}
+.doc-stage.analyzed .doc-analyzed-badge{display:inline-flex}
+.doc-remove{position:absolute;top:12px;right:12px;z-index:5;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--n600);background:var(--white);box-shadow:var(--sh-sm);transition:all .15s}
+.doc-remove:hover{background:#fef2f2;color:#dc2626;transform:rotate(90deg)}
+.doc-stage.scanning .doc-remove,.doc-stage.scan-done .doc-remove,.doc-stage.analyzed .doc-remove{display:none}
+
+/* scan overlay */
+.scan-overlay{position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .45s ease}
+.doc-stage.scanning .scan-overlay,.doc-stage.scan-done .scan-overlay{opacity:1}
+.scan-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(13,43,30,.18),rgba(13,43,30,.05) 40%,rgba(13,43,30,.18));mix-blend-mode:multiply}
+.scan-grid{position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,rgba(45,122,95,.07) 0,rgba(45,122,95,.07) 1px,transparent 1px,transparent 7px);opacity:.6}
+.scan-beam{position:absolute;left:0;right:0;height:120px;background:linear-gradient(180deg,transparent,rgba(45,122,95,.16) 45%,rgba(45,122,95,.28) 50%,rgba(45,122,95,.16) 55%,transparent);box-shadow:0 0 24px rgba(45,122,95,.18);opacity:0;pointer-events:none}
+.scan-beam::after{content:'';position:absolute;left:0;right:0;top:50%;height:2px;background:linear-gradient(90deg,transparent,rgba(45,122,95,.6),transparent)}
+.doc-stage.scanning .scan-beam{opacity:1;animation:scanBeam 2.6s cubic-bezier(.45,0,.55,1) infinite}
+@keyframes scanBeam{0%{top:-120px}100%{top:100%}}
+.doc-stage.scan-done .scan-scrim{background:rgba(45,122,95,.16);transition:background .2s ease}
+/* reading cursors — colored carets that trace the document line by line */
+.read-layer{position:absolute;left:0;top:0}
+.read-line{position:absolute;left:7%;right:7%;height:16px;transform:translateY(-50%)}
+.read-hl{position:absolute;left:0;top:50%;width:100%;height:11px;border-radius:3px;opacity:.32;transform:translateY(-50%) scaleX(0);transform-origin:left;animation:readHl 1100ms ease-out forwards}
+.read-caret{position:absolute;left:0;top:50%;width:3px;height:18px;border-radius:2px;transform:translateY(-50%);box-shadow:0 0 9px 1px currentColor;animation:readSweep 1100ms ease-out forwards}
+.read-tag{position:absolute;transform:translate(-50%,0);color:#fff;font-size:11px;font-weight:700;letter-spacing:.1px;padding:3px 9px;border-radius:100px;white-space:nowrap;box-shadow:0 5px 14px rgba(13,43,30,.28);background:var(--tagc,var(--g700));animation:readTag 1.9s ease forwards}
+.read-tag::after{content:'';position:absolute;left:50%;bottom:-4px;transform:translateX(-50%);border-width:5px 4px 0 4px;border-style:solid;border-color:var(--tagc,var(--g700)) transparent transparent transparent}
+.scan-phase{position:absolute;left:0;right:0;bottom:0;z-index:4;display:flex;align-items:center;justify-content:center;gap:9px;padding:24px 16px 14px;background:linear-gradient(transparent,rgba(13,43,30,.9));color:var(--white);font-size:13px;font-weight:600;letter-spacing:.1px;opacity:0;transition:opacity .4s ease}
+.doc-stage.scanning .scan-phase,.doc-stage.scan-done .scan-phase{opacity:1}
+.scan-phase::before{content:'';width:7px;height:7px;border-radius:50%;background:#6ee7b7;box-shadow:0 0 0 0 rgba(110,231,183,.6);animation:rrPulse 1.4s ease-out infinite}
+@keyframes readSweep{from{left:0}to{left:100%}}
+@keyframes readHl{0%{transform:translateY(-50%) scaleX(0);opacity:.36}55%{opacity:.34}100%{transform:translateY(-50%) scaleX(1);opacity:0}}
+@keyframes readTag{0%{opacity:0;transform:translate(-50%,7px) scale(.9)}16%{opacity:1;transform:translate(-50%,0) scale(1)}80%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;transform:translate(-50%,-7px) scale(1)}}
+
+/* staged reveal */
+@keyframes chipIn{from{opacity:0;transform:translateY(8px) scale(.92)}to{opacity:1;transform:none}}
+@keyframes cardRise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+#resumeChips .interest-chip{animation:chipIn .42s cubic-bezier(.22,1,.36,1) both}
+#resumeProfGrid.cascade > *{animation:cardRise .5s cubic-bezier(.22,1,.36,1) both}
+.resume-summary.type-caret::after{content:'';display:inline-block;width:2px;height:1em;background:var(--g700);margin-left:1px;vertical-align:-2px;animation:caretBlink .9s step-end infinite}
+@keyframes caretBlink{50%{opacity:0}}
+
+@media (prefers-reduced-motion:reduce){
+  .read-caret,.read-hl,.read-tag,.scan-phase::before{animation:none}
+  #resumeChips .interest-chip,#resumeProfGrid.cascade > *{animation:none}
+  .scan-beam,.rw-eyebrow .rw-pulse,.rw-ph-icon{animation:none}
+}
+
+/* Analyze button */
+.analyze-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;background:var(--g800);color:var(--white);padding:16px 24px;border-radius:var(--r-lg);font-size:15.5px;font-weight:600;font-family:var(--font-b);cursor:pointer;border:none;transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s,background .2s;margin-top:20px;width:100%;box-shadow:0 6px 18px rgba(27,77,62,.28)}
+.analyze-btn:hover:not(:disabled){background:var(--g700);transform:translateY(-2px);box-shadow:0 12px 28px rgba(27,77,62,.36)}
+.analyze-btn:active:not(:disabled){transform:translateY(0)}
+.analyze-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* Status */
+.resume-status{margin-top:20px;text-align:center;font-size:13.5px;color:var(--n500)}
+.resume-error{color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:var(--r-md);padding:12px 16px;margin-top:16px;font-size:13.5px}
+
+/* Interests chips */
+.interests-wrap{margin:32px 0 8px;background:var(--white);border:1px solid var(--n200);border-radius:var(--r-lg);padding:18px 20px;box-shadow:var(--sh-sm)}
+.interests-label{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--n500);margin-bottom:12px}
+.interests-label svg{width:15px;height:15px;color:var(--g600);flex:none}
+.interests-sublabel{display:flex;align-items:center;gap:12px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--n400);margin:18px 0 12px}
+.interests-sublabel::after{content:'';flex:1;height:1px;background:var(--n200)}
+.interests-chips{display:flex;flex-wrap:wrap;gap:9px}
+.interest-chip{display:inline-flex;align-items:center;gap:6px;background:var(--g50);border:1px solid var(--g100);color:var(--g700);font-size:13px;font-weight:600;padding:7px 13px;border-radius:100px;transition:.16s}
+.interest-chip svg{color:var(--g600);flex:none}
+.interest-chip:hover{background:var(--g100);border-color:var(--g600)}
+.resume-summary{font-size:14.5px;color:var(--n700);line-height:1.62;margin:10px 0 0}
+
+/* Results grid */
+.resume-results-head{display:flex;align-items:center;justify-content:space-between;gap:12px;font-family:var(--font-d);font-size:24px;font-weight:700;color:var(--n900);letter-spacing:-.3px;margin:32px 0 16px}
+.resume-results-head .rrh-left{display:flex;flex-direction:column;gap:3px;min-width:0}
+.resume-results-head .rrh-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.resume-results-head .rrh-sort{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-b);font-size:11.5px;font-weight:500;color:var(--n400);letter-spacing:0}
+.resume-results-head .rw-count{display:inline-flex;align-items:center;gap:7px;font-family:var(--font-b);background:var(--g800);color:#fff;font-size:12.5px;font-weight:600;padding:6px 13px;border-radius:100px;box-shadow:var(--sh-sm);white-space:nowrap}
+.resume-results-head .rw-count .n{background:rgba(255,255,255,.22);border-radius:6px;padding:0 6px;font-weight:700}
 </style>
 </head>
 <body>
 
-<aside id="global-sidebar" class="tr-sidebar">
-  <div class="tr-logo" onclick="go('home')">Reachout</div>
+<aside id="global-sidebar" class="tr-sidebar" style="display:none">
+  <div class="tr-logo" onclick="go('home', null, true)">Reachout</div>
   <ul class="tr-nav">
     <li>
-      <a id="nav-home" href="#" class="active" onclick="go('home');return false">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
-        Home
-      </a>
-    </li>
-    <li>
-      <a id="nav-browse" href="#" onclick="go('browse');return false">
+      <a id="nav-browse" href="#" class="active" onclick="go('browse');return false">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        Browse
+        Professors
       </a>
     </li>
     <li>
       <a id="nav-tracker" href="#" onclick="go('tracker');return false">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         Tracker
+      </a>
+    </li>
+    <li>
+      <a id="nav-resume" href="#" onclick="go('resume');return false">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Upload Resume
       </a>
     </li>
     <li class="sep">
@@ -418,12 +711,13 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
   </ul>
   <div class="tr-bottom">
     <div id="tr-logged-in" style="display:none">
-      <div class="tr-user">
+      <div class="tr-user" onclick="go('account')" style="cursor:pointer" title="Account settings">
         <div class="tr-u-av">👤</div>
         <div>
           <div class="tr-u-name" id="tr-user-name">Student Portal</div>
           <div class="tr-u-role" id="tr-user-role">Research Assistant</div>
         </div>
+        <svg style="margin-left:auto;opacity:.4;flex-shrink:0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
       <button class="find-btn" onclick="go('browse')">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
@@ -474,7 +768,7 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
 ══════════════════════════════════ -->
 <div id="page-home" class="page home-page active">
   <nav class="home-topnav">
-    <span class="home-topnav-logo" onclick="go('home')">Reachout</span>
+    <span class="home-topnav-logo" onclick="go('home', null, true)">Reachout</span>
     <div class="home-topnav-acts">
       <button id="home-nav-signin" class="btn-s" style="padding:8px 18px;font-size:13.5px" onclick="go('auth')">Sign in</button>
       <button id="home-nav-browse" class="btn-p" style="padding:8px 18px;font-size:13.5px;display:none" onclick="go('browse')">Open App</button>
@@ -653,26 +947,74 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
   <div class="browse-wrap">
     <div class="browse-hero">
       <h1>Recommended Professors</h1>
-      <p id="browseSubtitle">Discover top researchers and mentors aligned with your academic interests.<br>We've found <strong id="browseCount">—</strong> relevant matches.</p>
+      <p id="browseSubtitle">Discover top researchers and mentors aligned with your academic interests.</p>
     </div>
+
+    <div class="browse-sep"></div>
 
     <div class="browse-controls">
       <div class="browse-search">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--n400)"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         <input id="browseSearchInput" type="text" placeholder="Search by field (e.g. robotics, climate science)…">
       </div>
-      <button class="filter-btn">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
-        Filters
-      </button>
-      <button class="filter-btn">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-        University
-      </button>
-      <button class="filter-btn">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-        Domain
-      </button>
+      <div class="filter-wrap" id="filterWrap">
+        <button class="filter-btn" id="filterBtn" onclick="toggleFilterDropdown(event)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+          Filters
+          <span class="filter-count" id="filterCount" style="display:none">1</span>
+        </button>
+        <div class="filter-dropdown" id="filterDropdown">
+          <div class="fd-section-label">Sort by</div>
+          <div class="fd-sort-group">
+            <button class="fd-sort-btn active" id="sortBest" onclick="setSort('best')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              Best Match
+            </button>
+            <button class="fd-sort-btn" id="sortClosest" onclick="setSort('closest')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              Closest
+            </button>
+          </div>
+          <div class="fd-divider"></div>
+          <div class="fd-toggle-row" onclick="toggleRemoteFilter()">
+            <div class="fd-toggle-info">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+              <div>
+                <div class="fd-toggle-label">Remote Work</div>
+                <div class="fd-toggle-sub">Show only remote-friendly professors</div>
+              </div>
+            </div>
+            <div class="fd-tog" id="remoteTog"></div>
+          </div>
+          <div class="fd-footer">
+            <button class="fd-clear" onclick="clearFilters()">Clear all</button>
+          </div>
+        </div>
+      </div>
+      <div class="filter-wrap" id="uniFilterWrap">
+        <button class="filter-btn" id="uniFilterBtn" onclick="toggleUniDropdown(event)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          University
+          <span class="filter-count" id="uniFilterCount" style="display:none">0</span>
+        </button>
+        <div class="filter-dropdown" id="uniDropdown" style="width:280px;max-height:320px;overflow-y:auto">
+          <div class="fd-section-label">Filter by university</div>
+          <div id="uniList" style="padding:0 8px 8px"></div>
+          <div class="fd-footer"><button class="fd-clear" onclick="clearUniFilter()">Clear</button></div>
+        </div>
+      </div>
+      <div class="filter-wrap" id="domainFilterWrap">
+        <button class="filter-btn" id="domainFilterBtn" onclick="toggleDomainDropdown(event)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          Domain
+          <span class="filter-count" id="domainFilterCount" style="display:none">0</span>
+        </button>
+        <div class="filter-dropdown" id="domainDropdown" style="width:280px;max-height:320px;overflow-y:auto">
+          <div class="fd-section-label">Filter by research domain</div>
+          <div id="domainList" style="padding:0 8px 8px"></div>
+          <div class="fd-footer"><button class="fd-clear" onclick="clearDomainFilter()">Clear</button></div>
+        </div>
+      </div>
     </div>
 
     <div class="prof-grid" id="profGrid">
@@ -764,7 +1106,7 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
   <div class="prof-wrap">
     <span class="back-link" onclick="go('browse')">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,18 9,12 15,6"/></svg>
-      Back to Browse
+      Back to Professors
     </span>
 
     <div class="prof-layout">
@@ -789,26 +1131,34 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
           </div>
         </div>
 
-        <div class="res-sum">
-          <div class="sec-head"><span>📚</span> Research Summary</div>
-          <p id="profResSum">Loading research summary…</p>
+        <!-- RESEARCH FOCUS BAND (merged summary + areas + directions) -->
+        <div id="researchSection" class="res-band">
+          <div class="sec-head"><span>🔬</span> Research focus</div>
+          <p id="profResSum" class="res-summary">Loading research summary…</p>
+          <!-- focus areas + a trailing muted "+ …" directions chip live here -->
+          <div id="researchAreas" class="rs-chips"></div>
+          <!-- focus text + keywords kept for the additive research payload -->
+          <div id="researchFocus" class="rs-focus" style="display:none">
+            <p id="researchFocusText" class="res-summary" style="margin:10px 0 0"></p>
+          </div>
+          <div id="researchKeywords" class="rs-keywords" style="display:none"></div>
         </div>
 
-        <div id="hookSection">
-          <div class="sec-head"><span>📣</span> Outreach Hook</div>
-          <div class="hook-card">
-            <div class="hook-pub">
-              <span class="hook-pill">Latest Publication</span>
-              <span class="hook-venue" id="hookVenue">—</span>
+        <!-- PUBLICATIONS & PAPERS -->
+        <div id="pubSection" class="rsec" style="display:none">
+          <div class="sec-head"><span>📄</span> Recent papers</div>
+          <div class="rsec-body">
+            <div id="pubLoading" class="pub-loading">
+              <span class="ct-spinner"></span> Loading publications…
             </div>
-            <div class="hook-title" id="hookTitle">Loading…</div>
-            <div class="hook-strat">
-              <div class="hook-strat-lbl">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                Hook Strategy for Email:
-              </div>
-              <p id="hookStratText">Mention their most recent work and connect it to your own background or research interests. Ask a specific question about their ongoing projects.</p>
+            <div id="pubSelected" class="pub-rows"></div>
+            <div id="pubMoreWrap" class="pub-more-wrap" style="display:none">
+              <div class="rs-sub-lbl">More publications</div>
+              <ul id="pubMoreList" class="pub-list"></ul>
+              <button id="pubMoreBtn" class="pub-more-btn" type="button" style="display:none" onclick="togglePubMore()">Show more</button>
             </div>
+            <div id="pubLinks" class="pub-links" style="display:none"></div>
+            <div id="pubEmpty" class="pub-empty" style="display:none">No publications found.</div>
           </div>
         </div>
       </div>
@@ -816,59 +1166,186 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
       <div class="prof-sidebar">
         <div class="sb-card">
           <h4>Take Action</h4>
-          <button class="act-p">
+          <button class="act-p" id="profDraftBtn" disabled onclick="draftOutreach()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
             Draft Outreach Email
           </button>
-          <button class="act-s">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Log Interaction
-          </button>
           <div class="ct-item">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 7L2 7"/></svg>
-            evance@cs.stanford.edu
-            <span class="ct-copy" onclick="navigator.clipboard?.writeText('evance@cs.stanford.edu')">
+            <span class="ct-spinner" id="profEmailSpinner"></span>
+            <svg id="profEmailIcon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 7L2 7"/></svg>
+            <span id="profEmail">Finding email…</span>
+            <span class="ct-copy" id="profEmailCopy" style="display:none" onclick="copyProfEmail()" title="Copy email">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
             </span>
           </div>
-          <div class="ct-item">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-            Lab Website
+          <div class="ct-note" id="profEmailNote" style="display:none"></div>
+          <a class="ct-item ct-link" id="profFacultyLink" target="_blank" rel="noopener" style="display:none">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            Find their faculty page
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     PAGE: RESUME UPLOAD
+══════════════════════════════════ -->
+<div id="page-resume" class="page">
+  <main class="tr-main">
+  <div class="resume-wrap" id="resumeWrap">
+
+    <!-- ── UPLOAD VIEW (Approach A — Editorial Split) ── -->
+    <div id="resumeUploadView">
+      <div class="ru-split">
+        <!-- LEFT: the pitch -->
+        <div class="ru-pitch">
+          <div class="resume-eyebrow">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1m0-12.8-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>
+            AI-powered matching
           </div>
+          <h1>Upload your<br><span class="hero-accent">resume.</span></h1>
+          <p class="ru-lede">Drop in a photo or PDF — our AI reads it and surfaces the professors whose research lines up with your background.</p>
+
+          <div class="ru-props">
+            <div class="ru-prop">
+              <div class="ru-prop-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg></div>
+              <div class="ru-prop-tx"><b>Reads any format</b><span>Skills, coursework, and research interests — pulled straight from your file.</span></div>
+            </div>
+            <div class="ru-prop">
+              <div class="ru-prop-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></div>
+              <div class="ru-prop-tx"><b>Matches by research</b><span>We rank professors whose published work overlaps with what you've done.</span></div>
+            </div>
+            <div class="ru-prop">
+              <div class="ru-prop-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg></div>
+              <div class="ru-prop-tx"><b>Results in seconds</b><span>No forms to fill. One upload and your shortlist is ready.</span></div>
+            </div>
+          </div>
+
+          <div class="ru-trust"><span class="ru-trust-dot"></span>Processed securely · 12,000+ professors indexed</div>
         </div>
 
-        <div class="sb-card">
-          <div class="sb-lbl">Accepting Students?</div>
-          <div class="acc-row">
-            <div class="acc-dot"></div>
-            Actively recruiting PhDs for Fall 2024
+        <!-- RIGHT: the upload card -->
+        <div class="ru-card">
+          <div class="upload-area ru-drop" id="resumeDropZone"
+               ondragover="event.preventDefault();this.classList.add('drag-over')"
+               ondragleave="this.classList.remove('drag-over')"
+               ondrop="handleResumeDrop(event)">
+            <input type="file" id="resumeFileInput" accept="image/png,image/jpeg,application/pdf"
+                   onchange="onResumeFileChange(this)">
+            <div class="upload-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
+            <div class="upload-title">Drop your resume here</div>
+            <div class="ru-drop-sub">or click to browse your files</div>
+            <div class="upload-sub">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              PNG, JPG, or PDF · max 10&nbsp;MB
+            </div>
           </div>
+          <div class="ru-card-foot"><div class="ru-ln"></div>or<div class="ru-ln"></div></div>
+          <button type="button" class="ru-alt-btn" onclick="document.getElementById('resumeFileInput').click()">Paste resume text instead</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── WORKSPACE VIEW (split: document left, matches right) ── -->
+    <div id="resumeWorkView" style="display:none">
+      <div class="rw-topbar">
+        <div>
+          <div class="rw-eyebrow"><span class="rw-pulse"></span>Resume analysis</div>
+          <h1 class="rw-title" id="resumeWorkTitle">Reading your resume</h1>
+          <p class="rw-sub" id="resumeWorkSub">Our AI is scanning your document for skills, experience, and research interests.</p>
+        </div>
+      </div>
+
+      <div class="resume-split">
+        <!-- LEFT: the document + scan -->
+        <div class="resume-left">
+          <div id="resumeStage" class="doc-stage">
+            <div class="doc-analyzed-badge">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Analyzed
+            </div>
+            <button class="doc-remove" id="resumeDocRemove" onclick="clearResumeFile()" title="Choose a different file" aria-label="Remove file">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <div class="doc-page-wrap" id="resumeDocPage"></div>
+            <div class="scan-overlay" id="resumeScanOverlay" aria-hidden="true">
+              <div class="scan-scrim"></div>
+              <div class="scan-grid"></div>
+              <div class="scan-beam"></div>
+              <div class="read-layer" id="resumeReadLayer"></div>
+            </div>
+            <div class="scan-phase" id="resumePhase"></div>
+          </div>
+
+          <div id="resumeError" class="resume-error" style="display:none"></div>
+
+          <button class="analyze-btn" id="resumeAnalyzeBtn" onclick="analyzeResume()" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            Find matching professors
+          </button>
         </div>
 
-        <div class="sb-card">
-          <div class="sb-lbl">Related Projects</div>
-          <div class="proj-item">
-            <div class="proj-ic">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+        <!-- RIGHT: matches -->
+        <div class="resume-right" id="resumeRight">
+          <div class="rw-placeholder" id="resumeRightPlaceholder">
+            <div class="rw-ph-icon">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
             </div>
-            <div>
-              <div class="proj-name">Energy-Aware Routing in Sensor Networks</div>
-              <div class="proj-meta">Funded by NSF · Active</div>
+            <div class="rw-ph-title">Your matches will appear here</div>
+            <p class="rw-ph-sub">Hit <strong>Find matching professors</strong> and we'll line up the labs whose research fits your background.</p>
+            <div class="rw-ph-ghosts" aria-hidden="true">
+              <div class="rw-ph-ghost"></div>
+              <div class="rw-ph-ghost"></div>
+              <div class="rw-ph-ghost"></div>
+              <div class="rw-ph-ghost"></div>
             </div>
           </div>
-          <div class="proj-item">
-            <div class="proj-ic">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+
+          <div id="resumeInterests" style="display:none">
+            <div class="interests-wrap">
+              <div class="interests-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V18h6v-1.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"/></svg>What we found in your résumé</div>
+              <div class="resume-summary" id="resumeSummaryText"></div>
+              <div class="interests-sublabel">Research interests</div>
+              <div class="interests-chips" id="resumeChips"></div>
             </div>
-            <div>
-              <div class="proj-name">Adaptive Compute for Autonomous Vehicles</div>
-              <div class="proj-meta">Joint with AutoLabs · Completing</div>
+          </div>
+
+          <div id="resumeResultsSection" style="display:none">
+            <div class="resume-results-head">
+              <div class="rrh-left">
+                <span>Suggested professors</span>
+                <span class="rrh-sort">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg>
+                  Sorted by best fit
+                </span>
+              </div>
+              <div class="rrh-right">
+                <div class="filter-wrap">
+                  <button class="filter-btn" id="resumeUniFilterBtn" onclick="toggleResumeUniDropdown(event)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                    University
+                    <span class="filter-count" id="resumeUniFilterCount" style="display:none">0</span>
+                  </button>
+                  <div class="filter-dropdown" id="resumeUniDropdown" style="width:280px;max-height:320px;overflow-y:auto">
+                    <div class="fd-section-label">Filter by university</div>
+                    <div id="resumeUniList" style="padding:0 8px 8px"></div>
+                    <div class="fd-footer"><button class="fd-clear" onclick="clearResumeUniFilter()">Clear</button></div>
+                  </div>
+                </div>
+                <span class="rw-count"><span class="n" id="resumeMatchCount">0</span> matches</span>
+              </div>
             </div>
+            <div class="prof-grid" id="resumeProfGrid"></div>
           </div>
         </div>
       </div>
     </div>
   </div>
+  </main>
 </div>
 
 <!-- ══════════════════════════════════
@@ -898,17 +1375,21 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
         <div>
           <div class="stat-lbl">Total Saved</div>
           <div class="stat-val">42</div>
-          <span class="stat-badge green">+3 this week</span>
+          <span class="stat-badge green">↑ +3 this week</span>
         </div>
-        <div class="stat-icon">👥</div>
+        <div class="stat-icon stat-icon-1">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
       </div>
       <div class="stat-card">
         <div>
           <div class="stat-lbl">Emails Sent</div>
           <div class="stat-val">18</div>
-          <span class="stat-badge gray">42% conversion</span>
+          <span class="stat-badge blue">42% conversion</span>
         </div>
-        <div class="stat-icon">✉️</div>
+        <div class="stat-icon stat-icon-2">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
       </div>
       <div class="stat-card">
         <div>
@@ -916,7 +1397,9 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
           <div class="stat-val">5</div>
           <span class="stat-badge dark">2 meetings set</span>
         </div>
-        <div class="stat-icon">📬</div>
+        <div class="stat-icon stat-icon-3">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
       </div>
     </div>
 
@@ -949,7 +1432,7 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
           <tr>
             <td>
               <div style="display:flex;align-items:center;gap:11px">
-                <div class="tbl-av">DR</div>
+                <div class="tbl-av" style="background:#E0E7FF;color:#3730A3">DR</div>
                 <div><div class="tbl-pname">Dr. Elena Rodriguez</div><div class="tbl-pfield">Cognitive Neuroscience</div></div>
               </div>
             </td>
@@ -967,7 +1450,7 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
           <tr>
             <td>
               <div style="display:flex;align-items:center;gap:11px">
-                <div class="tbl-av">AK</div>
+                <div class="tbl-av" style="background:#FEF3C7;color:#92400E">AK</div>
                 <div><div class="tbl-pname">Prof. Alistair Kim</div><div class="tbl-pfield">Quantum Computing</div></div>
               </div>
             </td>
@@ -985,7 +1468,7 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
           <tr>
             <td>
               <div style="display:flex;align-items:center;gap:11px">
-                <div class="tbl-av">SC</div>
+                <div class="tbl-av" style="background:#FCE7F3;color:#9D174D">SC</div>
                 <div><div class="tbl-pname">Dr. Sarah Chen</div><div class="tbl-pfield">Bioinformatics</div></div>
               </div>
             </td>
@@ -1000,10 +1483,10 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
             </td>
             <td><div class="mnu-btn">⋮</div></td>
           </tr>
-          <tr>
+          <tr class="tr-overdue">
             <td>
               <div style="display:flex;align-items:center;gap:11px">
-                <div class="tbl-av" style="font-size:17px">👨‍🔬</div>
+                <div class="tbl-av" style="background:#DBEAFE;color:#1E40AF">JW</div>
                 <div><div class="tbl-pname">Prof. James Wilson</div><div class="tbl-pfield">Materials Science</div></div>
               </div>
             </td>
@@ -1035,12 +1518,55 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
   </main>
 </div>
 
-<script>
+<!-- ══════════════════════════════════
+     ACCOUNT PAGE
+══════════════════════════════════ -->
+<div id="page-account" class="page">
+  <main class="tr-main">
+    <div class="tr-head">
+      <div>
+        <h1>Account</h1>
+        <p>Manage your profile and sign out.</p>
+      </div>
+    </div>
+    <div class="acct-card">
+      <div class="acct-avatar">👤</div>
+      <div class="acct-info">
+        <div class="acct-name" id="acct-name">—</div>
+        <div class="acct-email" id="acct-email">—</div>
+      </div>
+    </div>
+    <div class="acct-actions">
+      <button class="acct-signout-btn" onclick="authSignOut()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
+      </button>
+    </div>
+  </main>
+</div>
+
+<script type="module">
 // ═══════════════════════════════════════════════════════
-//  ReachOut — Discovery Engine Frontend
-//  Talks to the Express proxy at localhost:8787
-//  which proxies OpenAlex (free, no key needed).
+//  ReachOut — Firebase Auth + Discovery Engine Frontend
 // ═══════════════════════════════════════════════════════
+import { initializeApp }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup,
+         createUserWithEmailAndPassword, signInWithEmailAndPassword,
+         signOut, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+
+const firebaseConfig = {
+  apiKey: 'AIzaSyCnYp5Tu_3zvFgsAr8AydA7enOIKxuYBug',
+  authDomain: 'reachout-93272.firebaseapp.com',
+  projectId: 'reachout-93272',
+  storageBucket: 'reachout-93272.firebasestorage.app',
+  messagingSenderId: '21299410825',
+  appId: '1:21299410825:web:ba2a58bb65d80f49489358',
+};
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+const googleProvider = new GoogleAuthProvider();
 
 const API = 'http://localhost:8787';
 
@@ -1051,31 +1577,120 @@ const state = {
   perPage: 12,
   total: 0,
   currentAuthorId: null,
-  backendOk: null,   // null = unknown, true/false
+  backendOk: null,
 };
 
-// ─── Auth state ──────────────────────────────────────
-function getAuthUser() {
-  try { return JSON.parse(localStorage.getItem('auth_user') || 'null'); } catch { return null; }
-}
-function setAuthUser(user) {
-  if (user) localStorage.setItem('auth_user', JSON.stringify(user));
-  else localStorage.removeItem('auth_user');
-  updateAuthUI();
-}
+// ─── Auth state (Firebase) ────────────────────────────
+let authMode = 'signin';
+
+function getAuthUser() { return auth.currentUser || null; }
+
 function updateAuthUI() {
   const user = getAuthUser();
-  document.getElementById('tr-logged-in').style.display = user ? '' : 'none';
-  document.getElementById('tr-logged-out').style.display = user ? 'none' : '';
+  const li = document.getElementById('tr-logged-in');
+  const lo = document.getElementById('tr-logged-out');
+  if (li) li.style.display = user ? '' : 'none';
+  if (lo) lo.style.display = user ? 'none' : '';
   if (user) {
-    document.getElementById('tr-user-name').textContent = user.name || 'Student Portal';
-    document.getElementById('tr-user-role').textContent = user.role || 'Research Assistant';
+    const nameEl = document.getElementById('tr-user-name');
+    if (nameEl) nameEl.textContent = user.displayName || user.email?.split('@')[0] || 'Student';
+    const av = document.getElementById('tr-u-av');
+    if (av && user.photoURL) av.innerHTML = `<img src="${user.photoURL}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+  }
+  const sidebar = document.getElementById('global-sidebar');
+  if (sidebar && !user) sidebar.style.display = 'none';
+  const signinBtn = document.getElementById('home-nav-signin');
+  const browseBtn = document.getElementById('home-nav-browse');
+  if (signinBtn) signinBtn.style.display = user ? 'none' : '';
+  if (browseBtn) browseBtn.style.display = user ? '' : 'none';
+}
+
+onAuthStateChanged(auth, (user) => {
+  updateAuthUI();
+  if (user) {
+    const cur = document.querySelector('.page.active')?.id?.replace('page-', '');
+    if (cur === 'auth' || cur === 'home') go('browse');
+  }
+});
+
+function clearAuthError() {
+  const err = document.getElementById('auth-error');
+  if (err) { err.textContent = ''; err.style.display = 'none'; }
+}
+function showAuthError(msg) {
+  const err = document.getElementById('auth-error');
+  if (err) { err.textContent = msg; err.style.display = ''; }
+}
+
+async function authGoogle() {
+  clearAuthError();
+  try { await signInWithPopup(auth, googleProvider); }
+  catch (e) {
+    if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request')
+      showAuthError(e.message);
   }
 }
-function showAuth(mode) {
-  // TODO: navigate to sign-in/sign-up page when built
-  console.log('Auth mode:', mode);
+
+async function authSubmit() {
+  clearAuthError();
+  const email    = document.getElementById('auth-email')?.value?.trim();
+  const password = document.getElementById('auth-password')?.value;
+  if (!email || !password) { showAuthError('Please fill in all fields.'); return; }
+  const btn = document.querySelector('.auth-submit');
+  if (btn) btn.disabled = true;
+  try {
+    if (authMode === 'signup') await createUserWithEmailAndPassword(auth, email, password);
+    else await signInWithEmailAndPassword(auth, email, password);
+  } catch (e) {
+    const msgs = {
+      'auth/user-not-found':      'No account found with that email.',
+      'auth/wrong-password':      'Incorrect password.',
+      'auth/invalid-credential':  'Incorrect email or password.',
+      'auth/email-already-in-use':'An account already exists with that email.',
+      'auth/weak-password':       'Password must be at least 6 characters.',
+      'auth/invalid-email':       'Please enter a valid email address.',
+    };
+    showAuthError(msgs[e.code] || e.message);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
+
+function setAuthMode(mode) {
+  authMode = mode;
+  const title      = document.getElementById('auth-title');
+  const sub        = document.getElementById('auth-sub');
+  const submitText = document.getElementById('auth-submit-text');
+  const toggleText = document.getElementById('auth-toggle-text');
+  clearAuthError();
+  if (mode === 'signup') {
+    if (title)      title.textContent = 'Create account';
+    if (sub)        sub.textContent   = 'Join Reachout to find your perfect research mentor.';
+    if (submitText) submitText.textContent = 'Create account';
+    if (toggleText) toggleText.innerHTML = 'Already have an account? <a href="#" onclick="setAuthMode(\'signin\');return false">Sign in</a>';
+  } else {
+    if (title)      title.textContent = 'Sign in';
+    if (sub)        sub.textContent   = 'Welcome back! Choose your sign-in method.';
+    if (submitText) submitText.textContent = 'Sign in';
+    if (toggleText) toggleText.innerHTML = "Don't have an account? <a href=\"#\" onclick=\"setAuthMode('signup');return false\">Sign up</a>";
+  }
+}
+
+async function authSignOut() {
+  await signOut(auth);
+  go('home');
+}
+
+function showAuth(mode) {
+  go('auth');
+  setAuthMode(mode === 'sign-up' || mode === 'signup' ? 'signup' : 'signin');
+}
+
+window.authGoogle   = authGoogle;
+window.authSubmit   = authSubmit;
+window.setAuthMode  = setAuthMode;
+window.authSignOut  = authSignOut;
+window.showAuth     = showAuth;
 
 // ─── API helpers ─────────────────────────────────────
 async function apiFetch(path) {
@@ -1093,10 +1708,605 @@ async function checkBackend() {
   }
 }
 
+async function apiPost(path, body) {
+  const res = await fetch(API + path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+// ─── Resume upload ────────────────────────────────────
+const MAX_RESUME_BYTES = 10 * 1024 * 1024; // 10 MB client-side guard
+const ALLOWED_RESUME_TYPES = new Set(['image/png', 'image/jpeg', 'application/pdf']);
+
+let resumeFile = null;        // currently selected file
+let resumeObjectUrl = null;   // object URL for image previews (revoke on clear)
+let analysisToken = 0;        // bumped on clear/new run to invalidate stale reveals
+let phaseTimer = null;        // setInterval handle for the phase ticker
+let readTimer = null;         // setInterval handle for the reading cursors
+let readCounter = 0;          // reading-pass counter (line + color rotation)
+let readLineCount = 12;       // number of reading lines across the page
+let resumeTextLines = null;   // real line boxes from a text PDF (null = image/synthetic)
+let pdfjsPromise = null;      // memoised lazy pdf.js loader
+
+function handleResumeDrop(event) {
+  event.preventDefault();
+  document.getElementById('resumeDropZone').classList.remove('drag-over');
+  const file = event.dataTransfer && event.dataTransfer.files[0];
+  if (!file) return;
+  // Reuse the same validation logic as the file input
+  const fakeInput = { files: [file] };
+  onResumeFileChange(fakeInput);
+}
+
+function resolveFileType(file) {
+  if (file.type && ALLOWED_RESUME_TYPES.has(file.type)) return file.type;
+  const ext = (file.name || '').split('.').pop().toLowerCase();
+  return { pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg' }[ext] || file.type;
+}
+
+function formatFileSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+  return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+}
+
+function fileTypeLabel(resolvedType) {
+  return { 'application/pdf': 'PDF', 'image/png': 'PNG', 'image/jpeg': 'JPG' }[resolvedType] || 'FILE';
+}
+
+// Toggle between the upload view and the split workspace (ready / analyzing).
+function setResumeState(stateName) {
+  document.getElementById('resumeUploadView').style.display = stateName === 'upload' ? '' : 'none';
+  document.getElementById('resumeWorkView').style.display   = stateName === 'upload' ? 'none' : 'block';
+  document.getElementById('resumeAnalyzeBtn').style.display = stateName === 'analyzing' ? 'none' : 'flex';
+
+  const titleEl = document.getElementById('resumeWorkTitle');
+  const subEl = document.getElementById('resumeWorkSub');
+  if (stateName === 'ready') {
+    titleEl.textContent = 'Ready to analyze';
+    subEl.textContent = 'Looks good — hit Find matching professors and we’ll line up your matches.';
+  } else if (stateName === 'analyzing') {
+    titleEl.textContent = 'Reading your resume';
+    subEl.textContent = 'Our AI is scanning your document for skills, experience, and research interests.';
+  }
+}
+
+// Reset back to the empty dropzone state.
+function clearResumeFile() {
+  analysisToken++;                       // invalidate any in-flight analysis
+  stopPhaseTicker();
+  stopReadingAnimation();
+  resumeFile = null;
+  resumeTextLines = null;
+  if (resumeObjectUrl) { URL.revokeObjectURL(resumeObjectUrl); resumeObjectUrl = null; }
+  const inputEl = document.getElementById('resumeFileInput');
+  if (inputEl) inputEl.value = '';
+  const stage = document.getElementById('resumeStage');
+  stage.classList.remove('scanning', 'scan-done', 'analyzed');
+  document.getElementById('resumeDocPage').innerHTML = '';
+  document.getElementById('resumeReadLayer').innerHTML = '';
+  document.getElementById('resumeError').style.display = 'none';
+  document.getElementById('resumeInterests').style.display = 'none';
+  document.getElementById('resumeResultsSection').style.display = 'none';
+  document.getElementById('resumeRightPlaceholder').style.display = 'flex'; // blank-right again
+  document.getElementById('resumeAnalyzeBtn').disabled = true;
+  setResumeState('upload');
+}
+
+function onResumeFileChange(input) {
+  const file = input.files && input.files[0];
+  const errEl = document.getElementById('resumeError');
+  const btnEl = document.getElementById('resumeAnalyzeBtn');
+
+  errEl.style.display = 'none';
+  resumeFile = null;
+  btnEl.disabled = true;
+
+  if (!file) return;
+
+  const resolvedType = resolveFileType(file);
+  if (!ALLOWED_RESUME_TYPES.has(resolvedType)) {
+    errEl.textContent = `Unsupported file type "${file.type || file.name}". Please upload a PNG, JPG, or PDF.`;
+    errEl.style.display = 'block';
+    return;
+  }
+  // Attach the resolved type so the server always gets a valid mediaType
+  file._resolvedType = resolvedType;
+  if (file.size > MAX_RESUME_BYTES) {
+    errEl.textContent = `File is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max size is 10 MB.`;
+    errEl.style.display = 'block';
+    return;
+  }
+
+  resumeFile = file;
+
+  // Present the actual document, then reveal the ready state.
+  renderDocPreview(file, resolvedType);
+  setResumeState('ready');
+  btnEl.disabled = false;
+}
+
+// ─── Document preview ────────────────────────────────
+const PDFJS_BASE = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174';
+function loadPdfJs() {
+  if (pdfjsPromise) return pdfjsPromise;
+  pdfjsPromise = (async () => {
+    if (!window.pdfjsLib) {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = PDFJS_BASE + '/pdf.min.js';
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+    // The worker must be same-origin: browsers block `new Worker()` from a
+    // cross-origin CDN URL (it silently hangs). Fetch it, make a same-origin blob
+    // URL, and hand pdf.js an explicit Worker via workerPort (more reliable than
+    // workerSrc, which can leave getDocument hanging if worker spin-up fails).
+    const resp = await fetch(PDFJS_BASE + '/pdf.worker.min.js');
+    const workerUrl = URL.createObjectURL(await resp.blob());
+    try {
+      window.pdfjsLib.GlobalWorkerOptions.workerPort = new Worker(workerUrl);
+    } catch (e) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
+    }
+    return window.pdfjsLib;
+  })();
+  return pdfjsPromise;
+}
+
+function skeletonDoc() {
+  const lines = ['sk-h'].concat(Array.from({ length: 11 }, (_, i) =>
+    i === 4 ? 'sk-h' : '')); // a couple of headers among body lines
+  return `<div class="doc-skeleton">${lines.map((c, i) =>
+    `<div class="sk-line ${c}" style="width:${c === 'sk-h' ? 44 : 60 + ((i * 37) % 38)}%"></div>`).join('')}</div>`;
+}
+
+// Extract real text lines from a PDF page as fractional boxes (0–1 of the page),
+// so the reading cursors can trace the actual lines. Returns null for image PDFs.
+async function extractPdfLines(pdfjsLib, page, viewport, scale) {
+  try {
+    const tc = await page.getTextContent();
+    const items = [];
+    for (const it of tc.items) {
+      const s = (it.str || '').trim();
+      if (!s) continue;
+      const d = pdfjsLib.Util.transform(viewport.transform, it.transform); // device coords
+      const fh = Math.hypot(d[2], d[3]) || 10;
+      items.push({
+        x: d[4] / viewport.width,
+        yb: d[5] / viewport.height,              // baseline
+        h: fh / viewport.height,
+        w: (it.width * scale) / viewport.width,
+        s,
+      });
+    }
+    if (items.length < 3) return null;           // scanned/image PDF — no usable text
+    items.sort((a, b) => a.yb - b.yb || a.x - b.x);
+    const rows = [];
+    let cur = null;
+    for (const it of items) {
+      if (cur && Math.abs(it.yb - cur.yb) < cur.h * 0.7) {
+        cur.items.push(it);
+      } else {
+        cur = { yb: it.yb, h: it.h, items: [it] };
+        rows.push(cur);
+      }
+    }
+    const out = rows.map(r => {
+      const its = r.items.sort((a, b) => a.x - b.x);
+      const left = Math.min(...its.map(i => i.x));
+      const right = Math.max(...its.map(i => i.x + i.w));
+      const h = Math.max(...its.map(i => i.h));
+      const top = Math.min(...its.map(i => i.yb - i.h));
+      return {
+        center: Math.min(0.99, Math.max(0.01, top + h * 0.5)),
+        left: Math.max(0, left),
+        width: Math.max(0.04, Math.min(1 - Math.max(0, left), right - left)),
+        h,
+        text: its.map(i => i.s).join(' ').replace(/\s+/g, ' ').trim(),
+      };
+    }).filter(l => l.text.length > 1);
+    return out.length >= 3 ? out : null;
+  } catch (e) { return null; }
+}
+
+async function renderDocPreview(file, resolvedType) {
+  const wrap = document.getElementById('resumeDocPage');
+  if (resumeObjectUrl) { URL.revokeObjectURL(resumeObjectUrl); resumeObjectUrl = null; }
+  resumeTextLines = null;   // reset; populated below only for text PDFs
+  wrap.innerHTML = '';
+
+  if (resolvedType === 'image/png' || resolvedType === 'image/jpeg') {
+    resumeObjectUrl = URL.createObjectURL(file);
+    const img = new Image();
+    img.className = 'doc-page';
+    img.alt = 'Your resume';
+    img.src = resumeObjectUrl;
+    wrap.appendChild(img);
+    return;
+  }
+
+  if (resolvedType === 'application/pdf') {
+    wrap.innerHTML = skeletonDoc(); // show immediately, replace when rendered
+    try {
+      const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('pdf timeout')), 8000));
+      const pdfjsLib = await Promise.race([loadPdfJs(), timeout]);
+      const buf = await file.arrayBuffer();
+      const pdf = await Promise.race([pdfjsLib.getDocument({ data: buf }).promise, timeout]);
+      const page = await pdf.getPage(1);
+      const baseViewport = page.getViewport({ scale: 1 });
+      const targetWidth = Math.min(820, wrap.clientWidth || 760);
+      const scale = (targetWidth / baseViewport.width) * (window.devicePixelRatio || 1);
+      const viewport = page.getViewport({ scale });
+      const canvas = document.createElement('canvas');
+      canvas.className = 'doc-page';
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      await Promise.race([page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise, timeout]);
+      // Only swap in if this file is still the active one.
+      if (resumeFile === file) {
+        wrap.innerHTML = '';
+        wrap.appendChild(canvas);
+        // Pull the real text layout so the reading cursors trace actual lines.
+        const lines = await Promise.race([extractPdfLines(pdfjsLib, page, viewport, scale), timeout]);
+        if (resumeFile === file) resumeTextLines = lines;
+      }
+    } catch (err) {
+      // Keep the skeleton fallback; the scan animation still plays over it.
+      if (resumeFile === file && !wrap.querySelector('.doc-skeleton')) wrap.innerHTML = skeletonDoc();
+    }
+  }
+}
+
+// ─── Scan animation ──────────────────────────────────
+const SCAN_PHASES = [
+  'Parsing document structure…',
+  'Reading education & experience…',
+  'Extracting skills & keywords…',
+  'Identifying research interests…',
+  'Matching against researchers…',
+];
+
+function startPhaseTicker() {
+  const phaseEl = document.getElementById('resumePhase');
+  let i = 0;
+  const tick = () => {
+    phaseEl.textContent = SCAN_PHASES[Math.min(i, SCAN_PHASES.length - 1)];
+    if (i < SCAN_PHASES.length - 1) i++;   // clamp on the final phase
+  };
+  tick();
+  phaseTimer = setInterval(tick, 1700);
+}
+
+function stopPhaseTicker() {
+  if (phaseTimer) { clearInterval(phaseTimer); phaseTimer = null; }
+}
+
+// ─── Reading cursors ─────────────────────────────────
+const READ_COLORS = ['#2D7A5F', '#D97706', '#2563EB', '#7C3AED', '#0891B2'];
+const READ_TAGS = [
+  'Machine Learning', 'Neural Networks', 'Computer Vision', 'Education',
+  'Stanford University', 'Python', 'Research Experience', 'Publications',
+  'Reinforcement Learning', 'Deep Learning', 'NLP', 'Robotics', 'Skills', 'Projects',
+];
+
+// Anchor the reading layer over the actual document page (not the gray padding).
+function positionReadLayer() {
+  const wrap = document.getElementById('resumeDocPage');
+  const layer = document.getElementById('resumeReadLayer');
+  const page = wrap.querySelector('.doc-page') || wrap.querySelector('.doc-skeleton');
+  if (!page) {
+    Object.assign(layer.style, { left: '8%', top: '8%', width: '84%', height: '84%' });
+    return;
+  }
+  Object.assign(layer.style, {
+    left: page.offsetLeft + 'px', top: page.offsetTop + 'px',
+    width: page.offsetWidth + 'px', height: page.offsetHeight + 'px',
+  });
+}
+
+// Pick a notable word from a line of real résumé text for the "Detected" tag.
+function lineKeyword(text) {
+  const words = (text.match(/[A-Za-z][A-Za-z+#.\-]{3,}/g) || []);
+  if (!words.length) return null;
+  const cap = words.find(w => /^[A-Z]/.test(w));
+  const pick = cap || words.sort((a, b) => b.length - a.length)[0];
+  return pick.charAt(0).toUpperCase() + pick.slice(1);
+}
+
+function spawnRead() {
+  const layer = document.getElementById('resumeReadLayer');
+  if (!layer) return;
+  const color = READ_COLORS[readCounter % READ_COLORS.length];
+  const real = resumeTextLines && resumeTextLines.length;
+
+  const line = document.createElement('div');
+  line.className = 'read-line';
+  let centerPct, tagLeft, tagText = null;
+
+  if (real) {
+    // Trace the actual text line: real vertical position, left edge, and width.
+    const ln = resumeTextLines[readCounter % resumeTextLines.length];
+    centerPct = ln.center * 100;
+    line.style.left = (ln.left * 100) + '%';
+    line.style.right = 'auto';
+    line.style.width = (ln.width * 100) + '%';
+    tagLeft = (ln.left + Math.min(ln.width, 0.45) * 0.5) * 100;
+    if (readCounter % 2 === 0) {
+      const kw = lineKeyword(ln.text);
+      if (kw) tagText = 'Detected: ' + kw;
+    }
+  } else {
+    // Synthetic evenly-spaced lines (images / scanned PDFs).
+    const idx = readCounter % readLineCount;
+    centerPct = ((idx + 0.5) / readLineCount) * 100;
+    tagLeft = 24 + (readCounter * 27) % 52;
+    if (readCounter % 2 === 0) tagText = 'Detected: ' + READ_TAGS[readCounter % READ_TAGS.length];
+  }
+
+  line.style.top = centerPct + '%';
+  const hl = document.createElement('div');
+  hl.className = 'read-hl';
+  hl.style.background = color;
+  const caret = document.createElement('div');
+  caret.className = 'read-caret';
+  caret.style.background = color;
+  caret.style.color = color; // drives the caret glow (box-shadow uses currentColor)
+  line.appendChild(hl);
+  line.appendChild(caret);
+  layer.appendChild(line);
+  setTimeout(() => line.remove(), 1250);
+
+  if (tagText) {
+    const tag = document.createElement('div');
+    tag.className = 'read-tag';
+    tag.textContent = tagText;
+    tag.style.setProperty('--tagc', color);
+    tag.style.left = tagLeft + '%';
+    tag.style.top = 'calc(' + centerPct + '% - 26px)';
+    tag.addEventListener('animationend', () => tag.remove());
+    layer.appendChild(tag);
+  }
+  readCounter++;
+}
+
+function startReadingAnimation() {
+  // Reading-cursor overlay (colored carets, highlights, "Detected:" tags) removed —
+  // the bottom phase ticker ("Parsing…", "Extracting skills…") conveys progress instead.
+}
+
+function stopReadingAnimation() {
+  if (readTimer) { clearInterval(readTimer); readTimer = null; }
+  const layer = document.getElementById('resumeReadLayer');
+  if (layer) layer.innerHTML = '';
+}
+
+function startScanAnimation() {
+  const stage = document.getElementById('resumeStage');
+  stage.classList.remove('scan-done', 'analyzed');
+  stage.classList.add('scanning');
+  startReadingAnimation();
+}
+
+function finishScanAnimation() {
+  return new Promise(resolve => {
+    stopReadingAnimation();
+    const stage = document.getElementById('resumeStage');
+    stage.classList.remove('scanning');
+    stage.classList.add('scan-done');   // brief green flash via .scan-scrim
+    setTimeout(resolve, 450);
+  });
+}
+
+function abortScanAnimation() {
+  stopPhaseTicker();
+  stopReadingAnimation();
+  const stage = document.getElementById('resumeStage');
+  stage.classList.remove('scanning', 'scan-done');
+}
+
+function typewriter(el, text) {
+  el.textContent = '';
+  if (!text) return;
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)').matches) {
+    el.textContent = text; return;
+  }
+  el.classList.add('type-caret');
+  let i = 0;
+  const step = () => {
+    if (i >= text.length) { el.classList.remove('type-caret'); return; }
+    el.textContent += text[i++];
+    setTimeout(step, 16);
+  };
+  step();
+}
+
+async function analyzeResume() {
+  if (!resumeFile) return;
+
+  const btnEl     = document.getElementById('resumeAnalyzeBtn');
+  const errEl     = document.getElementById('resumeError');
+  const intWrap   = document.getElementById('resumeInterests');
+  const resSection = document.getElementById('resumeResultsSection');
+
+  // Reset prior results
+  errEl.style.display = 'none';
+  intWrap.style.display = 'none';
+  resSection.style.display = 'none';
+  btnEl.disabled = true;
+
+  // Enter the analyzing state and kick off the scan animation.
+  const token = ++analysisToken;
+  setResumeState('analyzing');
+  startScanAnimation();
+  startPhaseTicker();
+  const minDelay = new Promise(r => setTimeout(r, 3500)); // no-flash floor
+
+  try {
+    // Read file as base64
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        // readAsDataURL returns "data:<type>;base64,<data>" — strip the prefix
+        const result = reader.result;
+        const comma = result.indexOf(',');
+        resolve(comma >= 0 ? result.slice(comma + 1) : result);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(resumeFile);
+    });
+
+    const fetchP = apiPost('/api/analyze-resume', {
+      data: base64,
+      mediaType: resumeFile._resolvedType || resumeFile.type,
+    });
+    const [resp] = await Promise.all([fetchP, minDelay]);
+    if (token !== analysisToken) return; // cancelled / new run while we waited
+
+    await finishScanAnimation();
+    if (token !== analysisToken) return;
+    stopPhaseTicker();
+    revealResults(resp);
+  } catch (err) {
+    if (token !== analysisToken) return;
+    abortScanAnimation();
+    setResumeState('ready');
+    errEl.textContent = err.message || 'Something went wrong. Make sure the server is running and ANTHROPIC_API_KEY is set.';
+    errEl.style.display = 'block';
+  } finally {
+    btnEl.disabled = false;
+  }
+}
+
+// Staged reveal once the real data lands.
+function revealResults({ interests, summary, professors }) {
+  const intWrap   = document.getElementById('resumeInterests');
+  const chipsEl   = document.getElementById('resumeChips');
+  const summaryEl = document.getElementById('resumeSummaryText');
+  const resSection = document.getElementById('resumeResultsSection');
+  const resGrid   = document.getElementById('resumeProfGrid');
+  const stage     = document.getElementById('resumeStage');
+
+  // Mark the document as analyzed (shows the badge; doc stays full-size on the left).
+  stage.classList.remove('scanning', 'scan-done');
+  stage.classList.add('analyzed');
+  document.getElementById('resumeReadLayer').innerHTML = '';
+
+  // Fill the right panel: swap the blank placeholder for the results.
+  document.getElementById('resumeRightPlaceholder').style.display = 'none';
+  document.getElementById('resumeWorkTitle').textContent = 'Your matches';
+  document.getElementById('resumeWorkSub').textContent =
+    'Professors whose research lines up with your background.';
+
+  // Interests — staggered chips.
+  if (interests && interests.length) {
+    chipsEl.innerHTML = interests.map((i, idx) =>
+      `<span class="interest-chip" style="animation-delay:${idx * 90}ms">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>
+        ${esc(i)}
+      </span>`
+    ).join('');
+    intWrap.style.display = 'block';
+    // Summary — typewriter after the chips have popped in.
+    setTimeout(() => typewriter(summaryEl, summary || ''), interests.length * 90 + 250);
+  }
+
+  // Professors — store the full set, then render via the filtered/sorted helper.
+  resumeProfessors = professors || [];
+  resumeFilter.unis.clear();
+  document.getElementById('resumeUniFilterCount').style.display = 'none';
+  document.getElementById('resumeUniFilterBtn').classList.remove('has-active');
+  renderResumeProfGrid();
+  resSection.style.display = 'block';
+}
+
+// ─── Résumé matches: university filter (best-fit ordered) ───
+let resumeProfessors = [];
+const resumeFilter = { unis: new Set() };
+
+function renderResumeProfGrid() {
+  const resGrid = document.getElementById('resumeProfGrid');
+  let list = resumeProfessors.slice();
+  if (resumeFilter.unis.size) {
+    list = list.filter(p => resumeFilter.unis.has(p.institution));
+  }
+  // Best fit first.
+  list.sort((a, b) => b.matchScore - a.matchScore);
+
+  if (list.length) {
+    resGrid.innerHTML = list.map(cardHTML).join('');
+  } else {
+    const label = resumeFilter.unis.size ? [...resumeFilter.unis].join(', ') : 'this filter';
+    resGrid.innerHTML = emptyHTML(label);
+  }
+  // Re-apply the cascade stagger.
+  resGrid.classList.add('cascade');
+  Array.from(resGrid.children).forEach((c, idx) => { c.style.animationDelay = (idx * 55) + 'ms'; });
+  document.getElementById('resumeMatchCount').textContent = list.length;
+}
+
+function toggleResumeUniDropdown(e) {
+  e.stopPropagation();
+  populateResumeUniList();
+  document.getElementById('resumeUniDropdown').classList.toggle('open');
+}
+
+function populateResumeUniList() {
+  const unis = [...new Set(resumeProfessors.map(p => p.institution).filter(Boolean))].sort();
+  const el = document.getElementById('resumeUniList');
+  el.innerHTML = unis.map(u => `
+    <label style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--n800);transition:background .12s" onmouseenter="this.style.background='var(--n50)'" onmouseleave="this.style.background=''">
+      <input type="checkbox" ${resumeFilter.unis.has(u) ? 'checked' : ''} onchange="toggleResumeUni(this,'${u.replace(/'/g,"\\'")}')">
+      ${esc(u)}
+    </label>`).join('');
+}
+
+function toggleResumeUni(cb, uni) {
+  resumeFilter.unis[cb.checked ? 'add' : 'delete'](uni);
+  const n = resumeFilter.unis.size;
+  const countEl = document.getElementById('resumeUniFilterCount');
+  countEl.style.display = n ? 'inline-flex' : 'none';
+  countEl.textContent = n;
+  document.getElementById('resumeUniFilterBtn').classList.toggle('has-active', n > 0);
+  renderResumeProfGrid();
+}
+
+function clearResumeUniFilter() {
+  resumeFilter.unis.clear();
+  document.getElementById('resumeUniFilterCount').style.display = 'none';
+  document.getElementById('resumeUniFilterBtn').classList.remove('has-active');
+  populateResumeUniList();
+  renderResumeProfGrid();
+}
+
 // ─── Card template ───────────────────────────────────
 const UNI_SVG = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`;
 const LOC_SVG = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
-const MATCH_SVG = `<svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>`;
+
+const AVATAR_PALETTES = [
+  {bg:'#E0E7FF',text:'#3730A3'},
+  {bg:'#FEF3C7',text:'#92400E'},
+  {bg:'#FCE7F3',text:'#9D174D'},
+  {bg:'#DBEAFE',text:'#1E40AF'},
+  {bg:'#D1FAE5',text:'#065F46'},
+  {bg:'#FEE2E2',text:'#991B1B'},
+  {bg:'#E0F2FE',text:'#075985'},
+  {bg:'#EDE9FE',text:'#5B21B6'},
+];
+
+function avatarColor(name) {
+  const sum = name.split('').reduce((a,c) => a + c.charCodeAt(0), 0);
+  return AVATAR_PALETTES[sum % AVATAR_PALETTES.length];
+}
 
 function initials(name) {
   return name.split(' ').filter(Boolean).slice(-2).map(w => w[0]).join('').toUpperCase().slice(0,2);
@@ -1104,6 +2314,7 @@ function initials(name) {
 
 function cardHTML(prof) {
   const inits = initials(prof.name);
+  const av = avatarColor(prof.name);
   const visibleTags = prof.topics.slice(0, 2);
   const extraCount = prof.topics.length - visibleTags.length;
   const tagHTML = visibleTags.map(t => `<span class="tag">${esc(t)}</span>`).join('') +
@@ -1116,12 +2327,12 @@ function cardHTML(prof) {
   return `
   <div class="prof-card" onclick="go('profile','${esc(prof.id)}')">
     <div class="pc-head">
-      <div class="pc-av-init">${inits}</div>
+      <div class="pc-av-init" style="background:${av.bg};color:${av.text}">${inits}</div>
       <div class="pc-info">
         <div class="pc-name">${esc(prof.name)}</div>
         <div class="pc-uni">${UNI_SVG} ${esc(prof.institution)}</div>
       </div>
-      <span class="match-badge">${MATCH_SVG} ${prof.matchScore}% Match</span>
+      <span class="match-badge"><span class="match-dot"></span>${prof.matchScore}% Match</span>
       <button class="heart" onclick="event.stopPropagation();toggleH(this)">♡</button>
     </div>
     <p class="pc-desc">${esc(desc)}</p>
@@ -1176,6 +2387,222 @@ function emptyHTML(field) {
   </div>`;
 }
 
+// ─── Browse: filters ─────────────────────────────────
+const browseFilter = { sort: 'best', remoteOnly: false, unis: new Set(), domains: new Set() };
+let cachedResults = [];
+
+function toggleFilterDropdown(e) {
+  e.stopPropagation();
+  document.getElementById('filterDropdown').classList.toggle('open');
+}
+
+document.addEventListener('click', () => {
+  document.getElementById('filterDropdown')?.classList.remove('open');
+  document.getElementById('uniDropdown')?.classList.remove('open');
+  document.getElementById('domainDropdown')?.classList.remove('open');
+  document.getElementById('resumeUniDropdown')?.classList.remove('open');
+});
+
+function setSort(mode) {
+  browseFilter.sort = mode;
+  document.getElementById('sortBest').classList.toggle('active', mode === 'best');
+  document.getElementById('sortClosest').classList.toggle('active', mode === 'closest');
+  updateFilterUI();
+  renderFiltered();
+}
+
+function toggleRemoteFilter() {
+  browseFilter.remoteOnly = !browseFilter.remoteOnly;
+  document.getElementById('remoteTog').classList.toggle('on', browseFilter.remoteOnly);
+  updateFilterUI();
+  renderFiltered();
+}
+
+function clearFilters() {
+  browseFilter.sort = 'best';
+  browseFilter.remoteOnly = false;
+  document.getElementById('sortBest').classList.add('active');
+  document.getElementById('sortClosest').classList.remove('active');
+  document.getElementById('remoteTog').classList.remove('on');
+  updateFilterUI();
+  renderFiltered();
+}
+
+// ── University filter ──
+function toggleUniDropdown(e) {
+  e.stopPropagation();
+  populateUniList();
+  document.getElementById('uniDropdown').classList.toggle('open');
+  document.getElementById('filterDropdown').classList.remove('open');
+  document.getElementById('domainDropdown').classList.remove('open');
+}
+
+function populateUniList() {
+  const unis = [...new Set(cachedResults.map(p => p.institution).filter(Boolean))].sort();
+  const el = document.getElementById('uniList');
+  el.innerHTML = unis.map(u => `
+    <label style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--n800);transition:background .12s" onmouseenter="this.style.background='var(--n50)'" onmouseleave="this.style.background=''">
+      <input type="checkbox" ${browseFilter.unis.has(u) ? 'checked' : ''} onchange="toggleUni(this,'${u.replace(/'/g,"\\'")}')">
+      ${esc(u)}
+    </label>`).join('');
+}
+
+function toggleUni(cb, uni) {
+  browseFilter.unis[cb.checked ? 'add' : 'delete'](uni);
+  const n = browseFilter.unis.size;
+  const countEl = document.getElementById('uniFilterCount');
+  countEl.style.display = n ? 'inline-flex' : 'none';
+  countEl.textContent = n;
+  document.getElementById('uniFilterBtn').classList.toggle('has-active', n > 0);
+  renderFiltered();
+}
+
+function clearUniFilter() {
+  browseFilter.unis.clear();
+  document.getElementById('uniFilterCount').style.display = 'none';
+  document.getElementById('uniFilterBtn').classList.remove('has-active');
+  populateUniList();
+  renderFiltered();
+}
+
+// ── Domain filter ──
+function toggleDomainDropdown(e) {
+  e.stopPropagation();
+  populateDomainList();
+  document.getElementById('domainDropdown').classList.toggle('open');
+  document.getElementById('filterDropdown').classList.remove('open');
+  document.getElementById('uniDropdown').classList.remove('open');
+}
+
+function populateDomainList() {
+  const domains = [...new Set(cachedResults.flatMap(p => p.topics || []).filter(Boolean))].sort();
+  const el = document.getElementById('domainList');
+  el.innerHTML = domains.map(d => `
+    <label style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--n800);transition:background .12s" onmouseenter="this.style.background='var(--n50)'" onmouseleave="this.style.background=''">
+      <input type="checkbox" ${browseFilter.domains.has(d) ? 'checked' : ''} onchange="toggleDomain(this,'${d.replace(/'/g,"\\'")}')">
+      ${esc(d)}
+    </label>`).join('');
+}
+
+function toggleDomain(cb, domain) {
+  browseFilter.domains[cb.checked ? 'add' : 'delete'](domain);
+  const n = browseFilter.domains.size;
+  const countEl = document.getElementById('domainFilterCount');
+  countEl.style.display = n ? 'inline-flex' : 'none';
+  countEl.textContent = n;
+  document.getElementById('domainFilterBtn').classList.toggle('has-active', n > 0);
+  renderFiltered();
+}
+
+function clearDomainFilter() {
+  browseFilter.domains.clear();
+  document.getElementById('domainFilterCount').style.display = 'none';
+  document.getElementById('domainFilterBtn').classList.remove('has-active');
+  populateDomainList();
+  renderFiltered();
+}
+
+function updateFilterUI() {
+  const active = (browseFilter.sort !== 'best') || browseFilter.remoteOnly;
+  const btn = document.getElementById('filterBtn');
+  const countEl = document.getElementById('filterCount');
+  btn.classList.toggle('has-active', active);
+  const n = (browseFilter.sort !== 'best' ? 1 : 0) + (browseFilter.remoteOnly ? 1 : 0);
+  countEl.style.display = n ? 'inline-flex' : 'none';
+  countEl.textContent = n;
+}
+
+function applyFilters(results) {
+  let out = [...results];
+  if (browseFilter.remoteOnly) out = out.filter(p => !p.country);
+  if (browseFilter.unis.size) out = out.filter(p => browseFilter.unis.has(p.institution));
+  if (browseFilter.domains.size) out = out.filter(p => (p.topics || []).some(t => browseFilter.domains.has(t)));
+  if (browseFilter.sort === 'best') {
+    out.sort((a, b) => b.matchScore - a.matchScore);
+  } else if (browseFilter.sort === 'closest') {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    const userRegion = tz.split('/')[0] || '';
+    const regionCountry = {
+      'America': ['US','CA','MX','BR','AR'],
+      'Europe': ['GB','FR','DE','IT','ES','NL','SE','CH'],
+      'Asia': ['CN','JP','KR','IN','SG'],
+      'Australia': ['AU','NZ'],
+      'Africa': ['ZA','NG','KE'],
+    };
+    const preferred = regionCountry[userRegion] || [];
+    out.sort((a, b) => {
+      const aScore = preferred.indexOf(a.country?.toUpperCase()) !== -1 ? 0 : 1;
+      const bScore = preferred.indexOf(b.country?.toUpperCase()) !== -1 ? 0 : 1;
+      return aScore - bScore || b.matchScore - a.matchScore;
+    });
+  }
+  return out;
+}
+
+function renderFiltered() {
+  const grid = document.getElementById('profGrid');
+  const pag  = document.getElementById('profPagination');
+  const filtered = applyFilters(cachedResults);
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px">
+      <div style="font-size:32px;margin-bottom:12px">🌐</div>
+      <div style="font-size:15px;font-weight:600;color:var(--n800);margin-bottom:6px">No remote professors found</div>
+      <div style="font-size:13.5px;color:var(--n500)">Try removing the Remote Work filter to see all results.</div>
+    </div>`;
+    pag.innerHTML = '';
+    return;
+  }
+
+  const user = getAuthUser();
+  const page = state.page || 1;
+  const perPage = state.perPage;
+  const pageResults = filtered.slice((page - 1) * perPage, page * perPage);
+
+  if (user || filtered.length <= 3) {
+    grid.innerHTML = pageResults.map(cardHTML).join('');
+    renderPaginationFor(filtered.length, page);
+  } else {
+    const visible = pageResults.slice(0, 3).map(cardHTML).join('');
+    const gated   = pageResults.slice(3).map(cardHTML).join('');
+    grid.innerHTML = visible + (gated ? `
+      <div class="grid-gate-wrap">
+        <div class="blurred-rows">${gated}</div>
+        <div class="grid-gate-overlay">
+          <div class="gate-card">
+            <div class="gate-lock">🔒</div>
+            <div class="gate-title">Sign in to view all results</div>
+            <div class="gate-sub">We found <strong>${filtered.length.toLocaleString()} professors</strong> matching your search. Create a free account to unlock them all.</div>
+            <div class="gate-btns">
+              <button class="gate-btn-primary" onclick="showAuth('sign-in')">Sign In</button>
+              <button class="gate-btn-secondary" onclick="showAuth('sign-up')">Create Account — it's free</button>
+            </div>
+            <div class="gate-note">No credit card required</div>
+          </div>
+        </div>
+      </div>` : '');
+    pag.innerHTML = '';
+  }
+}
+
+function renderPaginationFor(total, current) {
+  const pages = Math.ceil(total / state.perPage);
+  if (pages <= 1) { document.getElementById('profPagination').innerHTML = ''; return; }
+  const pag = document.getElementById('profPagination');
+  let html = `<button class="pg-btn arr" onclick="state.page=Math.max(1,state.page-1);renderFiltered()">‹</button>`;
+  const show = new Set([1, pages]);
+  for (let i = Math.max(1, current-1); i <= Math.min(pages, current+1); i++) show.add(i);
+  const sorted = [...show].sort((a,b) => a-b);
+  let prev = 0;
+  sorted.forEach(p => {
+    if (prev && p - prev > 1) html += `<span class="pg-dots">…</span>`;
+    html += `<button class="pg-btn ${p===current?'active':''}" onclick="state.page=${p};renderFiltered()">${p}</button>`;
+    prev = p;
+  });
+  html += `<button class="pg-btn arr" onclick="state.page=Math.min(${pages},state.page+1);renderFiltered()">›</button>`;
+  pag.innerHTML = html;
+}
+
 // ─── Browse: load data ────────────────────────────────
 let searchDebounceTimer = null;
 
@@ -1187,53 +2614,29 @@ async function loadBrowse(field, page) {
 
   const grid = document.getElementById('profGrid');
   const pag  = document.getElementById('profPagination');
-  const count = document.getElementById('browseCount');
 
   // Show skeletons while loading
   grid.innerHTML = Array(6).fill(0).map(skeletonCard).join('');
   pag.innerHTML = '';
-  count.textContent = '—';
 
   try {
     const data = await apiFetch(
       `/api/discover?field=${encodeURIComponent(field)}&page=${page}&per_page=${state.perPage}`
     );
     state.total = data.total || 0;
-    count.textContent = state.total.toLocaleString();
 
     if (!data.results || !data.results.length) {
       grid.innerHTML = emptyHTML(field);
+      cachedResults = [];
       return;
     }
 
-    const user = getAuthUser();
-    if (user || data.results.length <= 3) {
-      grid.innerHTML = data.results.map(cardHTML).join('');
-      renderPagination(state.total, page);
-    } else {
-      const visible = data.results.slice(0, 3).map(cardHTML).join('');
-      const gated   = data.results.slice(3).map(cardHTML).join('');
-      grid.innerHTML = visible + `
-        <div class="grid-gate-wrap">
-          <div class="blurred-rows">${gated}</div>
-          <div class="grid-gate-overlay">
-            <div class="gate-card">
-              <div class="gate-lock">🔒</div>
-              <div class="gate-title">Sign in to view all results</div>
-              <div class="gate-sub">We found <strong>${state.total.toLocaleString()} professors</strong> matching your search. Create a free account to unlock them all.</div>
-              <div class="gate-btns">
-                <button class="gate-btn-primary" onclick="showAuth('sign-in')">Sign In</button>
-                <button class="gate-btn-secondary" onclick="showAuth('sign-up')">Create Account — it's free</button>
-              </div>
-              <div class="gate-note">No credit card required</div>
-            </div>
-          </div>
-        </div>`;
-      pag.innerHTML = '';
-    }
+    cachedResults = data.results;
+    state.total = data.total || 0;
+    state.page = 1;
+    renderFiltered();
   } catch (err) {
     grid.innerHTML = errorHTML('Start the local server to search real researchers from OpenAlex.');
-    count.textContent = '—';
   }
 }
 
@@ -1269,29 +2672,24 @@ async function loadProfile(authorId) {
   setText('profInstText', '—');
   setEl('profTagRow', '');
   setText('profResSum', 'Loading…');
-  setText('hookTitle', '—');
-  setText('hookVenue', '—');
+
+  // Reset the new sections each time we load a profile.
+  resetResearchSections();
+
+  // Discover the contact email + publications in parallel (each manages its own UI).
+  loadProfEmail(authorId);
+  loadProfPapers(authorId);
 
   try {
     const data = await apiFetch(`/api/professor/${authorId}`);
-    const { profile, recentPapers, latestPublication } = data;
+    const { profile } = data;
 
     setText('profName', profile.name);
     setText('profInstText', profile.institution);
     setEl('profTagRow', profile.topics.map(t => `<span class="tag">${esc(t)}</span>`).join(''));
     setText('profResSum', profile.summary || `${profile.name} has published ${profile.worksCount} works with ${profile.citedByCount.toLocaleString()} citations.`);
 
-    if (latestPublication) {
-      setText('hookTitle', `"${latestPublication.title}"`);
-      const venueYear = [latestPublication.venue, latestPublication.year].filter(Boolean).join(' · ');
-      setText('hookVenue', venueYear || '—');
-      setText('hookStratText',
-        `Reference their recent paper "${latestPublication.title.slice(0,60)}…" and explain how your own background connects to this work. Ask a specific question about their ongoing research.`
-      );
-    } else {
-      setText('hookTitle', 'No recent publications found');
-      setText('hookVenue', '—');
-    }
+    renderResearch(profile.research);
 
     // Update ORCID link if sidebar has one
     const el = document.getElementById('profOrcid');
@@ -1303,19 +2701,310 @@ async function loadProfile(authorId) {
   }
 }
 
+// ── Contact email discovery (free, on-demand) ──
+let _profEmail = null; // the verified/likely address (null for guesses)
+
+function copyProfEmail() {
+  const v = document.getElementById('profEmail')?.textContent;
+  if (v) navigator.clipboard?.writeText(v);
+}
+
+function draftOutreach() {
+  if (_profEmail) window.location.href = `mailto:${_profEmail}`;
+}
+
+async function loadProfEmail(authorId) {
+  const emailEl = document.getElementById('profEmail');
+  const copyEl  = document.getElementById('profEmailCopy');
+  const noteEl  = document.getElementById('profEmailNote');
+  const facEl   = document.getElementById('profFacultyLink');
+  const btnEl   = document.getElementById('profDraftBtn');
+  const spinEl  = document.getElementById('profEmailSpinner');
+  const iconEl  = document.getElementById('profEmailIcon');
+  if (!emailEl) return;
+
+  // Reset — show the spinner while we look the email up.
+  _profEmail = null;
+  emailEl.textContent = 'Finding email…';
+  emailEl.style.color = '';
+  copyEl.style.display = 'none';
+  noteEl.style.display = 'none';
+  facEl.style.display = 'none';
+  btnEl.disabled = true;
+  if (spinEl) spinEl.style.display = '';
+  if (iconEl) iconEl.style.display = 'none';
+
+  const LABELS = {
+    verified: 'Verified from a published paper',
+    likely: 'From a PubMed record',
+    guess: 'Likely email — worth a quick check',
+  };
+
+  try {
+    const d = await apiFetch(`/api/professor/${authorId}/email`);
+
+    if (d.email && d.mailtoEnabled) {
+      // A real, person-matched address.
+      _profEmail = d.email;
+      emailEl.textContent = d.email;
+      copyEl.style.display = '';
+      btnEl.disabled = false;
+      const src = d.source ? ` · <a href="${esc(d.source)}" target="_blank" rel="noopener">source</a>` : '';
+      noteEl.innerHTML = `✓ ${LABELS[d.confidence] || ''}${src}`;
+      noteEl.style.display = 'block';
+    } else if (d.email) {
+      // A pattern guess — show it, but never as a clickable mailto.
+      emailEl.textContent = d.email;
+      emailEl.style.color = 'var(--n400)';
+      noteEl.textContent = `○ ${LABELS.guess}`;
+      noteEl.style.display = 'block';
+    } else {
+      emailEl.textContent = 'No public email found';
+      emailEl.style.color = 'var(--n400)';
+    }
+
+    // Faculty-page link is the actionable fallback when we don't have a trusted email.
+    if (!d.mailtoEnabled && d.facultySearchUrl) {
+      facEl.href = d.facultySearchUrl;
+      facEl.style.display = 'flex';
+    }
+  } catch (err) {
+    emailEl.textContent = 'Email lookup unavailable';
+    emailEl.style.color = 'var(--n400)';
+  } finally {
+    // Stop the spinner, restore the envelope icon — covers every outcome.
+    if (spinEl) spinEl.style.display = 'none';
+    if (iconEl) iconEl.style.display = '';
+  }
+}
+
+// ── Research + Publications sections ──
+let _pubMoreExpanded = false;
+let _dirChipHTML = ''; // trailing "+ …" directions chip, appended to the area chip row
+
+function resetResearchSections() {
+  const hide = id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; };
+  const clear = id => { const el = document.getElementById(id); if (el) el.innerHTML = ''; };
+  hide('researchKeywords'); hide('researchFocus');
+  clear('researchAreas'); clear('researchKeywords');
+  _dirChipHTML = '';
+  hide('pubSection'); clear('pubSelected'); clear('pubMoreList'); clear('pubLinks');
+  hide('pubMoreWrap'); hide('pubLinks'); hide('pubEmpty');
+  const loading = document.getElementById('pubLoading');
+  if (loading) loading.style.display = 'flex';
+  const moreBtn = document.getElementById('pubMoreBtn');
+  if (moreBtn) moreBtn.style.display = 'none';
+  _pubMoreExpanded = false;
+}
+
+// Renders the additive `profile.research` block from /api/professor/:id.
+function renderResearch(research) {
+  if (!research) return;
+  const areas = Array.isArray(research.areas) ? research.areas : [];
+  const keywords = Array.isArray(research.keywords) ? research.keywords : [];
+  const summary = research.summary;
+
+  const areasEl = document.getElementById('researchAreas');
+  if (areasEl) {
+    if (areas.length) {
+      areasEl.innerHTML = areas.map(a => {
+        const count = (a.count != null)
+          ? ` <b>${esc(String(a.count))}</b>` : '';
+        return `<span class="rs-chip">${esc(a.name)}${count}</span>`;
+      }).join('');
+    } else {
+      areasEl.innerHTML = '';
+    }
+    // Re-attach the directions chip if it was already rendered (papers can resolve first).
+    if (_dirChipHTML) areasEl.insertAdjacentHTML('beforeend', _dirChipHTML);
+  }
+
+  const kwEl = document.getElementById('researchKeywords');
+  if (kwEl) {
+    if (keywords.length) {
+      kwEl.innerHTML = keywords.map(k => `<span class="rs-kw">${esc(k.name)}</span>`).join('');
+      kwEl.style.display = 'flex';
+    } else {
+      kwEl.style.display = 'none';
+    }
+  }
+
+  // Prefer research.summary here; dedupe against the existing Research Summary card.
+  const focusEl = document.getElementById('researchFocus');
+  const focusText = document.getElementById('researchFocusText');
+  if (focusEl && focusText) {
+    const existing = (document.getElementById('profResSum')?.textContent || '').trim();
+    if (summary && summary.trim() && summary.trim() !== existing) {
+      focusText.textContent = summary.trim();
+      focusEl.style.display = 'block';
+    } else {
+      focusEl.style.display = 'none';
+    }
+  }
+
+  // The band hosts the always-present summary, so keep it visible.
+  const section = document.getElementById('researchSection');
+  if (section) section.style.display = 'block';
+}
+
+// Directions (current/earlier) fold into the research chip row as one trailing
+// muted chip, e.g. "+ vision-language, self-supervised". Data is from /papers.
+function renderDirections(directions) {
+  if (!directions) return;
+  const recent = Array.isArray(directions.recent) ? directions.recent : [];
+  const earlier = Array.isArray(directions.earlier) ? directions.earlier : [];
+  // Prefer recent directions for the trailing chip; fall back to earlier work.
+  const names = (recent.length ? recent : earlier).map(d => d && d.name).filter(Boolean);
+  if (!names.length) { _dirChipHTML = ''; return; }
+
+  _dirChipHTML = `<span class="rs-chip muted">+ ${esc(names.slice(0, 4).join(', '))}</span>`;
+
+  // Append into the same chip row as the focus areas (re-render-safe).
+  const areasEl = document.getElementById('researchAreas');
+  if (areasEl) {
+    areasEl.querySelectorAll('.rs-chip.muted').forEach(c => c.remove());
+    areasEl.insertAdjacentHTML('beforeend', _dirChipHTML);
+  }
+  const section = document.getElementById('researchSection');
+  if (section) section.style.display = 'block';
+}
+
+function paperCardHTML(p) {
+  if (!p) return '';
+  // Dense row: [year] [title + inline meta]. Pills, venue, citations and a PDF
+  // link all collapse onto one meta line separated by · dots.
+  const parts = [];
+  if (p.isMostRecent) parts.push(`<span class="pub-badge recent">Latest</span>`);
+  if (p.isMostCited)  parts.push(`<span class="pub-badge cited">Most cited</span>`);
+  if (p.isPreprint)   parts.push(`<span class="pub-badge preprint">Preprint</span>`);
+  if (p.venue) parts.push(esc(p.venue));
+  if (p.citedByCount != null) {
+    parts.push(`<span class="pub-cite">${esc(p.citedByCount.toLocaleString())} cite${p.citedByCount === 1 ? '' : 's'}</span>`);
+  }
+  if (p.oaPdfUrl) {
+    parts.push(`<a class="pub-pdf" href="${esc(safeUrl(p.oaPdfUrl))}" target="_blank" rel="noopener">PDF</a>`);
+  } else if (p.isOpenAccess) {
+    parts.push(`<span class="pub-badge oa">OA</span>`);
+  }
+  const meta = parts.join(`<span class="dot">·</span>`);
+
+  return `<div class="pub-row${p.isMostRecent ? ' recent' : ''}">
+    <div class="pub-yr">${p.year != null ? esc(String(p.year)) : ''}</div>
+    <div class="pub-main">
+      <div class="pub-title">${esc(p.title || 'Untitled')}</div>
+      ${meta ? `<div class="pub-meta">${meta}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+function togglePubMore() {
+  _pubMoreExpanded = !_pubMoreExpanded;
+  const list = document.getElementById('pubMoreList');
+  const btn = document.getElementById('pubMoreBtn');
+  if (!list) return;
+  list.querySelectorAll('li[data-extra]').forEach(li => {
+    li.style.display = _pubMoreExpanded ? '' : 'none';
+  });
+  if (btn) btn.textContent = _pubMoreExpanded ? 'Show less' : 'Show more';
+}
+
+// Lazy-load the publications payload (endpoint 2). Fails quietly like loadProfEmail.
+async function loadProfPapers(authorId) {
+  const section = document.getElementById('pubSection');
+  const loading = document.getElementById('pubLoading');
+  const selectedEl = document.getElementById('pubSelected');
+  const emptyEl = document.getElementById('pubEmpty');
+  if (!section) return;
+
+  // Show the section + loading state immediately.
+  section.style.display = 'block';
+  if (loading) loading.style.display = 'flex';
+
+  try {
+    const d = await apiFetch(`/api/professor/${authorId}/papers`);
+
+    if (loading) loading.style.display = 'none';
+
+    // Directions feed the Research section's current-vs-earlier block.
+    renderDirections(d.directions);
+
+    const selected = Array.isArray(d.selected) ? d.selected : [];
+    const papers = Array.isArray(d.papers) ? d.papers : [];
+
+    if (!selected.length && !papers.length) {
+      if (emptyEl) emptyEl.style.display = 'block';
+    } else {
+      // Representative papers as cards.
+      const cards = (selected.length ? selected : papers.slice(0, 5));
+      if (selectedEl) selectedEl.innerHTML = cards.map(paperCardHTML).join('');
+
+      // Compact fuller list: papers not already shown as cards, cap visible at 10.
+      const shownIds = new Set(cards.map(p => p && p.id).filter(Boolean));
+      const rest = papers.filter(p => p && !shownIds.has(p.id));
+      if (rest.length) {
+        const moreWrap = document.getElementById('pubMoreWrap');
+        const moreList = document.getElementById('pubMoreList');
+        const moreBtn = document.getElementById('pubMoreBtn');
+        const CAP = 10;
+        moreList.innerHTML = rest.map((p, i) => {
+          const venueYear = [p.venue, p.year].filter(Boolean).map(esc).join(' · ');
+          const hidden = i >= CAP ? ' data-extra style="display:none"' : '';
+          return `<li${hidden}><span class="pub-li-title">${esc(p.title || 'Untitled')}</span>` +
+            (venueYear ? ` <span class="pub-li-meta">— ${venueYear}</span>` : '') + `</li>`;
+        }).join('');
+        if (moreBtn) moreBtn.style.display = rest.length > CAP ? 'inline-block' : 'none';
+        if (moreWrap) moreWrap.style.display = 'block';
+      }
+    }
+
+    // Outbound full-list links.
+    const links = d.links || {};
+    const linkDefs = [];
+    if (links.orcid)    linkDefs.push(['ORCID', links.orcid]);
+    if (links.scholar)  linkDefs.push(['Google Scholar', links.scholar]);
+    if (links.openalex) linkDefs.push(['OpenAlex', links.openalex]);
+    if (linkDefs.length) {
+      const linksEl = document.getElementById('pubLinks');
+      linksEl.innerHTML = linkDefs.map(([label, href]) =>
+        `<a class="pub-link" href="${esc(safeUrl(href))}" target="_blank" rel="noopener">${esc(label)}</a>`
+      ).join('');
+      linksEl.style.display = 'flex';
+    }
+  } catch (err) {
+    // Fail quietly: hide the section so the rest of the profile stays intact.
+    if (loading) loading.style.display = 'none';
+    section.style.display = 'none';
+  }
+}
+
 // ─── Router ──────────────────────────────────────────
-function go(page, authorId) {
+function go(page, authorId, force) {
+  // Signed-in users should land in the app, not the marketing splash screen
+  // (unless a caller explicitly forces home, e.g. the logo).
+  if (page === 'home' && getAuthUser() && !force) page = 'browse';
+  // Already signed in? Skip the auth screen and go straight into the app.
+  if (page === 'auth' && getAuthUser()) page = 'browse';
+
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
 
   const sidebar = document.getElementById('global-sidebar');
-  if (sidebar) sidebar.style.display = (page === 'onboarding' || page === 'how-it-works') ? 'none' : 'flex';
+  const _appPages = ['browse', 'profile', 'tracker', 'account', 'resume'];
+  if (sidebar) sidebar.style.display = (_appPages.includes(page) && !!getAuthUser()) ? 'flex' : 'none';
 
-  ['home','browse','tracker'].forEach(id => {
+  ['browse','tracker','resume'].forEach(id => {
     const el = document.getElementById('nav-' + id);
     if (el) el.classList.remove('active');
   });
-  const activeMap = { home:'nav-home', browse:'nav-browse', tracker:'nav-tracker', profile:'nav-browse' };
+  const activeMap = { browse:'nav-browse', tracker:'nav-tracker', profile:'nav-browse', resume:'nav-resume', account:'nav-browse' };
+
+  if (page === 'account') {
+    const user = getAuthUser();
+    const nameEl  = document.getElementById('acct-name');
+    const emailEl = document.getElementById('acct-email');
+    if (nameEl)  nameEl.textContent  = (user && (user.displayName || user.email)) || '—';
+    if (emailEl) emailEl.textContent = (user && user.email) || '—';
+  }
   const activeEl = document.getElementById(activeMap[page]);
   if (activeEl) activeEl.classList.add('active');
 
@@ -1363,6 +3052,10 @@ document.addEventListener('DOMContentLoaded', () => {
 function esc(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+// Allow only http(s) URLs in hrefs — neutralizes javascript:/data: from third-party (OpenAlex) fields.
+function safeUrl(u) {
+  return /^https?:\/\//i.test(String(u || '')) ? String(u) : '#';
+}
 
 const COUNTRY_NAMES = {
   US:'United States',GB:'United Kingdom',CA:'Canada',AU:'Australia',
@@ -1389,6 +3082,34 @@ function setSF(b) {
   b.closest('.sf-btns').querySelectorAll('.sf-btn').forEach(x => x.classList.remove('active'));
   b.classList.add('active');
 }
+
+// Expose all onclick handlers to global scope (required for type="module")
+window.go             = go;
+window.toggleH        = toggleH;
+window.toggleTag      = toggleTag;
+window.setTab         = setTab;
+window.setSF          = setSF;
+window.loadBrowse     = loadBrowse;
+window.analyzeResume  = analyzeResume;
+window.onResumeFileChange = onResumeFileChange;
+window.handleResumeDrop   = handleResumeDrop;
+window.copyProfEmail      = copyProfEmail;
+window.draftOutreach      = draftOutreach;
+window.togglePubMore      = togglePubMore;
+window.clearResumeFile    = clearResumeFile;
+window.toggleFilterDropdown = toggleFilterDropdown;
+window.setSort              = setSort;
+window.toggleRemoteFilter   = toggleRemoteFilter;
+window.clearFilters         = clearFilters;
+window.toggleUniDropdown    = toggleUniDropdown;
+window.toggleUni            = toggleUni;
+window.clearUniFilter       = clearUniFilter;
+window.toggleDomainDropdown = toggleDomainDropdown;
+window.toggleDomain         = toggleDomain;
+window.clearDomainFilter    = clearDomainFilter;
+window.toggleResumeUniDropdown = toggleResumeUniDropdown;
+window.toggleResumeUni         = toggleResumeUni;
+window.clearResumeUniFilter    = clearResumeUniFilter;
 </script>
 </body>
 </html>
