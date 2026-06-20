@@ -533,27 +533,35 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
 @keyframes rwPulse{0%{box-shadow:0 0 0 0 rgba(45,122,95,.45)}70%{box-shadow:0 0 0 9px rgba(45,122,95,0)}100%{box-shadow:0 0 0 0 rgba(45,122,95,0)}}
 .rw-title{font-family:var(--font-d);font-size:clamp(28px,3.4vw,40px);font-weight:800;color:var(--n900);letter-spacing:-.025em;line-height:1.08}
 .rw-sub{font-size:16px;color:var(--n600);margin-top:10px;max-width:560px;line-height:1.55}
-.resume-split{display:grid;grid-template-columns:380px 1fr;gap:32px;align-items:start;animation:fadeUp .45s ease}
-.resume-left{position:sticky;top:80px;display:flex;flex-direction:column;gap:16px}
-.resume-left .analyze-btn{margin-top:0}
-.resume-right{min-height:420px}
-.resume-right .prof-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-bottom:0}
-.resume-right .interests-wrap{margin:0 0 30px}
-.resume-right .resume-results-head{margin:0 0 18px}
-@media (max-width:1180px){.resume-right .prof-grid{grid-template-columns:1fr}}
+/* Pre-results: single centered column, the document is the focal element. */
+.resume-split{display:grid;grid-template-columns:minmax(0,460px);justify-content:center;gap:26px;align-items:start;animation:fadeUp .45s ease}
+.resume-split:not(.done) .resume-primary{display:none}
+.resume-aside{display:flex;flex-direction:column;gap:16px}
+.resume-aside .analyze-btn{margin-top:0}
+
+/* Results state: professors take the wide left column, doc + pitch sticky on the right. */
+.resume-split.done{grid-template-columns:1fr 360px;justify-content:stretch}
+.resume-split.done .resume-aside{position:sticky;top:80px}
+.resume-primary{min-height:420px}
+.resume-primary .prof-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-bottom:0}
+.resume-primary .resume-results-head{margin:0 0 18px}
+
+/* The pitch card is hidden until results land. */
+.resume-split:not(.done) #resumePitch{display:none}
+@media (max-width:1180px){.resume-primary .prof-grid{grid-template-columns:1fr}}
 /* Resume match cards — re-laid-out for the narrower 2-col workspace grid so names never wrap.
-   Row 1: avatar + match badge · Row 2: name + university (full width). Scoped to .resume-right. */
-.resume-right .prof-card{padding:22px;border-radius:16px;display:flex;flex-direction:column}
-.resume-right .pc-head{flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:14px}
-.resume-right .pc-av-init{width:46px;height:46px;font-size:14px}
-.resume-right .pc-info{order:3;flex-basis:100%;padding-right:0;min-width:0}
-.resume-right .pc-name{font-size:16.5px;line-height:1.2;margin-bottom:4px}
-.resume-right .pc-uni{font-size:12.5px;margin-top:0}
-.resume-right .match-badge{position:static;order:2;margin-left:auto;flex-shrink:0;background:var(--g50);border-color:var(--g100);color:var(--g700);font-size:12px;padding:5px 11px}
-.resume-right .heart{display:none}
-.resume-right .pc-desc{font-size:13px;line-height:1.6;margin-bottom:14px}
-.resume-right .tag-row{margin-bottom:14px}
-.resume-right .pc-foot{margin-top:auto;padding-top:14px;border-top:1px solid var(--n100)}
+   Row 1: avatar + match badge · Row 2: name + university (full width). Scoped to .resume-primary. */
+.resume-primary .prof-card{padding:22px;border-radius:16px;display:flex;flex-direction:column}
+.resume-primary .pc-head{flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:14px}
+.resume-primary .pc-av-init{width:46px;height:46px;font-size:14px}
+.resume-primary .pc-info{order:3;flex-basis:100%;padding-right:0;min-width:0}
+.resume-primary .pc-name{font-size:16.5px;line-height:1.2;margin-bottom:4px}
+.resume-primary .pc-uni{font-size:12.5px;margin-top:0}
+.resume-primary .match-badge{position:static;order:2;margin-left:auto;flex-shrink:0;background:var(--g50);border-color:var(--g100);color:var(--g700);font-size:12px;padding:5px 11px}
+.resume-primary .heart{display:none}
+.resume-primary .pc-desc{font-size:13px;line-height:1.6;margin-bottom:14px}
+.resume-primary .tag-row{margin-bottom:14px}
+.resume-primary .pc-foot{margin-top:auto;padding-top:14px;border-top:1px solid var(--n100)}
 /* blank-right placeholder */
 .rw-placeholder{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:480px;border:1.5px dashed var(--n200);border-radius:var(--r-xl);background:linear-gradient(180deg,var(--white),var(--n50));padding:48px 32px}
 .rw-placeholder::before{content:'';position:absolute;left:50%;top:-18%;width:420px;height:300px;transform:translateX(-50%);background:radial-gradient(closest-side,var(--g50),transparent);opacity:.7;pointer-events:none}
@@ -566,7 +574,13 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
 .rw-ph-ghost::before{content:'';position:absolute;left:14px;top:14px;width:34px;height:34px;border-radius:10px;background:var(--n100)}
 .rw-ph-ghost::after{content:'';position:absolute;left:58px;right:14px;top:18px;height:9px;border-radius:5px;background:var(--n100);box-shadow:0 16px 0 var(--n100)}
 @media (max-width:560px){.rw-ph-ghosts{grid-template-columns:1fr}}
-@media (max-width:880px){.resume-split{grid-template-columns:1fr}.resume-left{position:static}.rw-placeholder{min-height:280px}}
+@media (max-width:880px){
+  .resume-split,.resume-split.done{grid-template-columns:1fr;justify-content:stretch}
+  .resume-split.done .resume-aside{position:static}
+  .resume-split.done .resume-aside{order:1}
+  .resume-split.done .resume-primary{order:2}
+  .rw-placeholder{min-height:280px}
+}
 
 .upload-file-name{display:none;margin-top:14px;font-size:13px;font-weight:500;color:var(--g800);background:var(--g50);border:1px solid var(--g100);padding:6px 14px;border-radius:100px;display:none;align-items:center;gap:6px;justify-content:center}
 
@@ -646,6 +660,7 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
   .read-caret,.read-hl,.read-tag,.scan-phase::before{animation:none}
   #resumeChips .interest-chip,#resumeProfGrid.cascade > *{animation:none}
   .scan-beam,.rw-eyebrow .rw-pulse,.rw-ph-icon{animation:none}
+  .resume-split.done #resumeResultsSection,.resume-split.done #resumePitch{animation:none}
 }
 
 /* Analyze button */
@@ -669,6 +684,29 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
 .interest-chip svg{color:var(--g600);flex:none}
 .interest-chip:hover{background:var(--g100);border-color:var(--g600)}
 .resume-summary{font-size:14.5px;color:var(--n700);line-height:1.62;margin:10px 0 0}
+
+/* ── Cold-email pitch card (right column, under the document) ── */
+.pitch-card{background:var(--white);border:1px solid var(--n200);border-radius:var(--r-xl);box-shadow:var(--sh-md);overflow:hidden}
+.pitch-head{display:flex;align-items:center;gap:11px;padding:15px 18px;background:linear-gradient(180deg,var(--g50),#fff);border-bottom:1px solid var(--n100)}
+.pitch-ic{width:33px;height:33px;border-radius:9px;background:var(--g800);color:var(--white);display:flex;align-items:center;justify-content:center;flex:none}
+.pitch-head h3{font-family:var(--font-d);font-size:16.5px;font-weight:700;color:var(--n900);line-height:1.1}
+.pitch-head p{font-size:11.5px;color:var(--n500);margin-top:2px}
+.pitch-body{padding:15px 18px 18px}
+.pitch-blurb{background:var(--n50);border:1px solid var(--n200);border-left:3px solid var(--g600);border-radius:9px;padding:11px 13px;font-size:13px;color:var(--n700);line-height:1.55;margin:0}
+.pitch-sec{margin-top:15px}
+.pitch-label{display:flex;align-items:center;gap:7px;font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--n400);margin-bottom:10px}
+.pitch-label svg{width:13px;height:13px;color:var(--g600);flex:none}
+.pitch-bullets{list-style:none;display:flex;flex-direction:column;gap:8px}
+.pitch-bullets li{display:flex;gap:8px;font-size:12.5px;color:var(--n700);line-height:1.45}
+.pitch-bullets li svg{width:14px;height:14px;color:var(--g600);flex:none;margin-top:2px}
+.pitch-bullets li b{color:var(--n900);font-weight:600}
+.pitch-copy{width:100%;justify-content:center;margin-top:16px;display:inline-flex;align-items:center;gap:7px;background:var(--g800);color:var(--white);font-size:12.5px;font-weight:600;padding:10px 14px;border-radius:var(--r-md);border:none;font-family:var(--font-b);cursor:pointer;transition:background .15s}
+.pitch-copy:hover{background:var(--g700)}
+.pitch-copy.copied{background:var(--g600)}
+
+/* Reveal: matches cascade in, pitch slides up once .done is set. */
+.resume-split.done #resumeResultsSection{animation:fadeUp .5s ease both;animation-delay:.35s}
+.resume-split.done #resumePitch{animation:fadeUp .5s ease both;animation-delay:.5s}
 
 /* Results grid */
 .resume-results-head{display:flex;align-items:center;justify-content:space-between;gap:12px;font-family:var(--font-d);font-size:24px;font-weight:700;color:var(--n900);letter-spacing:-.3px;margin:32px 0 16px}
