@@ -2214,6 +2214,9 @@ async function analyzeResume() {
   resSection.style.display = 'none';
   document.getElementById('resumeRightPlaceholder').style.display = 'flex';
   resetCopyButton();
+  // Clear any leftover FLIP transform from a prior reveal before re-scanning.
+  const resetStage = document.getElementById('resumeStage');
+  resetStage.style.transition = ''; resetStage.style.transform = ''; resetStage.style.transformOrigin = '';
   btnEl.disabled = true;
 
   // Enter the analyzing state and kick off the scan animation.
@@ -2325,6 +2328,8 @@ function revealResults({ interests, summary, professors, sellingPoints, accompli
 // (small) rect: switch layout, then animate the inverse transform to identity.
 function flipReveal(split, stage) {
   const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  // Drop any cleanup listener still pending from a prior reveal (idempotent re-run).
+  if (stage._flipCleanup) { stage.removeEventListener('transitionend', stage._flipCleanup); stage._flipCleanup = null; }
   const first = stage.getBoundingClientRect();
   split.classList.add('done');                 // layout becomes two-column; stage shrinks
   if (reduce) return;                          // reduced motion: jump to final, no animation
@@ -2345,7 +2350,9 @@ function flipReveal(split, stage) {
     stage.style.transform = '';
     stage.style.transformOrigin = '';
     stage.removeEventListener('transitionend', cleanup);
+    stage._flipCleanup = null;
   };
+  stage._flipCleanup = cleanup;
   stage.addEventListener('transitionend', cleanup);
 }
 
