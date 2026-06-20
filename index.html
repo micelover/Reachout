@@ -1852,9 +1852,19 @@ function clearResumeFile() {
   document.getElementById('resumeDocPage').innerHTML = '';
   document.getElementById('resumeReadLayer').innerHTML = '';
   document.getElementById('resumeError').style.display = 'none';
-  document.getElementById('resumeInterests').style.display = 'none';
+  const split = document.querySelector('.resume-split');
+  if (split) split.classList.remove('done');
+  const pitch = document.getElementById('resumePitch');
+  if (pitch) pitch.style.display = 'none';
+  document.getElementById('resumePitchSelling').innerHTML = '';
+  document.getElementById('resumePitchAccomp').innerHTML = '';
+  document.getElementById('resumeChips').innerHTML = '';
+  document.getElementById('resumeSummaryText').textContent = '';
+  resetCopyButton();
+  // Clear any in-progress FLIP transform on the doc.
+  stage.style.transition = ''; stage.style.transform = ''; stage.style.transformOrigin = '';
   document.getElementById('resumeResultsSection').style.display = 'none';
-  document.getElementById('resumeRightPlaceholder').style.display = 'flex'; // blank-right again
+  document.getElementById('resumeRightPlaceholder').style.display = 'flex'; // blank-left again
   document.getElementById('resumeAnalyzeBtn').disabled = true;
   setResumeState('upload');
 }
@@ -2194,13 +2204,16 @@ async function analyzeResume() {
 
   const btnEl     = document.getElementById('resumeAnalyzeBtn');
   const errEl     = document.getElementById('resumeError');
-  const intWrap   = document.getElementById('resumeInterests');
   const resSection = document.getElementById('resumeResultsSection');
+  const split = document.querySelector('.resume-split');
 
-  // Reset prior results
+  // Reset prior results (re-run goes back to the pre-results, single-column state)
   errEl.style.display = 'none';
-  intWrap.style.display = 'none';
+  if (split) split.classList.remove('done');
+  document.getElementById('resumePitch').style.display = 'none';
   resSection.style.display = 'none';
+  document.getElementById('resumeRightPlaceholder').style.display = 'flex';
+  resetCopyButton();
   btnEl.disabled = true;
 
   // Enter the analyzing state and kick off the scan animation.
@@ -2247,45 +2260,126 @@ async function analyzeResume() {
 }
 
 // Staged reveal once the real data lands.
-function revealResults({ interests, summary, professors }) {
-  const intWrap   = document.getElementById('resumeInterests');
+function revealResults({ interests, summary, professors, sellingPoints, accomplishments }) {
   const chipsEl   = document.getElementById('resumeChips');
   const summaryEl = document.getElementById('resumeSummaryText');
+  const sellEl    = document.getElementById('resumePitchSelling');
+  const accEl     = document.getElementById('resumePitchAccomp');
+  const pitchEl   = document.getElementById('resumePitch');
   const resSection = document.getElementById('resumeResultsSection');
-  const resGrid   = document.getElementById('resumeProfGrid');
   const stage     = document.getElementById('resumeStage');
+  const split     = document.querySelector('.resume-split');
 
-  // Mark the document as analyzed (shows the badge; doc stays full-size on the left).
+  // Mark the document as analyzed (shows the badge).
   stage.classList.remove('scanning', 'scan-done');
   stage.classList.add('analyzed');
   document.getElementById('resumeReadLayer').innerHTML = '';
 
-  // Fill the right panel: swap the blank placeholder for the results.
+  // Swap the blank placeholder for the matches; update the heading.
   document.getElementById('resumeRightPlaceholder').style.display = 'none';
   document.getElementById('resumeWorkTitle').textContent = 'Your matches';
   document.getElementById('resumeWorkSub').textContent =
-    'Professors whose research lines up with your background.';
+    'Your résumé and pitch are on the right — the labs that fit are on the left.';
 
-  // Interests — staggered chips.
-  if (interests && interests.length) {
-    chipsEl.innerHTML = interests.map((i, idx) =>
-      `<span class="interest-chip" style="animation-delay:${idx * 90}ms">
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>
-        ${esc(i)}
-      </span>`
-    ).join('');
-    intWrap.style.display = 'block';
-    // Summary — typewriter after the chips have popped in.
-    setTimeout(() => typewriter(summaryEl, summary || ''), interests.length * 90 + 250);
-  }
+  // ── Build the pitch card ──────────────────────────────────────────────
+  // Interests as chips (reused styling).
+  const ints = interests || [];
+  chipsEl.innerHTML = ints.map((i, idx) =>
+    `<span class="interest-chip" style="animation-delay:${idx * 90}ms">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>
+      ${esc(i)}
+    </span>`
+  ).join('');
+  document.getElementById('resumePitchInterestsSec').style.display = ints.length ? '' : 'none';
 
-  // Professors — store the full set, then render via the filtered/sorted helper.
+  // Selling points + accomplishments as ✓ bullets.
+  const bulletHTML = (items) => (items || []).map(t =>
+    `<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>${esc(t)}</span></li>`
+  ).join('');
+  sellEl.innerHTML = bulletHTML(sellingPoints);
+  accEl.innerHTML  = bulletHTML(accomplishments);
+  document.getElementById('resumePitchSellingSec').style.display = (sellingPoints && sellingPoints.length) ? '' : 'none';
+  document.getElementById('resumePitchAccompSec').style.display  = (accomplishments && accomplishments.length) ? '' : 'none';
+
+  // Reset the copy button label (in case of a re-run).
+  resetCopyButton();
+
+  // Show the pitch and type out the blurb.
+  pitchEl.style.display = 'block';
+  setTimeout(() => typewriter(summaryEl, summary || ''), 300);
+
+  // ── Professors into the left column ───────────────────────────────────
   resumeProfessors = professors || [];
   resumeFilter.unis.clear();
   document.getElementById('resumeUniFilterCount').style.display = 'none';
   document.getElementById('resumeUniFilterBtn').classList.remove('has-active');
   renderResumeProfGrid();
   resSection.style.display = 'block';
+
+  // ── FLIP: morph the document from its big pre-results spot into the
+  //    small right-column slot as the layout switches to two columns. ────
+  flipReveal(split, stage);
+}
+
+// FLIP the #resumeStage from its current (large) rect to its post-layout
+// (small) rect: switch layout, then animate the inverse transform to identity.
+function flipReveal(split, stage) {
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  const first = stage.getBoundingClientRect();
+  split.classList.add('done');                 // layout becomes two-column; stage shrinks
+  if (reduce) return;                          // reduced motion: jump to final, no animation
+  const last = stage.getBoundingClientRect();
+  const dx = first.left - last.left;
+  const dy = first.top  - last.top;
+  const sx = last.width ? first.width / last.width : 1;
+  stage.style.transformOrigin = 'top left';
+  stage.style.transition = 'none';
+  stage.style.transform = `translate(${dx}px, ${dy}px) scale(${sx})`;
+  // Two rAFs so the browser commits the inverted start before transitioning.
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    stage.style.transition = 'transform .8s cubic-bezier(.7,0,.2,1)';
+    stage.style.transform = 'none';
+  }));
+  const cleanup = () => {
+    stage.style.transition = '';
+    stage.style.transform = '';
+    stage.style.transformOrigin = '';
+    stage.removeEventListener('transitionend', cleanup);
+  };
+  stage.addEventListener('transitionend', cleanup);
+}
+
+// Copy ONLY the summary blurb to the clipboard (the email-ready intro).
+function copyPitchBlurb(btn) {
+  const text = (document.getElementById('resumeSummaryText').textContent || '').trim();
+  if (!text) return;
+  const done = () => {
+    btn.classList.add('copied');
+    btn.querySelector('.pitch-copy-label').textContent = 'Copied to clipboard';
+    clearTimeout(btn._copyTimer);
+    btn._copyTimer = setTimeout(resetCopyButton, 1800);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+  } else {
+    fallbackCopy(text, done);
+  }
+}
+
+function fallbackCopy(text, done) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); done(); } catch (e) {}
+  document.body.removeChild(ta);
+}
+
+function resetCopyButton() {
+  const btn = document.getElementById('resumePitchCopy');
+  if (!btn) return;
+  btn.classList.remove('copied');
+  const label = btn.querySelector('.pitch-copy-label');
+  if (label) label.textContent = 'Copy pitch for your email';
 }
 
 // ─── Résumé matches: university filter (best-fit ordered) ───
