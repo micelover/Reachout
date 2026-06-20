@@ -602,7 +602,16 @@ const RESUME_PROMPT =
   '  "interests": array of academic research fields/topics the person is strongest in, ordered strongest-first ' +
   '(empty array if not a resume)\n' +
   '  "summary": one sentence summarising their research background (empty string if not a resume)\n' +
-  'Example: {"isResume":true,"transcript":"Jane Doe\\nEducation: BSc Computer Science...","interests":["machine learning","computer vision"],"summary":"PhD candidate in deep learning with a focus on image recognition."}';
+  '  "sellingPoints": array of up to 3 short phrases (max ~12 words each) capturing what makes this person ' +
+  'a strong research candidate — concrete skills, built systems, or strengths a professor would value. ' +
+  'Empty array if not a resume.\n' +
+  '  "accomplishments": array of up to 3 short phrases (max ~12 words each) listing concrete achievements — ' +
+  'publications, GPA/honors, awards, scholarships, or notable projects. Empty array if not a resume.\n' +
+  'Example: {"isResume":true,"transcript":"Jane Doe\\nEducation: BSc Computer Science...",' +
+  '"interests":["machine learning","computer vision"],' +
+  '"summary":"PhD candidate in deep learning with a focus on image recognition.",' +
+  '"sellingPoints":["Built a real-time object detection pipeline in PyTorch","Strong C++/CUDA systems background"],' +
+  '"accomplishments":["First-author paper at CVPR 2025","3.9 GPA, Dean\'s List"]}';
 
 /**
  * Analyse a resume image or PDF and suggest matching professors.
@@ -610,7 +619,8 @@ const RESUME_PROMPT =
  * POST /api/analyze-resume
  * Body: { data: "<base64>", mediaType: "image/png" | "image/jpeg" | "application/pdf" }
  *
- * Response: { interests: string[], summary: string, professors: Professor[] }
+ * Response: { interests: string[], summary: string, transcript: string,
+ *             sellingPoints: string[], accomplishments: string[], professors: Professor[] }
  *
  * The file is never persisted — it is sent to Claude, interests extracted, then discarded.
  */
@@ -665,9 +675,11 @@ app.post('/api/analyze-resume', async (req, res) => {
     const interests = (extracted.interests || []).slice(0, 3).filter(Boolean);
     const summary = extracted.summary || '';
     const transcript = extracted.transcript || '';
+    const sellingPoints = (extracted.sellingPoints || []).slice(0, 4).filter(Boolean);
+    const accomplishments = (extracted.accomplishments || []).slice(0, 4).filter(Boolean);
 
     if (!interests.length) {
-      return res.json({ interests: [], summary, transcript, professors: [] });
+      return res.json({ interests: [], summary, transcript, sellingPoints, accomplishments, professors: [] });
     }
 
     // ── Match professors via OpenAlex ────────────────────────────────────────
@@ -715,7 +727,7 @@ app.post('/api/analyze-resume', async (req, res) => {
       .sort((a, b) => b.matchScore - a.matchScore)
       .slice(0, 24); // cap; do NOT pad — return fewer if fewer qualify
 
-    res.json({ interests, summary, transcript, professors });
+    res.json({ interests, summary, transcript, sellingPoints, accomplishments, professors });
   } catch (err) {
     console.error('[/api/analyze-resume]', err.message);
     if (err.status === 401) {
