@@ -1261,36 +1261,8 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
       </div>
 
       <div class="resume-split">
-        <!-- LEFT: the document + scan -->
-        <div class="resume-left">
-          <div id="resumeStage" class="doc-stage">
-            <div class="doc-analyzed-badge">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              Analyzed
-            </div>
-            <button class="doc-remove" id="resumeDocRemove" onclick="clearResumeFile()" title="Choose a different file" aria-label="Remove file">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-            <div class="doc-page-wrap" id="resumeDocPage"></div>
-            <div class="scan-overlay" id="resumeScanOverlay" aria-hidden="true">
-              <div class="scan-scrim"></div>
-              <div class="scan-grid"></div>
-              <div class="scan-beam"></div>
-              <div class="read-layer" id="resumeReadLayer"></div>
-            </div>
-            <div class="scan-phase" id="resumePhase"></div>
-          </div>
-
-          <div id="resumeError" class="resume-error" style="display:none"></div>
-
-          <button class="analyze-btn" id="resumeAnalyzeBtn" onclick="analyzeResume()" disabled>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            Find matching professors
-          </button>
-        </div>
-
-        <!-- RIGHT: matches -->
-        <div class="resume-right" id="resumeRight">
+        <!-- LEFT (primary): placeholder pre-results, professor matches after -->
+        <div class="resume-primary" id="resumePrimary">
           <div class="rw-placeholder" id="resumeRightPlaceholder">
             <div class="rw-ph-icon">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
@@ -1302,15 +1274,6 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
               <div class="rw-ph-ghost"></div>
               <div class="rw-ph-ghost"></div>
               <div class="rw-ph-ghost"></div>
-            </div>
-          </div>
-
-          <div id="resumeInterests" style="display:none">
-            <div class="interests-wrap">
-              <div class="interests-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V18h6v-1.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"/></svg>What we found in your résumé</div>
-              <div class="resume-summary" id="resumeSummaryText"></div>
-              <div class="interests-sublabel">Research interests</div>
-              <div class="interests-chips" id="resumeChips"></div>
             </div>
           </div>
 
@@ -1340,6 +1303,64 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
               </div>
             </div>
             <div class="prof-grid" id="resumeProfGrid"></div>
+          </div>
+        </div>
+
+        <!-- RIGHT (aside): the document, then the generated pitch -->
+        <div class="resume-aside" id="resumeAside">
+          <div id="resumeStage" class="doc-stage">
+            <div class="doc-analyzed-badge">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Analyzed
+            </div>
+            <button class="doc-remove" id="resumeDocRemove" onclick="clearResumeFile()" title="Choose a different file" aria-label="Remove file">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <div class="doc-page-wrap" id="resumeDocPage"></div>
+            <div class="scan-overlay" id="resumeScanOverlay" aria-hidden="true">
+              <div class="scan-scrim"></div>
+              <div class="scan-grid"></div>
+              <div class="scan-beam"></div>
+              <div class="read-layer" id="resumeReadLayer"></div>
+            </div>
+            <div class="scan-phase" id="resumePhase"></div>
+          </div>
+
+          <div id="resumeError" class="resume-error" style="display:none"></div>
+
+          <button class="analyze-btn" id="resumeAnalyzeBtn" onclick="analyzeResume()" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            Find matching professors
+          </button>
+
+          <div class="pitch-card" id="resumePitch" style="display:none">
+            <div class="pitch-head">
+              <div class="pitch-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></div>
+              <div><h3>Your cold-email pitch</h3><p>Generated from your résumé</p></div>
+            </div>
+            <div class="pitch-body">
+              <div class="resume-summary pitch-blurb" id="resumeSummaryText"></div>
+
+              <div class="pitch-sec" id="resumePitchInterestsSec">
+                <div class="pitch-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V18h6v-1.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"/><path d="M9 18h6M10 22h4"/></svg>Research interests</div>
+                <div class="interests-chips" id="resumeChips"></div>
+              </div>
+
+              <div class="pitch-sec" id="resumePitchSellingSec">
+                <div class="pitch-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Selling points</div>
+                <ul class="pitch-bullets" id="resumePitchSelling"></ul>
+              </div>
+
+              <div class="pitch-sec" id="resumePitchAccompSec">
+                <div class="pitch-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6m12 5h1.5a2.5 2.5 0 0 0 0-5H18M6 9v6a6 6 0 0 0 12 0V9M6 4h12M8 21h8M12 17v4"/></svg>Accomplishments</div>
+                <ul class="pitch-bullets" id="resumePitchAccomp"></ul>
+              </div>
+
+              <button class="pitch-copy" id="resumePitchCopy" onclick="copyPitchBlurb(this)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span class="pitch-copy-label">Copy pitch for your email</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
