@@ -70,15 +70,27 @@ New pitch card structure (`#resumePitch`), populated by JS:
 - "Copy pitch for your email" button → copies the blurb text via `navigator.clipboard`,
   with a brief "Copied" confirmation state.
 
-**Layout states:** the workspace has two visual states on `.resume-split`:
-- *Analyzing* (unchanged): document in the sticky left column with the scan animation,
-  right side shows the existing placeholder/ghosts.
-- *Analyzed* (new): professors fill the wide left column; the document **relocates** into
-  the right column above the pitch. Achieve via a state class toggled in `revealResults()`
-  (e.g. `.resume-split.analyzed`) that re-grids the regions, plus relocating the
-  `#resumeStage` node into the right column (or grid-area reorder). Decide the exact
-  mechanism in the plan; either way the document node and its "Analyzed" badge are reused,
-  not duplicated.
+**Layout states & reveal transition (confirmed via `transition-demo.html`):**
+The professors-left / [doc+pitch]-right **grid exists from the start**; the document node
+lives in the right column the whole time and is **never relocated in the DOM** — the
+"fly + shrink" effect is done with a CSS `transform` on the doc card, so it's GPU-cheap
+and there's no reflow. Two states are toggled by a class on the grid (e.g.
+`.resume-split.analyzing` → `.resume-split.done`), set in `revealResults()`:
+
+- *Analyzing*: the doc card is `transform: translate(...) scale(~1.7)` with
+  `transform-origin: top right`, so it reads as an enlarged, centered focal element with
+  the existing scan beam running. The left (professors) and the pitch card are at
+  `opacity:0`.
+- *Reveal* (one continuous ~0.8s motion, `cubic-bezier(.7,0,.2,1)`): the doc's transform
+  is removed → it **shrinks and glides into its real slot** at top-right; the "Analyzed"
+  badge fades in; then (staggered ~0.4–0.6s) the professor cards **cascade in** on the
+  left and the pitch card **slides up** beneath the doc. The workspace title crossfades
+  "Reading your résumé…" → "Your matches".
+
+Reuse the existing scan/`finishScanAnimation` timing as the trigger point. The same
+`#resumeStage` element and its badge are reused (not duplicated). Honor the existing
+`prefers-reduced-motion` block: under reduced motion, skip the transform/cascade and just
+show the final state.
 
 **JS (`revealResults`, `setResumeState`, reset helpers):**
 - `revealResults({ interests, summary, professors, sellingPoints, accomplishments })`:
@@ -118,6 +130,9 @@ order; the right column un-sticks.
 
 ## Success criteria
 
+- On reveal, the scanned document **shrinks and glides** into its right-column slot in one
+  continuous motion while the matches cascade in and the pitch slides up (reduced-motion
+  users get the final state with no animation).
 - After analysis: professors are the dominant, immediately-visible content (left column).
 - The right column shows the user's actual document **and** a full pitch — blurb,
   interests, selling points, accomplishments — all visible without expanding, pinned on
