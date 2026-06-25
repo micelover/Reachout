@@ -6,7 +6,7 @@
 <title>ReachOut — Find the right professor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,800;9..144,900&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800;9..144,900&family=DM+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
   --g900: #0D2B1E;
@@ -99,30 +99,62 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
 .footer{background:var(--white);border-top:1px solid var(--n200);padding:24px 40px;display:flex;align-items:center;justify-content:space-between}
 .footer-copy{font-size:13px;color:var(--n500)}
 .footer-links{display:flex;gap:24px}
-.footer-links a{font-size:13px;color:var(--n500);transition:color .15s}
+.footer-links a{font-size:13px;color:var(--n500);cursor:pointer;transition:color .15s}
 .footer-links a:hover{color:var(--n700)}
+.footer-links a:focus-visible{outline:2px solid var(--g600);outline-offset:3px;border-radius:3px;color:var(--n700)}
 
 /* ═══════════════════════════
    PAGE: HOME
 ═══════════════════════════ */
 .home-page{background:var(--white);min-height:100vh}
 .home-nav-icon{display:flex;align-items:center;background:var(--n50);border:1px solid var(--n200);border-radius:100px;padding:7px 12px}
-.home-hero{text-align:center;padding:90px 40px 56px;max-width:680px;margin:0 auto}
-.home-hero h1{font-family:var(--font-d);font-size:clamp(32px,4.5vw,50px);font-weight:700;line-height:1.15;color:var(--n900);letter-spacing:-0.5px;margin-bottom:18px}
-.home-hero p{font-size:16.5px;color:var(--n500);line-height:1.7;max-width:460px;margin:0 auto 32px}
-.home-hero-btns{display:flex;gap:10px;justify-content:center}
-.home-hero-btns .btn-p,.home-hero-btns .btn-s{padding:12px 24px;font-size:15px}
-
-.home-preview{max-width:840px;margin:0 auto 72px;padding:0 40px}
-.preview-frame{background:var(--n50);border:1px solid var(--n200);border-radius:var(--r-xl);overflow:hidden;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center}
-.preview-mock{width:56%;background:var(--white);border-radius:var(--r-lg);box-shadow:var(--sh-lg);overflow:hidden}
-.mock-bar{background:var(--white);border-bottom:1px solid var(--n100);padding:10px 14px;display:flex;align-items:center;gap:6px}
-.mock-dot{width:8px;height:8px;border-radius:50%}
-.mock-row{padding:10px 14px;border-bottom:1px solid var(--n50);display:flex;align-items:center;gap:10px}
-.mock-av{width:26px;height:26px;border-radius:50%;background:var(--n200);flex-shrink:0}
-.mock-lines{flex:1}
-.mock-line{height:7px;border-radius:4px;background:var(--n200);margin-bottom:4px}
-.mock-badge-s{width:52px;height:18px;border-radius:100px;background:var(--g100);flex-shrink:0}
+/* ── HOME HERO — Heavy + Serif Accent ── */
+.home-hero{max-width:1220px;margin:0 auto;padding:80px 40px}
+.hh-grid{display:grid;grid-template-columns:minmax(0,48fr) minmax(0,52fr);align-items:center;gap:60px;width:100%}
+.hh-left{min-width:0}
+.hh-headline{font-family:var(--font-b);font-weight:800;font-size:clamp(42px,5.6vw,72px);line-height:1.03;letter-spacing:-1px;color:var(--n950);margin-bottom:26px}
+.hh-accent{font-family:var(--font-d);font-style:italic;font-weight:600;color:var(--g700);font-size:1.08em;letter-spacing:-.5px}
+.hh-sub{font-family:var(--font-b);font-size:18.5px;line-height:1.6;color:var(--n600);max-width:480px;margin-bottom:36px}
+.hh-actions{display:flex;align-items:center;gap:22px;flex-wrap:wrap;margin-bottom:16px}
+.hh-cta{display:inline-flex;align-items:center;gap:10px;background:var(--g800);color:var(--white);font-family:var(--font-b);font-weight:700;font-size:17px;padding:17px 32px;border-radius:13px;border:none;cursor:pointer;box-shadow:0 8px 22px rgba(27,77,62,.28),0 2px 6px rgba(27,77,62,.18);transition:transform .18s ease,box-shadow .18s ease,background .18s ease}
+.hh-cta span{transition:transform .18s ease}
+.hh-cta:hover{background:var(--g900);transform:translateY(-2px);box-shadow:0 10px 26px rgba(27,77,62,.3),0 3px 8px rgba(27,77,62,.2)}
+.hh-cta:hover span{transform:translateX(3px)}
+.hh-cta:focus-visible{outline:3px solid var(--g600);outline-offset:3px}
+.hh-link{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-b);font-weight:600;font-size:16px;color:var(--n700);background:none;border:none;cursor:pointer;transition:color .18s ease,gap .18s ease}
+.hh-link span{transition:transform .18s ease}
+.hh-link:hover{color:var(--g800);gap:9px}
+.hh-link:focus-visible{outline:2px solid var(--g600);outline-offset:3px;border-radius:4px}
+.hh-note{font-family:var(--font-b);font-size:13.5px;color:var(--n400);letter-spacing:.1px;margin-top:2px}
+.hh-right{min-width:0;display:flex;justify-content:center}
+.hh-email{width:100%;max-width:560px;background:var(--white);border:1.5px solid var(--n200);border-radius:18px;box-shadow:0 24px 56px rgba(13,43,30,.12),0 6px 16px rgba(13,43,30,.07);overflow:hidden}
+.hh-email-bar{display:flex;align-items:center;gap:8px;padding:16px 22px;border-bottom:1px solid var(--n100);background:var(--n50)}
+.hh-dot{width:11px;height:11px;border-radius:50%;background:var(--n200)}
+.hh-dot:nth-child(1){background:#FCA5A5}.hh-dot:nth-child(2){background:#FCD34D}.hh-dot:nth-child(3){background:#86EFAC}
+.hh-email-head{padding:22px 28px 18px;border-bottom:1px solid var(--n100)}
+.hh-field{display:flex;align-items:baseline;gap:14px;padding:6px 0}
+.hh-field+.hh-field{border-top:1px solid var(--n50)}
+.hh-label{flex:none;width:58px;font-family:var(--font-m);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.7px;color:var(--n400)}
+.hh-value{font-family:var(--font-b);font-size:15.5px;font-weight:500;color:var(--n800);line-height:1.45}
+.hh-field:last-child .hh-value{font-weight:400;color:var(--n600)}
+.hh-email-body{padding:26px 28px 14px;font-family:var(--font-b);font-size:16px;line-height:1.7;color:var(--n700);height:286px;overflow:hidden}
+.hh-line{margin:0 0 13px;white-space:pre-wrap}
+.hh-line:last-child{margin-bottom:0}
+.hh-sign{color:var(--n500);font-weight:500}
+.hh-caret{display:inline-block;width:2px;height:1.05em;margin-left:1px;vertical-align:text-bottom;background:var(--g700);animation:hh-blink 1s step-end infinite}
+@keyframes hh-blink{0%,100%{opacity:1}50%{opacity:0}}
+.hh-caption{padding:14px 28px 22px;font-family:var(--font-b);font-size:13px;font-weight:500;color:var(--n400);letter-spacing:.1px}
+.hh-caption::before{content:"✦ ";color:var(--g600)}
+@media(max-width:1000px){
+  .home-hero{padding:48px 28px 56px}
+  .hh-grid{grid-template-columns:minmax(0,1fr);gap:40px}
+  .hh-sub{max-width:none}
+  .hh-email-body{height:auto;min-height:282px}
+}
+@media(prefers-reduced-motion:reduce){
+  .hh-caret{animation:none}
+  .hh-cta,.hh-cta span,.hh-link{transition:none}
+}
 
 .home-features{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;max-width:840px;margin:0 auto 72px;padding:0 40px}
 .feat-card{background:var(--n50);border:1px solid var(--n200);border-radius:var(--r-lg);padding:26px}
@@ -605,6 +637,18 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
 .mem-edit-area{width:100%;border:1.5px solid var(--n200);border-radius:var(--r-md);padding:11px 14px;font-size:14px;font-family:var(--font-b);color:var(--n900);line-height:1.6;resize:vertical;min-height:90px;outline:none;transition:border-color .15s}
 .mem-edit-area:focus{border-color:var(--g700)}
 .mem-edit-area::placeholder{color:var(--n400)}
+/* Accomplishments bullet-row editor — one editable point per row */
+.acc-edit{display:flex;flex-direction:column;gap:8px}
+.acc-row{display:flex;align-items:flex-start;gap:10px;background:var(--g50);border:1.5px solid var(--g100);border-radius:var(--r-md);padding:10px 12px;transition:border-color .15s}
+.acc-row:focus-within{border-color:var(--g700);background:var(--white)}
+.acc-bullet{flex:none;width:6px;height:6px;border-radius:50%;background:var(--g600);margin-top:9px}
+.acc-input{flex:1;min-width:0;border:none;outline:none;background:transparent;resize:none;overflow:hidden;font-size:14px;font-family:var(--font-b);color:var(--n900);line-height:1.5;padding:1px 0}
+.acc-input::placeholder{color:var(--n400)}
+.acc-del{flex:none;border:none;background:transparent;color:var(--n400);font-size:18px;line-height:1;cursor:pointer;padding:1px 4px;border-radius:6px;transition:color .15s,background .15s}
+.acc-del:hover{color:var(--err,#c0392b);background:var(--n100)}
+.acc-add{align-self:flex-start;display:inline-flex;align-items:center;gap:7px;border:1.5px dashed var(--n200);background:var(--white);color:var(--g700);font-size:13px;font-weight:600;font-family:var(--font-b);padding:8px 14px;border-radius:var(--r-md);cursor:pointer;transition:border-color .15s,background .15s}
+.acc-add:hover{border-color:var(--g600);background:var(--g50)}
+.acc-add-ic{font-size:15px;font-weight:700;line-height:1}
 .mem-edit-acts{display:flex;justify-content:flex-end;gap:8px}
 .mem-edit-acts .btn-s{padding:8px 16px;font-size:13px}
 .mem-edit-save{background:var(--g800);color:var(--white);border-color:var(--g800)}
@@ -1076,6 +1120,22 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
 @media (prefers-reduced-motion:reduce){.paper-dialog,.paper-backdrop{animation:none}}
 @media (max-width:560px){.paper-foot{flex-direction:column;align-items:stretch}.paper-foot>*{justify-content:center}}
 
+/* ── Info / legal modal (Privacy · Terms · Support) ── */
+.info-modal{position:fixed;inset:0;z-index:1200;display:flex;align-items:center;justify-content:center;padding:24px}
+.info-backdrop{position:absolute;inset:0;background:rgba(8,15,12,.55);backdrop-filter:blur(3px);animation:draftFade .2s ease}
+.info-dialog{position:relative;width:100%;max-width:560px;max-height:88vh;display:flex;flex-direction:column;background:var(--white);border:1px solid var(--n200);border-radius:var(--r-xl);box-shadow:0 28px 70px rgba(8,15,12,.4);overflow:hidden;animation:draftPop .26s cubic-bezier(.22,1,.36,1)}
+.info-head{display:flex;align-items:flex-start;gap:13px;padding:22px 24px 16px;border-bottom:1px solid var(--n100);flex:none}
+.info-head h3{flex:1;min-width:0;font-family:var(--font-d);font-size:21px;font-weight:700;color:var(--n900);letter-spacing:-.3px;line-height:1.2}
+.info-x{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border:none;background:var(--n100);color:var(--n500);border-radius:8px;cursor:pointer;flex:none;transition:background .15s}
+.info-x:hover{background:var(--n200);color:var(--n700)}
+.info-body{padding:20px 24px 24px;overflow-y:auto}
+.info-body p{font-size:14px;color:var(--n700);line-height:1.65;margin-bottom:13px}
+.info-body p:last-child{margin-bottom:0}
+.info-body h4{font-family:var(--font-b);font-size:14px;font-weight:700;color:var(--n900);margin:18px 0 7px}
+.info-body a{color:var(--g700);font-weight:600;text-decoration:underline}
+.info-body a:hover{color:var(--g800)}
+@media (prefers-reduced-motion:reduce){.info-dialog,.info-backdrop{animation:none}}
+
 /* Reveal: matches cascade in, pitch slides up once .done is set. */
 .resume-split.done #resumeResultsSection{animation:fadeUp .5s ease both;animation-delay:.35s}
 .resume-split.done #resumePitch{animation:fadeUp .5s ease both;animation-delay:.5s}
@@ -1178,43 +1238,25 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
   </nav>
 
   <div class="home-hero">
-    <h1>Find the right professor. Write an email they'll actually answer.</h1>
-    <p>Reachout connects motivated students with world-class research labs. Start your journey with confidence.</p>
-    <div class="home-hero-btns">
-      <button class="btn-p" onclick="go('auth')">Get Started</button>
-      <button class="btn-s" onclick="go('how-it-works')">Learn More</button>
-    </div>
-  </div>
-
-  <div class="home-preview">
-    <div class="preview-frame">
-      <div class="preview-mock">
-        <div class="mock-bar">
-          <div class="mock-dot" style="background:#FF5F57"></div>
-          <div class="mock-dot" style="background:#FFBD2E"></div>
-          <div class="mock-dot" style="background:#28C840"></div>
+    <div class="hh-grid">
+      <div class="hh-left">
+        <h1 class="hh-headline">The <em class="hh-accent">right way</em> to cold-email a professor.</h1>
+        <p class="hh-sub">Generic outreach gets ignored. ReachOut studies the lab and writes a personalized email that actually earns a reply.</p>
+        <div class="hh-actions">
+          <button class="hh-cta" onclick="go('auth')">Get started free <span aria-hidden="true">→</span></button>
+          <button class="hh-link" onclick="go('how-it-works')">See how it works <span aria-hidden="true">→</span></button>
         </div>
-        <div class="mock-row">
-          <div class="mock-av"></div>
-          <div class="mock-lines"><div class="mock-line" style="width:72%"></div><div class="mock-line" style="width:50%"></div></div>
-          <div class="mock-badge-s"></div>
-        </div>
-        <div class="mock-row" style="background:#f0fdf4">
-          <div style="width:8px;height:8px;border-radius:50%;background:#10B981;flex-shrink:0"></div>
-          <div class="mock-lines"><div class="mock-line" style="width:68%;background:#bbf7d0;height:9px"></div></div>
-        </div>
-        <div class="mock-row">
-          <div class="mock-av" style="opacity:.55"></div>
-          <div class="mock-lines"><div class="mock-line" style="width:78%"></div><div class="mock-line" style="width:45%"></div></div>
-          <div style="width:8px;height:8px;border-radius:50%;background:#F59E0B;flex-shrink:0"></div>
-        </div>
-        <div class="mock-row">
-          <div class="mock-av" style="opacity:.3"></div>
-          <div class="mock-lines"><div class="mock-line" style="width:60%"></div><div class="mock-line" style="width:40%"></div></div>
-          <div style="width:8px;height:8px;border-radius:50%;background:var(--n300);flex-shrink:0"></div>
-        </div>
-        <div class="mock-row" style="justify-content:center;padding:14px">
-          <div style="height:5px;background:var(--g800);width:28%;border-radius:3px;margin:0 auto"></div>
+        <p class="hh-note">No credit card required</p>
+      </div>
+      <div class="hh-right">
+        <div class="hh-email" role="img" aria-label="A personalized cold-email to Prof. Elena Vasquez at Stanford, written by ReachOut.">
+          <div class="hh-email-bar"><span class="hh-dot"></span><span class="hh-dot"></span><span class="hh-dot"></span></div>
+          <div class="hh-email-head">
+            <div class="hh-field"><span class="hh-label">To</span><span class="hh-value">Prof. Elena Vasquez · Stanford</span></div>
+            <div class="hh-field"><span class="hh-label">Subject</span><span class="hh-value">Prospective student — your work on graph neural networks</span></div>
+          </div>
+          <div class="hh-email-body" aria-hidden="true"></div>
+          <p class="hh-caption">Written in your voice</p>
         </div>
       </div>
     </div>
@@ -1247,10 +1289,9 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
   <div class="home-foot">
     <span class="home-foot-logo">Reachout</span>
     <div class="footer-links">
-      <a href="#">Privacy Policy</a>
-      <a href="#">Terms of Service</a>
-      <a href="#">Contact Support</a>
-      <a href="#">University Partnerships</a>
+      <a href="#" onclick="event.preventDefault();openInfoModal('privacy')">Privacy Policy</a>
+      <a href="#" onclick="event.preventDefault();openInfoModal('terms')">Terms of Service</a>
+      <a href="#" onclick="event.preventDefault();openInfoModal('support')">Contact Support</a>
     </div>
   </div>
 </div>
@@ -1335,9 +1376,9 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
   <div class="home-foot">
     <span class="home-foot-logo">Reachout</span>
     <div class="footer-links">
-      <a href="#">Privacy Policy</a>
-      <a href="#">Terms of Service</a>
-      <a href="#">Contact Support</a>
+      <a href="#" onclick="event.preventDefault();openInfoModal('privacy')">Privacy Policy</a>
+      <a href="#" onclick="event.preventDefault();openInfoModal('terms')">Terms of Service</a>
+      <a href="#" onclick="event.preventDefault();openInfoModal('support')">Contact Support</a>
     </div>
   </div>
 </div>
@@ -1553,6 +1594,10 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
       -->
     </div>
 
+    <!-- Thin-profile nudge (shown by loadRecommendations when interests are sparse).
+         Outside #profGrid so pagination redraws don't wipe it. -->
+    <div id="recsNudge" style="display:none;margin-bottom:18px"></div>
+
     <div class="prof-grid" id="profGrid">
       <!-- populated by discovery engine -->
     </div>
@@ -1561,10 +1606,10 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
   </div>
 
   <div class="footer">
-    <span class="footer-copy">© 2024 Reachout Research Platform. All rights reserved.</span>
+    <span class="footer-copy">© 2026 Reachout Research Platform. All rights reserved.</span>
     <div class="footer-links">
-      <a href="#">Privacy Policy</a><a href="#">Terms of Service</a>
-      <a href="#">Contact Support</a><a href="#">University Partnerships</a>
+      <a href="#" onclick="event.preventDefault();openInfoModal('privacy')">Privacy Policy</a><a href="#" onclick="event.preventDefault();openInfoModal('terms')">Terms of Service</a>
+      <a href="#" onclick="event.preventDefault();openInfoModal('support')">Contact Support</a>
     </div>
   </div>
   </div><!-- /#browseFilled -->
@@ -1893,6 +1938,22 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
 </div>
 
 <!-- ══════════════════════════════════
+     INFO / LEGAL MODAL (Privacy · Terms · Support)
+══════════════════════════════════ -->
+<div id="infoModal" class="info-modal" style="display:none" aria-hidden="true">
+  <div class="info-backdrop" onclick="closeInfoModal()"></div>
+  <div class="info-dialog" role="dialog" aria-modal="true" aria-labelledby="infoModalTitle">
+    <div class="info-head">
+      <h3 id="infoModalTitle"></h3>
+      <button class="info-x" onclick="closeInfoModal()" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="info-body" id="infoModalBody"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
      PAGE: TRACKER
 ══════════════════════════════════ -->
 <div id="page-tracker" class="page">
@@ -2202,14 +2263,22 @@ async function checkBackend() {
 }
 
 async function apiPost(path, body) {
+  const headers = { 'Content-Type': 'application/json' };
+  // Authenticated POSTs: attach the signed-in user's Firebase ID token so the
+  // server can identify the account (e.g. the per-day résumé cap).
+  const u = auth.currentUser;
+  if (u) headers['Authorization'] = 'Bearer ' + await u.getIdToken();
   const res = await fetch(API + path, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify(body),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || `HTTP ${res.status}`);
+    const e = new Error(err.error || `HTTP ${res.status}`);
+    e.status = res.status;                      // let callers branch on 401/429/etc.
+    e.body = err;                               // parsed body (e.g. { slotConsumed, resetAt })
+    throw e;
   }
   return res.json();
 }
@@ -2746,6 +2815,14 @@ async function analyzeResume() {
   const btnEl     = document.getElementById('resumeAnalyzeBtn');
   const errEl     = document.getElementById('resumeError');
 
+  // One upload per account per UTC day. Bail before any work (no read, no scan
+  // animation, button stays enabled) when today's upload is already used.
+  if (hasReachedDailyResumeLimit()) {
+    errEl.textContent = 'Max daily limit reached — come back tomorrow.';
+    errEl.style.display = 'block';
+    return;
+  }
+
   // Reset prior state (re-run goes back to the pre-results scanning state).
   errEl.style.display = 'none';
   document.getElementById('resumeRightPlaceholder').style.display = 'flex';
@@ -2780,6 +2857,10 @@ async function analyzeResume() {
       data: base64,
       mediaType: resumeFile._resolvedType || resumeFile.type,
     });
+    // Upload succeeded server-side → spend today's allowance and persist it the
+    // same way every other profile change is saved (localStorage + Firestore).
+    _userMemory.lastResumeUploadDate = todayUTC();
+    saveMemory();
     if (token !== analysisToken) return; // cancelled / new run while we waited
 
     setScanStep('match');   // AI responded → settle the tracker before the reveal
@@ -2791,7 +2872,21 @@ async function analyzeResume() {
     if (token !== analysisToken) return;
     abortScanAnimation();
     setResumeState('ready');
-    errEl.textContent = err.message || 'Something went wrong. Make sure the server is running and ANTHROPIC_API_KEY is set.';
+    if (err.status === 429) {
+      // Server says the day's already spent (e.g. uploaded from another device).
+      // Record it locally so the client gates the rest of the day / next refresh.
+      _userMemory.lastResumeUploadDate = todayUTC();
+      saveMemory();
+      errEl.textContent = 'Max daily limit reached — come back tomorrow.';
+    } else {
+      // A not-a-résumé 400 still spends the day's slot server-side — record it so
+      // the local gate stays in sync (else the next try wastes a scan then 429s).
+      if (err.status === 400 && err.body && err.body.slotConsumed) {
+        _userMemory.lastResumeUploadDate = todayUTC();
+        saveMemory();
+      }
+      errEl.textContent = err.message || 'Something went wrong. Make sure the server is running and ANTHROPIC_API_KEY is set.';
+    }
     errEl.style.display = 'block';
   } finally {
     btnEl.disabled = false;
@@ -2909,6 +3004,7 @@ function applyResumeToMemory(resp, mode = 'merge') {
   let resolveInst = '';
   if (resp.institution && (replace || !_userMemory.institution)) {
     _userMemory.institution = String(resp.institution).trim();
+    _userMemory.institutionId = ''; _userMemory.institutionLoc = null; // canonicalize repopulates
     resolveInst = _userMemory.institution;
   }
   // Field → a catalog entry. Replace overwrites; merge fills only when empty or when
@@ -2949,12 +3045,15 @@ async function canonicalizeInstitution(raw) {
     if (_userMemory.institution !== q) return;                 // user edited mid-lookup
     const results = data.results || [];
     const exact = results.find(r => r.name && r.name.toLowerCase() === q.toLowerCase());
-    const resolved = exact ? exact.name : (results[0]?.name || '');
-    if (resolved !== q) {
-      _userMemory.institution = resolved;                      // canonical option, or '' if none
-      saveMemory();
-      if (document.getElementById('page-myprofile')?.classList.contains('active')) renderMyProfile();
-    }
+    const choice = exact || results[0] || null;
+    const resolved = choice ? choice.name : '';
+    // Capture the resolved option's id + coordinates (location-proximity boost).
+    _userMemory.institutionId = (resolved && choice && choice.id) || '';
+    _userMemory.institutionLoc = (resolved && choice && Number.isFinite(choice.lat) && Number.isFinite(choice.lng))
+      ? { lat: choice.lat, lng: choice.lng, country: choice.country || '' } : null;
+    if (resolved !== q) _userMemory.institution = resolved;    // canonical option, or '' if none
+    saveMemory();
+    if (document.getElementById('page-myprofile')?.classList.contains('active')) renderMyProfile();
   } catch { /* network failure — can't validate, leave the value as-is */ }
 }
 
@@ -3231,6 +3330,54 @@ function recsZeroHTML() {
   </div>`;
 }
 
+// ── Thin-profile nudge ────────────────────────────────────────────────────────
+// When the saved profile has 0–1 interests, the recommendation list is broadened
+// from related (sibling) topics on the backend. This banner tells the user that and
+// invites them to add interests — the real lever for sharper, more personal ranking.
+// It lives OUTSIDE #profGrid (in #recsNudge) so client-side pagination redraws don't
+// wipe it. Dismissed for the session via the × button.
+let _recsNudgeDismissed = false;
+
+function recsNudgeHTML() {
+  return `
+  <div style="display:flex;align-items:center;gap:14px;padding:13px 16px;
+              background:#f1f7f3;border:1px solid #dcebe1;border-radius:12px">
+    <div style="font-size:20px;line-height:1">💡</div>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:13.5px;font-weight:700;color:var(--n800)">Add your research interests for sharper matches</div>
+      <div style="font-size:12.5px;color:var(--n500);line-height:1.5;margin-top:2px">These results are broadened from related fields. Tell us a few specific interests and we'll rank professors by what you actually care about.</div>
+    </div>
+    <button class="mem-cta" style="white-space:nowrap;flex:none" onclick="addInterestsCTA()">Add interests</button>
+    <button onclick="dismissRecsNudge()" aria-label="Dismiss"
+            style="background:none;border:none;cursor:pointer;color:var(--n400);font-size:20px;line-height:1;padding:2px 4px;flex:none">×</button>
+  </div>`;
+}
+
+function hideRecsNudge() {
+  const el = document.getElementById('recsNudge');
+  if (el) { el.style.display = 'none'; el.innerHTML = ''; }
+}
+
+// Show the nudge only for thin profiles (and only until dismissed this session).
+function updateRecsNudge(interestCount) {
+  const el = document.getElementById('recsNudge');
+  if (!el) return;
+  if (interestCount < 2 && !_recsNudgeDismissed) {
+    el.innerHTML = recsNudgeHTML();
+    el.style.display = '';
+  } else {
+    hideRecsNudge();
+  }
+}
+
+function dismissRecsNudge() { _recsNudgeDismissed = true; hideRecsNudge(); }
+
+// Jump straight into the interests editor on the profile page.
+function addInterestsCTA() {
+  go('myprofile');
+  if (typeof startEdit === 'function') startEdit('interests');
+}
+
 // ─── Browse: filters ─────────────────────────────────
 const browseFilter = { sort: 'best', unis: new Map(), locations: new Map() }; // unis: id -> {id,name}; locations: token -> {token,label,type}
 let cachedResults = [];
@@ -3342,10 +3489,18 @@ const INTERESTS_CATALOG = [
   'cybersecurity',
   'cryptography','network security','blockchain and distributed ledgers',
   'internet of things','augmented and virtual reality','game design and development',
+  'theoretical computer science','computational complexity',
+  'formal methods and verification','high-performance computing','parallel computing',
+  'embedded systems','information retrieval','recommender systems',
+  'knowledge graphs','graph neural networks','multimodal machine learning',
+  'federated learning','explainable ai','ai safety and alignment','ai ethics',
+  'speech recognition','speech and audio processing','autonomous vehicles',
+  'computational linguistics',
   // Data
   'data science','data analytics','data engineering','big data systems',
   'data visualization','business intelligence','statistical modeling',
   'predictive analytics','database systems','data privacy and governance',
+  'time series analysis','causal inference','natural language understanding',
   // Business / finance / entrepreneurship
   'business strategy and entrepreneurship','product management','project management',
   'operations management','supply chain management','marketing strategy',
@@ -3356,6 +3511,7 @@ const INTERESTS_CATALOG = [
   'management consulting','organizational behavior','human resources management',
   'leadership and management','nonprofit management','social entrepreneurship',
   'real estate and development','innovation management',
+  'quantitative finance','financial engineering','actuarial science','econometrics',
   // Healthcare / medicine
   'medicine and clinical practice','public health','epidemiology','global health',
   'health policy','healthcare administration','nursing and patient care',
@@ -3363,34 +3519,54 @@ const INTERESTS_CATALOG = [
   'dentistry','veterinary medicine','physical therapy and rehabilitation',
   'medical imaging','biomedical engineering','biotechnology',
   'genomics and precision medicine','immunology','oncology research','neurology',
-  'cardiology',
+  'cardiology','psychiatry','radiology','surgery','pediatrics','infectious diseases',
+  'health informatics','medical informatics','biostatistics','computational medicine',
   // Biology / life sciences
   'biology','molecular biology','cell biology','genetics','microbiology','biochemistry',
   'ecology and conservation','evolutionary biology','marine biology',
   'botany and plant science','zoology','neuroscience','cognitive science',
   'bioinformatics','synthetic biology',
+  'computational biology','systems biology','structural biology',
+  'developmental biology','cancer biology','stem cell biology','biophysics',
+  'virology','epigenetics','proteomics','metabolomics',
+  // Neuroscience
+  'computational neuroscience','cognitive neuroscience','behavioral neuroscience',
+  'systems neuroscience','molecular neuroscience',
+  'neuroengineering and brain-computer interfaces',
   // Physical sciences
   'physics','astrophysics and astronomy','particle physics',
   'condensed matter physics','chemistry','organic chemistry','physical chemistry',
   'materials science','nanotechnology','earth science and geology','oceanography',
   'meteorology and atmospheric science',
+  'computational physics','computational chemistry','quantum mechanics',
+  'quantum information science','cosmology','optics and photonics','plasma physics',
+  'fluid dynamics','thermodynamics','geophysics','analytical chemistry',
+  'inorganic chemistry',
   // Engineering
   'engineering','mechanical engineering','electrical engineering','civil engineering',
   'chemical engineering','aerospace engineering','environmental engineering',
   'industrial engineering','structural engineering','control systems',
   'signal processing','power and energy systems','renewable energy',
   'nuclear engineering','automotive engineering','manufacturing and automation',
+  'mechatronics','biomechanics','systems engineering','acoustics',
+  'semiconductor and microelectronics','telecommunications',
   // Math / statistics
   'mathematics','applied mathematics','pure mathematics','statistics',
   'probability theory','operations research','optimization','mathematical modeling',
+  'computational mathematics and scientific computing','numerical analysis',
+  'number theory','topology','abstract algebra','differential geometry',
+  'combinatorics','graph theory','dynamical systems','game theory',
+  'mathematical logic','discrete mathematics','partial differential equations',
   // Social sciences
   'psychology','clinical psychology','social psychology','sociology','anthropology',
   'political science','international relations','public policy','urban planning',
   'geography','demography','criminology',
+  'computational social science','network science','cognitive psychology',
+  'developmental psychology','neuroeconomics',
   // Humanities
   'history','philosophy','ethics','literature','linguistics','religious studies',
   'art history','classics and archaeology','cultural studies',
-  "gender and women's studies",
+  "gender and women's studies",'digital humanities',
   // Law / policy / governance
   'law and legal studies','constitutional law','intellectual property law',
   'international law','environmental law','human rights','public administration',
@@ -3739,14 +3915,25 @@ function renderFiltered() {
   }
 }
 
+// Which page numbers to render: a sliding window of up to 5 pages centered on
+// the current page, always anchored by the first and last page (with … gaps).
+// Shared by the browse + recommend paginators.
+function pageWindow(pages, current) {
+  const WINDOW = 5;
+  let start = Math.max(1, current - Math.floor(WINDOW / 2));
+  let end   = Math.min(pages, start + WINDOW - 1);
+  start = Math.max(1, end - WINDOW + 1);   // re-anchor when near the last page
+  const show = new Set([1, pages]);
+  for (let i = start; i <= end; i++) show.add(i);
+  return [...show].sort((a, b) => a - b);
+}
+
 function renderPaginationFor(total, current) {
   const pages = Math.ceil(total / state.perPage);
   if (pages <= 1) { document.getElementById('profPagination').innerHTML = ''; return; }
   const pag = document.getElementById('profPagination');
   let html = `<button class="pg-btn arr" onclick="state.page=Math.max(1,state.page-1);renderFiltered()">‹</button>`;
-  const show = new Set([1, pages]);
-  for (let i = Math.max(1, current-1); i <= Math.min(pages, current+1); i++) show.add(i);
-  const sorted = [...show].sort((a,b) => a-b);
+  const sorted = pageWindow(pages, current);
   let prev = 0;
   sorted.forEach(p => {
     if (prev && p - prev > 1) html += `<span class="pg-dots">…</span>`;
@@ -3776,6 +3963,7 @@ async function loadBrowse(field, page) {
   browseLoaded = true;
   browseMode = 'search';
   setBrowseState('filled');
+  hideRecsNudge();   // the interests nudge is recommend-mode only
   const sub = document.getElementById('browseSubtitle');
   if (sub) sub.textContent = 'Discover top researchers and mentors aligned with your academic interests.';
 
@@ -3843,6 +4031,7 @@ async function loadRecommendations() {
     if (sub) sub.textContent = 'Personalized professor recommendations.';
     if (grid) grid.innerHTML = recsOnboardingHTML();
     if (pag) pag.innerHTML = '';
+    hideRecsNudge();
     cachedResults = [];
     return;
   }
@@ -3864,6 +4053,11 @@ async function loadRecommendations() {
       goal: m.goal || '',
       unis: [...browseFilter.unis.keys()],
       locations: [...browseFilter.locations.keys()],
+      // Student institution → location-proximity boost (server resolves name if no coords).
+      institution: m.institution || '',
+      institutionId: m.institutionId || '',
+      institutionLoc: m.institutionLoc || null,
+      limit: 150,   // fetch up to 5 pages' worth; client paginates at state.perPage (30)
     });
     if (seq !== recsSeq) return;          // a newer request superseded this one
 
@@ -3874,8 +4068,12 @@ async function loadRecommendations() {
     if (!cachedResults.length) {          // scored, but nothing cleared the bar
       if (grid) grid.innerHTML = recsZeroHTML();
       if (pag) pag.innerHTML = '';
+      hideRecsNudge();
       return;
     }
+    // Thin profiles (0–1 interests) are broadened from related topics server-side;
+    // nudge the user to add interests for sharper ranking.
+    updateRecsNudge(interests.length);
     setSort('best');                      // best-fit ordering + re-render + sync sort UI
   } catch (err) {
     if (seq !== recsSeq) return;
@@ -3883,6 +4081,7 @@ async function loadRecommendations() {
     // are the server being down or a 502 from OpenAlex upstream.
     if (grid) grid.innerHTML = errorHTML('Start the local server to score professors against your profile.');
     if (pag) pag.innerHTML = '';
+    hideRecsNudge();
   }
 }
 
@@ -3908,10 +4107,7 @@ function renderPagination(total, current) {
   const pag = document.getElementById('profPagination');
   let html = `<button class="pg-btn arr" onclick="loadBrowse('${esc(state.field)}',${Math.max(1, current-1)})">‹</button>`;
 
-  const show = new Set();
-  show.add(1); show.add(pages);
-  for (let i = Math.max(1, current-1); i <= Math.min(pages, current+1); i++) show.add(i);
-  const sorted = [...show].sort((a,b) => a-b);
+  const sorted = pageWindow(pages, current);
 
   let prev = 0;
   sorted.forEach(p => {
@@ -3988,7 +4184,7 @@ async function loadProfile(authorId) {
 }
 
 // ── Contact email discovery (free, on-demand) ──
-let _profEmail = null; // the verified/likely address (null for guesses)
+let _profEmail = null; // the mailable address (verified/likely, incl. institution-pattern best-guess)
 
 function copyProfEmail() {
   const v = document.getElementById('profEmail')?.textContent;
@@ -4025,6 +4221,61 @@ function draftOutreach() {
 }
 function regenerateDraft() {
   if (state.currentAuthorId) runDraft();
+}
+
+// ─── Info / legal modal (Privacy · Terms · Contact Support) ───
+// Static, hand-authored copy — safe to render as HTML (no user/API data).
+const INFO_CONTENT = {
+  privacy: {
+    title: 'Privacy Policy',
+    html: `
+      <p>Reachout is a research tool that helps students discover professors and manage academic outreach. We keep data collection to the minimum needed to run the product.</p>
+      <h4>What we store</h4>
+      <p>When you create an account we store your sign-in details and the profile information you choose to add (such as your field, interests, and résumé-derived summary) so we can remember your preferences and tailor recommendations. Outreach you log is saved to your account so you can track it across sessions.</p>
+      <h4>How we use it</h4>
+      <p>Your profile is used only to power discovery and recommendations inside Reachout. We do not sell your data, and we do not share it with third parties for advertising.</p>
+      <h4>Third-party services</h4>
+      <p>We rely on public academic sources (such as OpenAlex) to surface professor and publication data, and on infrastructure providers to host the app and authenticate you. Their handling of data is governed by their own policies.</p>
+      <p>This is a lightweight project; if you have questions about your data or want it removed, contact us at <a href="tel:+19259155548">925-915-5548</a>.</p>`
+  },
+  terms: {
+    title: 'Terms of Service',
+    html: `
+      <p>By using Reachout you agree to these terms. Reachout is provided as-is to help you discover professors and organize academic outreach.</p>
+      <h4>Acceptable use</h4>
+      <p>Use Reachout for genuine academic and research outreach. Do not use it to send spam, harass anyone, or scrape or redistribute the underlying data at scale. You are responsible for the messages you send.</p>
+      <h4>Accuracy</h4>
+      <p>Professor information, email suggestions, and recommendations are drawn from public sources and automated matching, and may be incomplete or out of date. Always verify contact details before reaching out.</p>
+      <h4>Availability</h4>
+      <p>Reachout is an evolving project. Features may change or break, and the service is offered without warranties of any kind. We are not liable for any outcomes arising from its use.</p>
+      <p>Questions about these terms? Reach us at <a href="tel:+19259155548">925-915-5548</a>.</p>`
+  },
+  support: {
+    title: 'Contact Support',
+    html: `
+      <p>Need help, found a bug, or have feedback? We'd love to hear from you.</p>
+      <p>Call us directly at <a href="tel:+19259155548">925-915-5548</a> and we'll get back to you as soon as we can.</p>
+      <h4>Helpful details to include</h4>
+      <p>If you're reporting an issue, let us know what you were trying to do, what happened instead, and which page you were on. Screenshots are always welcome and help us resolve things faster.</p>`
+  }
+};
+function openInfoModal(kind) {
+  const data = INFO_CONTENT[kind];
+  if (!data) return;
+  const m = document.getElementById('infoModal');
+  document.getElementById('infoModalTitle').textContent = data.title;
+  const body = document.getElementById('infoModalBody');
+  body.innerHTML = data.html;
+  body.scrollTop = 0;
+  m.style.display = 'flex';
+  m.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+}
+function closeInfoModal() {
+  const m = document.getElementById('infoModal');
+  m.style.display = 'none';
+  m.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
 }
 
 // Put the modal back into AI mode after a compose session may have edited it:
@@ -4244,7 +4495,8 @@ function copyDraft(btn) {
 // Esc closes the modal.
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
-  if (document.getElementById('paperModal').style.display === 'flex') closePaperModal();
+  if (document.getElementById('infoModal').style.display === 'flex') closeInfoModal();
+  else if (document.getElementById('paperModal').style.display === 'flex') closePaperModal();
   else if (document.getElementById('draftModal').style.display === 'flex') closeDraftModal();
 });
 
@@ -4273,8 +4525,7 @@ async function loadProfEmail(authorId) {
 
   const LABELS = {
     verified: 'Verified from a published paper',
-    likely: 'Found on the paper’s page',
-    guess: 'Unverified guess — confirm before sending.',
+    likely: 'Most likely email',
   };
 
   try {
@@ -4290,8 +4541,10 @@ async function loadProfEmail(authorId) {
       _emailCache.set(authorId, d);
     }
 
-    if (d.email && d.mailtoEnabled) {
-      // A real, person-matched address.
+    const isPattern = !!(d.email && d.source === 'institution-pattern');
+    if (d.email && d.mailtoEnabled && !isPattern) {
+      // A real, mailable hit (verified or real-found likely): clickable + copyable,
+      // with a link back to where it was found.
       _profEmail = d.email;
       emailEl.textContent = d.email;
       copyEl.style.display = '';
@@ -4299,19 +4552,30 @@ async function loadProfEmail(authorId) {
       const src = d.source ? ` · <a href="${esc(safeUrl(d.source))}" target="_blank" rel="noopener">source</a>` : '';
       noteEl.innerHTML = `✓ ${LABELS[d.confidence] || ''}${src}`;
       noteEl.style.display = 'block';
-    } else if (d.email) {
-      // A pattern guess — show it, but never as a clickable mailto.
+    } else if (isPattern) {
+      // Institution-pattern best guess: display-only. Never observed anywhere, so we
+      // show it greyed for reference (no copy, not a send target — _profEmail stays
+      // null) and let the faculty-search link below be the actionable fallback.
+      // textContent (not innerHTML) so the institution name can't inject markup.
       emailEl.textContent = d.email;
       emailEl.style.color = 'var(--n400)';
-      noteEl.textContent = `○ ${LABELS.guess}`;
+      noteEl.textContent = `○ Best guess${d.institution ? ` · Standard ${d.institution} email format` : ''}`;
+      noteEl.style.display = 'block';
+    } else if (d.email) {
+      // Defensive fallback: an email with mailtoEnabled:false (not currently
+      // produced by the API) — show it non-clickably.
+      emailEl.textContent = d.email;
+      emailEl.style.color = 'var(--n400)';
+      noteEl.textContent = `○ ${LABELS[d.confidence] || ''}`;
       noteEl.style.display = 'block';
     } else {
       emailEl.textContent = 'No public email found';
       emailEl.style.color = 'var(--n400)';
     }
 
-    // Faculty-page link is the actionable fallback when we don't have a trusted email.
-    if (!d.mailtoEnabled && d.facultySearchUrl) {
+    // Faculty-page link is the actionable fallback whenever we don't have a trusted,
+    // mailable email — including the display-only institution-pattern best guess.
+    if ((!d.mailtoEnabled || isPattern) && d.facultySearchUrl) {
       facEl.href = d.facultySearchUrl;
       facEl.style.display = 'flex';
     }
@@ -5034,6 +5298,7 @@ function applyMergedProfile(merged) {
   let resolveInst = '';
   if (merged.institution) {
     _userMemory.institution = String(merged.institution).trim();
+    _userMemory.institutionId = ''; _userMemory.institutionLoc = null; // canonicalize repopulates
     resolveInst = _userMemory.institution;
   }
   _studentProfile = {
@@ -5067,6 +5332,11 @@ async function analyzePrResume(file) {
     err.textContent = `File is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max size is 10 MB.`;
     err.style.display = 'block'; return;
   }
+  // One upload per account per UTC day — bail before any scan/upload (mirrors analyzeResume).
+  if (hasReachedDailyResumeLimit()) {
+    err.textContent = 'Max daily limit reached — come back tomorrow.';
+    err.style.display = 'block'; return;
+  }
   file._resolvedType = resolvedType;
 
   // Swap the dropzone for the relocated scan stage and play the real animation.
@@ -5094,6 +5364,9 @@ async function analyzePrResume(file) {
     setScanStep('analyze');
 
     const resp = await apiPost('/api/analyze-resume', { data: base64, mediaType: resolvedType });
+    // Upload succeeded server-side → spend today's allowance and persist it.
+    _userMemory.lastResumeUploadDate = todayUTC();
+    saveMemory();
     if (token !== analysisToken) return;
     setScanStep('match');
     await finishScanAnimation();
@@ -5118,7 +5391,20 @@ async function analyzePrResume(file) {
     mount.style.display = 'none';
     document.getElementById('prDropZone').style.display = '';
     prSetHead(PR_HEAD_DEFAULT.title, PR_HEAD_DEFAULT.sub);
-    err.textContent = e2.message || 'Something went wrong. Make sure the server is running and ANTHROPIC_API_KEY is set.';
+    if (e2.status === 429) {
+      // Day already spent server-side → record it locally and show the limit copy.
+      _userMemory.lastResumeUploadDate = todayUTC();
+      saveMemory();
+      err.textContent = 'Max daily limit reached — come back tomorrow.';
+    } else {
+      // A not-a-résumé 400 still spends the day's slot server-side — record it so
+      // the local gate stays in sync (else the next try wastes a scan then 429s).
+      if (e2.status === 400 && e2.body && e2.body.slotConsumed) {
+        _userMemory.lastResumeUploadDate = todayUTC();
+        saveMemory();
+      }
+      err.textContent = e2.message || 'Something went wrong. Make sure the server is running and ANTHROPIC_API_KEY is set.';
+    }
     err.style.display = 'block';
   }
 }
@@ -5199,18 +5485,28 @@ function countryName(code) { return COUNTRY_NAMES[code?.toUpperCase()] || code |
 // are never pushed to the cloud.
 const MEM_KEY = 'reachout.profileMemory';
 const memKey = (uid) => `${MEM_KEY}.${uid || 'anon'}`;
-const blankMemory = () => ({ name:'', institution:'', field:'', goal:'', interests:[], accomplishments:[], skills:[] });
+// lastResumeUploadDate ('YYYY-MM-DD', UTC) backs the once-per-day résumé cap. It
+// rides the same memory object — so loadMemory/hydrate read it and saveMemory/
+// scheduleCloudSave persist it to Firestore with the rest of the profile.
+const blankMemory = () => ({ name:'', institution:'', institutionId:'', institutionLoc:null, field:'', goal:'', interests:[], accomplishments:[], skills:[], lastResumeUploadDate:'' });
 let _memUid = null;            // uid the in-memory copy belongs to (null = signed out)
 let _cloudSaveTimer = null;    // debounce handle for Firestore writes
 let _userMemory = loadMemory(null);
 function loadMemory(uid){ try { return { ...blankMemory(), ...(JSON.parse(localStorage.getItem(memKey(uid)))||{}) }; } catch { return blankMemory(); } }
+
+// One résumé upload per account per UTC day. The gate reads the date persisted on
+// the synced memory doc, so it survives refresh and follows the user across devices.
+const todayUTC = () => new Date().toISOString().slice(0, 10);
+function hasReachedDailyResumeLimit(){ return _userMemory.lastResumeUploadDate === todayUTC(); }
 
 // Signature of the fields that actually drive recommendation scoring (field, goal,
 // interests). When this changes, the cached recommendations are stale and must be
 // refetched on the next browse visit. accomplishments/skills/name/institution do
 // NOT enter ranking, so editing them never triggers a refetch.
 function recScoringSig(m = _userMemory){
-  return JSON.stringify([m.field || '', m.goal || '', [...(m.interests || [])].sort()]);
+  // institution(Id/Loc) included so changing schools re-ranks (location proximity).
+  return JSON.stringify([m.field || '', m.goal || '', [...(m.interests || [])].sort(),
+    m.institutionId || '', m.institutionLoc || null]);
 }
 let _lastRecSig = recScoringSig();
 
@@ -5588,8 +5884,17 @@ function memEditBody(key){
     </div>`;
   }
   if (key === 'accomplishments') {
+    // One editable bullet row per accomplishment (seed an empty row when none yet,
+    // so there's always somewhere to type). Values live in the DOM while editing;
+    // readAccDom() pulls them back into the array on add/remove/save.
+    const items = (_memEdit && _memEdit.buf && _memEdit.buf.length) ? _memEdit.buf : [''];
     return `<div class="mem-edit">
-      <textarea id="mem-edit-acc" class="mem-edit-area" placeholder="One accomplishment per line">${esc((m.accomplishments || []).join('\n'))}</textarea>
+      <div class="acc-edit" id="mem-edit-acc-list">
+        ${items.map((s, i) => accRowHTML(s, i)).join('')}
+      </div>
+      <button type="button" class="acc-add" onclick="addAccRow()">
+        <span class="acc-add-ic" aria-hidden="true">+</span> Add accomplishment
+      </button>
       ${memEditActs(key)}
     </div>`;
   }
@@ -5612,6 +5917,43 @@ function memEditActs(key){
     <button class="btn-s" onclick="cancelEdit()">Cancel</button>
     <button class="btn-s mem-edit-save" onclick="saveEdit('${key}')">Save</button>
   </div>`;
+}
+
+// ── Accomplishments bullet-row editor ──
+// Each accomplishment is its own bulleted, auto-growing textarea row with a remove
+// button, so the list reads as discrete points instead of one cramped block.
+function accRowHTML(s, i){
+  return `<div class="acc-row">
+    <span class="acc-bullet" aria-hidden="true"></span>
+    <textarea class="acc-input" rows="1" data-i="${i}" oninput="accAutosize(this)" placeholder="Describe an accomplishment…">${esc(s)}</textarea>
+    <button type="button" class="acc-del" title="Remove" aria-label="Remove accomplishment" onclick="removeAccRow(${i})">×</button>
+  </div>`;
+}
+// Pull the current row values out of the DOM (source of truth while editing).
+function readAccDom(){
+  const list = document.getElementById('mem-edit-acc-list');
+  if (!list) return (_memEdit && _memEdit.buf) ? _memEdit.buf.slice() : [];
+  return [...list.querySelectorAll('.acc-input')].map(t => t.value);
+}
+function addAccRow(){
+  if (!_memEdit) return;
+  _memEdit.buf = readAccDom();            // keep in-progress edits
+  _memEdit.buf.push('');
+  renderMyProfile();
+  const list = document.getElementById('mem-edit-acc-list');
+  const inputs = list ? list.querySelectorAll('.acc-input') : [];
+  if (inputs.length) inputs[inputs.length - 1].focus();
+}
+function removeAccRow(i){
+  if (!_memEdit) return;
+  _memEdit.buf = readAccDom();
+  _memEdit.buf.splice(i, 1);
+  renderMyProfile();
+}
+// Grow a row's textarea to fit its content (no inner scrollbar on long entries).
+function accAutosize(t){
+  t.style.height = 'auto';
+  t.style.height = t.scrollHeight + 'px';
 }
 function renderMyProfile(){
   const root = document.getElementById('myProfileBody');
@@ -5665,12 +6007,20 @@ function renderMyProfile(){
 
   // Focus the relevant input once the edit-mode card is in the DOM.
   if (_memEdit) {
-    const focusId = _memEdit.key === 'identity' ? 'mem-edit-name'
-      : (_memEdit.key === 'field' || _memEdit.key === 'goal') ? `mem-edit-${_memEdit.key}`
-      : _memEdit.key === 'accomplishments' ? 'mem-edit-acc'
-      : 'mem-edit-chip-inp';
-    const el = document.getElementById(focusId);
-    if (el) el.focus();
+    if (_memEdit.key === 'accomplishments') {
+      const list = document.getElementById('mem-edit-acc-list');
+      if (list) {
+        list.querySelectorAll('.acc-input').forEach(accAutosize); // fit pre-filled rows
+        const first = list.querySelector('.acc-input');
+        if (first) first.focus();
+      }
+    } else {
+      const focusId = _memEdit.key === 'identity' ? 'mem-edit-name'
+        : (_memEdit.key === 'field' || _memEdit.key === 'goal') ? `mem-edit-${_memEdit.key}`
+        : 'mem-edit-chip-inp';
+      const el = document.getElementById(focusId);
+      if (el) el.focus();
+    }
   }
 }
 
@@ -5721,20 +6071,31 @@ function instSearch(e){
     }
   }, 500);
 }
+let _instOpts = [];     // last-rendered institution options (carry id + coords by index)
+let _pickedInst = null; // pending pick {name,id,loc} captured on select, applied on save
 function renderInstSuggest(results){
   const el = instSuggestEl();
   if (!el) return;
-  if (!results.length) { el.innerHTML = `<div class="inst-note">No matches.</div>`; return; }
-  el.innerHTML = results.map(r => `
-    <button type="button" class="inst-opt" data-name="${esc(r.name)}" onmousedown="pickInstitution(event)">
+  _instOpts = results || [];
+  if (!_instOpts.length) { el.innerHTML = `<div class="inst-note">No matches.</div>`; return; }
+  el.innerHTML = _instOpts.map((r, i) => `
+    <button type="button" class="inst-opt" data-i="${i}" onmousedown="pickInstitution(event)">
       <span class="inst-opt-name">${esc(r.name)}</span>
       ${r.hint ? `<span class="inst-opt-hint">${esc(r.hint)}</span>` : ''}
     </button>`).join('');
 }
 function pickInstitution(e){
   e.preventDefault(); // fire before the input's blur
+  const o = _instOpts[+e.currentTarget.dataset.i] || {};
+  // Stash the id + coordinates so the recommender can boost nearby professors.
+  _pickedInst = {
+    name: o.name || '',
+    id: o.id || '',
+    loc: (Number.isFinite(o.lat) && Number.isFinite(o.lng))
+      ? { lat: o.lat, lng: o.lng, country: o.country || '' } : null,
+  };
   const inp = document.getElementById('mem-edit-institution');
-  if (inp) inp.value = e.currentTarget.dataset.name || '';
+  if (inp) inp.value = o.name || '';
   closeInstSuggest();
 }
 function instKey(e){ if (e.key === 'Escape') { _instSeq++; closeInstSuggest(); } }
@@ -5858,6 +6219,17 @@ function saveEdit(key){
     const val = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
     _userMemory.name = val('mem-edit-name');
     _userMemory.institution = val('mem-edit-institution');
+    // Keep the picked institution's id/coords only if the field still matches the
+    // selection; if the user free-typed over it, clear them so the server resolves
+    // the name itself (and we don't attach a stale Stanford pin to "MIT").
+    if (_pickedInst && _pickedInst.name === _userMemory.institution) {
+      _userMemory.institutionId = _pickedInst.id || '';
+      _userMemory.institutionLoc = _pickedInst.loc || null;
+    } else {
+      _userMemory.institutionId = '';
+      _userMemory.institutionLoc = null;
+    }
+    _pickedInst = null;
   } else if (key === 'field') {
     const inp = document.getElementById('mem-edit-field');
     _userMemory.field = inp ? inp.value.trim() : '';
@@ -5865,10 +6237,7 @@ function saveEdit(key){
     _userMemory.goal = [...document.querySelectorAll('#myProfileBody .dz-row.is-editing .int-tag.sel')]
       .map(b => b.textContent.trim()).join(', ');
   } else if (key === 'accomplishments') {
-    const area = document.getElementById('mem-edit-acc');
-    _userMemory.accomplishments = area
-      ? area.value.split('\n').map(s => s.trim()).filter(Boolean)
-      : [];
+    _userMemory.accomplishments = readAccDom().map(s => s.trim()).filter(Boolean);
   } else if (_memEdit && _memEdit.buf) {
     _userMemory[key] = [..._memEdit.buf];
   }
@@ -5923,10 +6292,20 @@ window.setStatus      = setStatus;
 window.toggleTag      = toggleTag;
 window.saveOnboarding = saveOnboarding;
 window.startEdit      = startEdit;
+window.addInterestsCTA  = addInterestsCTA;
+window.dismissRecsNudge = dismissRecsNudge;
+// Recommend-mode pagination buttons (renderPaginationFor) use inline onclick that
+// references `state`/`renderFiltered`; inline handlers resolve against the global
+// scope, so both must be exposed or the page buttons silently no-op.
+window.state          = state;
+window.renderFiltered = renderFiltered;
 window.cancelEdit     = cancelEdit;
 window.saveEdit       = saveEdit;
 window.removeMemChip  = removeMemChip;
 window.addMemChip     = addMemChip;
+window.addAccRow      = addAccRow;
+window.removeAccRow   = removeAccRow;
+window.accAutosize    = accAutosize;
 window.memChipKey     = memChipKey;
 window.instSearch     = instSearch;
 window.instKey        = instKey;
@@ -5948,6 +6327,8 @@ window.draftOutreach      = draftOutreach;
 window.togglePubMore      = togglePubMore;
 window.openPaperModal     = openPaperModal;
 window.closePaperModal    = closePaperModal;
+window.openInfoModal      = openInfoModal;
+window.closeInfoModal     = closeInfoModal;
 window.clearResumeFile    = clearResumeFile;
 window.toggleSortDropdown   = toggleSortDropdown;
 window.setSort              = setSort;
@@ -6040,6 +6421,74 @@ function requestResumeSticky() {
 // capture:true so scrolls from an inner scroll container reach this handler too.
 window.addEventListener('scroll', requestResumeSticky, { passive: true, capture: true });
 window.addEventListener('resize', requestResumeSticky);
+</script>
+
+<!-- Home hero: typing-email animation -->
+<script>
+(function(){
+  var body=document.querySelector('.hh-email-body');
+  if(!body)return;
+  var lines=[
+    {text:"Dear Professor Vasquez,"},
+    {text:"Your recent paper on dynamic graph embeddings caught my eye —"},
+    {text:"my work on temporal GNNs lines up closely with it."},
+    {text:"Could I borrow 15 minutes to hear how you'd approach the next step?"},
+    {text:"— Maya Chen, CS '26", sign:true}
+  ];
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  function renderStatic(){
+    body.innerHTML='';
+    lines.forEach(function(l){
+      var p=document.createElement('p');
+      p.className='hh-line'+(l.sign?' hh-sign':'');
+      p.textContent=l.text;
+      body.appendChild(p);
+    });
+  }
+  if(reduce){renderStatic();return;}
+  var CHAR_MS=26, LINE_PAUSE=240, LOOP_PAUSE=3000;
+  var li=0, ci=0, cur=null, caret=null, timer=null;
+  function makeCaret(){var c=document.createElement('span');c.className='hh-caret';return c;}
+  function startLine(){
+    cur=document.createElement('p');
+    cur.className='hh-line'+(lines[li].sign?' hh-sign':'');
+    var textNode=document.createTextNode('');
+    cur.appendChild(textNode);
+    caret=makeCaret();
+    cur.appendChild(caret);
+    body.appendChild(cur);
+    cur._text=textNode;
+    ci=0;
+    typeChar();
+  }
+  function typeChar(){
+    var full=lines[li].text;
+    if(ci<full.length){
+      cur._text.textContent=full.slice(0,ci+1);
+      ci++;
+      timer=setTimeout(typeChar,CHAR_MS);
+    }else{
+      if(caret&&caret.parentNode)caret.parentNode.removeChild(caret);
+      li++;
+      if(li<lines.length){
+        timer=setTimeout(startLine,LINE_PAUSE);
+      }else{
+        var lastCaret=makeCaret();
+        cur.appendChild(lastCaret);
+        timer=setTimeout(function(){
+          if(lastCaret&&lastCaret.parentNode)lastCaret.parentNode.removeChild(lastCaret);
+          reset();
+        },LOOP_PAUSE);
+      }
+    }
+  }
+  function reset(){
+    body.innerHTML='';
+    li=0;ci=0;cur=null;caret=null;
+    timer=setTimeout(startLine,LINE_PAUSE);
+  }
+  timer=setTimeout(startLine,500);
+})();
 </script>
 </body>
 </html>

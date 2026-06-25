@@ -110,26 +110,55 @@ async function wdFetch(url) {
 //   • Otherwise everything lives in the same in-memory `cache` Map (durable keys
 //     never collide with oaFetch's URL keys), shape { data, expiresAt }.
 let _fbInitPromise = null; // memoized in-flight (or settled) init — runs at most once
+let _adminAppPromise = null; // memoized firebase-admin app accessor — inits at most once
+
+// Shared lazy firebase-admin app accessor. Resolves to the `admin` module with the
+// DEFAULT app initialized exactly once, so BOTH the durable cache (Firestore) and
+// Firebase-auth token verification reuse a single app. firebase-admin is imported
+// lazily (it's an optional-at-runtime dependency). KEY DETAIL: a service-account
+// credential is attached only when one is configured, but the app is ALWAYS
+// initialized with an explicit projectId — `admin.auth().verifyIdToken` validates a
+// JWT against Google's public certs + projectId and needs NO credential, so token
+// verification works even with no creds. (Firestore still requires real creds; that
+// gate stays in _initFirebaseCacheOnce.) Never reached under NODE_ENV==='test'.
+function getAdminApp() {
+  if (!_adminAppPromise) _adminAppPromise = (async () => {
+    const admin = (await import('firebase-admin')).default;
+    if (!admin.apps.length) {
+      const opts = { projectId: process.env.FIREBASE_PROJECT_ID || 'reachout-93272' };
+      if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+        const json = JSON.parse(Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT, 'base64').toString('utf8'));
+        opts.credential = admin.credential.cert(json);
+      } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+        opts.credential = admin.credential.applicationDefault();
+      }
+      admin.initializeApp(opts);
+    }
+    return admin;
+  })().catch((err) => {
+    // Never cache a rejection — a transient init failure (e.g. a flaky lazy import)
+    // would otherwise 401 every later verifyFirebaseToken until restart. Reset the
+    // memo so the NEXT call retries init from scratch, and rethrow for this caller.
+    _adminAppPromise = null;
+    throw err;
+  });
+  return _adminAppPromise;
+}
 
 // Internal: actually attempt firebase-admin init. Resolves to a Firestore handle
 // or null. Wrapped once by initFirebaseCache so concurrent first-callers all await
 // the SAME promise instead of racing past a synchronous flag and falling back to
 // the Map (which would give different callers different backends).
 async function _initFirebaseCacheOnce() {
+  // Hermetic tests: NEVER touch live Firestore under `npm test` (NODE_ENV=test),
+  // even if .env carries creds. The gRPC transport bypasses the fetch mocks, so a
+  // live connection would both pollute the prod `cache` collection AND leak stale
+  // entries across runs (cacheClear() only wipes the in-memory Map). Force the Map.
+  if (process.env.NODE_ENV === 'test') return null;
   const hasCreds = !!(process.env.FIREBASE_SERVICE_ACCOUNT || process.env.GOOGLE_APPLICATION_CREDENTIALS);
   if (!hasCreds) return null; // no creds → in-memory Map (the default, test-safe path)
   try {
-    const admin = (await import('firebase-admin')).default;
-    if (!admin.apps.length) {
-      let credential;
-      if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-        const json = JSON.parse(Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT, 'base64').toString('utf8'));
-        credential = admin.credential.cert(json);
-      } else {
-        credential = admin.credential.applicationDefault(); // GOOGLE_APPLICATION_CREDENTIALS
-      }
-      admin.initializeApp({ credential });
-    }
+    const admin = await getAdminApp(); // reuse the one shared default app — never double-init
     console.log('[cache] firebase-admin durable cache enabled');
     return admin.firestore();
   } catch (err) {
@@ -182,6 +211,20 @@ async function cacheSet(key, value, ttlMs) {
   cache.set(key, { data: value, expiresAt });
 }
 
+/** Delete a durable cache entry. Never throws — a backend outage is a silent no-op. */
+async function cacheDelete(key) {
+  const db = await initFirebaseCache();
+  if (db) {
+    try {
+      await db.collection('cache').doc(cacheDocId(key)).delete();
+    } catch (err) {
+      console.error('[cache] delete failed:', err.message);
+    }
+    return;
+  }
+  cache.delete(key);
+}
+
 /** Clear the in-memory cache (volatile HTTP entries + in-memory durable entries).
  *  Firestore-backed durable entries are not touched. Used by the test suite. */
 function cacheClear() {
@@ -191,8 +234,79 @@ function cacheClear() {
 // Durable TTLs (ms).
 const DAY_MS = 24 * 60 * 60 * 1000;
 const EMAIL_TTL_VERIFIED_MS = 7 * DAY_MS;  // verified/likely email payloads
-const EMAIL_TTL_GUESS_MS = 2 * DAY_MS;     // guess + negative payloads (re-probe sooner)
-const INTERMEDIATE_TTL_MS = 30 * DAY_MS;   // unpaywall/page/europepmc/instdomain/rordomain
+const EMAIL_TTL_GUESS_MS = 2 * DAY_MS;  // constructed-pattern best-guess + not-found payloads (re-probe sooner)
+const INTERMEDIATE_TTL_MS = 30 * DAY_MS;   // unpaywall/page/europepmc/instdomain
+const NEG_INTERMEDIATE_TTL_MS = 1 * DAY_MS; // negative author-PMC probe (no PMC paper / no match) — re-probe sooner
+
+// ─── Firebase auth + per-account daily upload limit ──────────────────────────
+// verifyFirebaseToken authenticates the caller; the daily-upload helpers enforce a
+// 1-résumé-per-day-per-account cap on POST /api/analyze-resume. The cap rides the
+// durable cacheGet/cacheSet layer above (Firestore when creds exist, else the
+// in-memory Map) — best-effort-durable across redeploys when configured.
+
+/**
+ * Verify an `Authorization: Bearer <token>` Firebase ID token. Resolves to { uid }
+ * or throws (the caller maps any throw to a 401).
+ *
+ * Test seam (critical): under NODE_ENV==='test' we NEVER import firebase-admin or
+ * touch the network — mirroring the durable-cache test guard so the suite stays
+ * hermetic. The token is treated as the literal uid via the form `Bearer test:<uid>`
+ * (e.g. `Bearer test:alice` → { uid:'alice' }). In production the token is verified
+ * against Google's public certs + projectId via admin.auth().verifyIdToken, which
+ * needs NO service-account credential — so auth works even with the cache in Map mode.
+ */
+async function verifyFirebaseToken(authorizationHeader) {
+  const m = /^Bearer\s+(.+)$/i.exec(String(authorizationHeader || '').trim());
+  if (!m) throw new Error('Missing or malformed Authorization header');
+  const token = m[1].trim();
+  if (!token) throw new Error('Empty bearer token');
+
+  if (process.env.NODE_ENV === 'test') {
+    const t = /^test:(.+)$/.exec(token);
+    if (!t) throw new Error('Invalid test token (expected "test:<uid>")');
+    return { uid: t[1] };
+  }
+
+  const admin = await getAdminApp();
+  const decoded = await admin.auth().verifyIdToken(token);
+  return { uid: decoded.uid };
+}
+
+/** UTC calendar-day key, e.g. '2026-06-25'. The daily cap rolls over at 00:00 UTC. */
+const dayKeyUTC = (date = new Date()) => new Date(date).toISOString().slice(0, 10);
+
+/** Milliseconds from `now` until the next 00:00 UTC — used for the slot TTL and Retry-After. */
+function msUntilNextUtcMidnight(now = Date.now()) {
+  const d = new Date(now);
+  const next = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1, 0, 0, 0, 0);
+  return next - now;
+}
+
+/** Durable key for one account's daily résumé-upload slot. */
+const dailyUploadKey = (uid) => `rl:resume:${uid}:${dayKeyUTC()}`;
+
+/**
+ * Reserve today's single résumé-upload slot for `uid`. Returns { ok:true } and marks
+ * the slot used, or { ok:false, resetAt } (ISO of next UTC midnight) when already used.
+ * Read-then-set: a benign concurrent double-submit could slip a second request through
+ * before the first writes — acceptable for a 1/day cap. The slot TTL outlives the UTC
+ * day by 60s of slack so it never expires a hair early.
+ */
+async function reserveDailyUpload(uid) {
+  const key = dailyUploadKey(uid);
+  const used = await cacheGet(key);
+  const resetAt = new Date(Date.now() + msUntilNextUtcMidnight()).toISOString();
+  if (used) return { ok: false, resetAt };
+  await cacheSet(key, 1, msUntilNextUtcMidnight() + 60000);
+  return { ok: true };
+}
+
+/** Release today's slot for `uid` (refund after our own / Claude's failure). Never throws. */
+async function refundDailyUpload(uid) {
+  try {
+    await cacheDelete(dailyUploadKey(uid));
+  } catch { /* best-effort — a failed refund just costs the user one slot */ }
+}
 
 // ─── Body parsing ────────────────────────────────────────────────────────────
 // Base64-encoded resume images inflate ~33%, so 15 MB covers ~10 MB source files.
@@ -202,7 +316,7 @@ app.use(express.json({ limit: '15mb' }));
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
@@ -268,6 +382,7 @@ async function fetchTopicCandidates(field) {
     fieldId: stripId(t.field?.id),       // e.g. "fields/17"; may be null
     fieldName: t.field?.display_name || null,
     subfieldId: stripId(t.subfield?.id),
+    siblings: Array.isArray(t.siblings) ? t.siblings : [], // related topics in the same subfield
   }));
 }
 
@@ -304,7 +419,35 @@ async function resolveTopicId(field, preferredFieldId = null) {
     name: best.name,
     fieldId: best.fieldId,
     subfieldId: best.subfieldId,
+    siblings: best.siblings || [],
   };
+}
+
+/**
+ * Related-topic fan-out for THIN profiles. Resolves `field` to its OpenAlex topic
+ * and returns up to `max` of that topic's siblings — related topics in the SAME
+ * subfield, already relevance-ordered by OpenAlex — as fully-formed topic objects.
+ * Siblings share the subfield, so we reuse the primary topic's field/subfield ids
+ * without a second lookup. The caller adds these as extra search buckets purely to
+ * widen recall; they never inflate a card's score (see recommendForInterests).
+ * Never throws — returns [] on any upstream hiccup.
+ */
+async function relatedTopics(field, preferredFieldId = null, max = 5) {
+  try {
+    const primary = await resolveTopicId(field, preferredFieldId);
+    if (!primary) return [];
+    return (primary.siblings || [])
+      .slice(0, max)
+      .map((s) => ({
+        id: stripId(s.id),
+        name: s.display_name,
+        fieldId: primary.fieldId,      // siblings share the subfield → same field
+        subfieldId: primary.subfieldId,
+      }))
+      .filter((t) => t.id && t.name);
+  } catch {
+    return [];
+  }
 }
 
 /**
@@ -536,7 +679,7 @@ function computeResponsiveness(stats, dominantField) {
  *
  * Returns { percent, breakdown }. Pure & deterministic.
  */
-function computeReplyFitScore({ bestBase, hitCount, n, hasField, stats, dominantField, goal, coverage }) {
+function computeReplyFitScore({ bestBase, hitCount, n, hasField, stats, dominantField, goal, coverage, prox01 = null }) {
   // FIT01 — topical/field fit, normalized to [0,1]. fitRaw rewards multi-interest
   // coverage (8 = COVERAGE_STEP); maxHit accounts for the field double-count so a
   // full-coverage author lands near 1.0.
@@ -556,7 +699,13 @@ function computeReplyFitScore({ bestBase, hitCount, n, hasField, stats, dominant
   const wFit = leanFit ? 0.75 : 0.60;
   const wResp = leanFit ? 0.25 : 0.40;
 
-  const percent = Math.min(99, Math.max(30, Math.round(30 + 69 * (wFit * fit01 + wResp * resp01))));
+  // Location proximity — a BOOST-ONLY nudge gated on prox01. When prox01 is null
+  // (no student location, or this professor has no resolvable geo) bonus is 0 and
+  // the score is byte-identical to the two-term blend. Never negative → never demotes.
+  const proxAvail = Number.isFinite(prox01);
+  const core = wFit * fit01 + wResp * resp01;
+  const bonus = proxAvail ? PROX_CONFIG.wProx * prox01 : 0;
+  const percent = Math.min(99, Math.max(30, Math.round(30 + 69 * clamp01(core + bonus))));
 
   // Deterministic, FACTUAL reasons — strongest-first, NO career-stage claim.
   const reasons = [];
@@ -578,6 +727,9 @@ function computeReplyFitScore({ bestBase, hitCount, n, hasField, stats, dominant
   if (saturationScore < 0.4) {
     reasons.push('Very high-profile for their field — may have a busy inbox');
   }
+  // Location leads the list when it's a strong signal (the card shows a place line).
+  if (proxAvail && prox01 >= 0.85) reasons.unshift('Right in your area');
+  else if (proxAvail && prox01 >= 0.55) reasons.unshift('Close to your institution');
 
   return {
     percent,
@@ -588,6 +740,7 @@ function computeReplyFitScore({ bestBase, hitCount, n, hasField, stats, dominant
         activity: Math.round(100 * activityScore),
         saturation: Math.round(100 * saturationScore),
       },
+      proximity: proxAvail ? Math.round(100 * prox01) : null,
       reasons,
     },
   };
@@ -658,15 +811,16 @@ function normalizeWork(raw) {
 
 // ─── Email discovery helpers (free: Europe PMC, Unpaywall, OA PDFs, pattern) ──
 // The hot path is now a DOI-keyed, all-fields fan-out (Europe PMC + Unpaywall +
-// arXiv + ROR/ORCID) — see GET /api/professor/:authorId/email. The NCBI-efetch
-// orchestrators below are retired from that path but kept (with their exports) so
-// the existing unit tests keep passing.
+// arXiv) — see GET /api/professor/:authorId/email. The NCBI-efetch orchestrators
+// below are retired from that path but kept (with their exports) so the existing
+// unit tests keep passing.
 const NCBI_EUTILS = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils';
 const EUROPE_PMC = 'https://www.ebi.ac.uk/europepmc/webservices/rest';
 const UNPAYWALL = 'https://api.unpaywall.org/v2';
 const ROR_API = 'https://api.ror.org/organizations';
 const ORCID_API = 'https://pub.orcid.org/v3.0';
-const EMAIL_RE = /[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/g;
+const CROSSREF_API = 'https://api.crossref.org';
+const EMAIL_RE = /[A-Za-z0-9._%+\-]+@[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)+/g;
 const GENERIC_LOCALS = /^(info|contact|admin|editor|journal|journals|support|office|webmaster|enquiries|enquiry|press|media|help|noreply|no-reply|corresponding|author|authors|reprints|permissions)$/;
 // Optional NCBI API key raises the E-utilities rate limit 3 → 10 req/s.
 const NCBI_API_KEY = process.env.NCBI_API_KEY || '';
@@ -676,12 +830,18 @@ const NCBI_KEY_PARAM = NCBI_API_KEY ? `&api_key=${encodeURIComponent(NCBI_API_KE
 async function ncbiFetch(db, ids) {
   const url = `${NCBI_EUTILS}/efetch.fcgi?db=${db}&id=${encodeURIComponent(ids.join(','))}` +
     `&rettype=xml&retmode=xml&tool=reachout&email=${encodeURIComponent(CONTACT_EMAIL)}${NCBI_KEY_PARAM}`;
+  await assertPublicHttpUrl(url); // constant host, but gate for consistency
   const res = await fetch(url, {
     headers: { 'User-Agent': UA },
     signal: AbortSignal.timeout(4500), // bounded; findEmailFromNcbiBatch catches the abort
   });
   if (!res.ok) throw new Error(`NCBI ${db} ${res.status}`);
-  return res.text();
+  // Defense-in-depth byte cap so an oversized response can't feed extractEmails/
+  // EMAIL_RE an unbounded string. 8MB is generous: batched PMC full-text (up to
+  // ~10 articles) is legitimately a few MB and never truncated, while abuse is bounded.
+  const NCBI_CAP = 8 * 1024 * 1024;
+  const t = await res.text();
+  return t.length > NCBI_CAP ? t.slice(0, NCBI_CAP) : t;
 }
 
 /** Strip diacritics so "José" compares as "jose" (NFD → drop combining marks). */
@@ -1034,17 +1194,6 @@ async function extractEmailsFromPdfWithText(buffer) {
 const normPmcid = (v) => { const m = String(v || '').match(/PMC(\d+)/i); return m ? m[1] : null; };
 const normPmid = (v) => { const m = String(v || '').match(/(\d{4,})/); return m ? m[1] : null; };
 
-/** Build common email-pattern guesses from name + institution domain. */
-function guessEmails(first, last, domain) {
-  if (!domain || !first || !last) return [];
-  return [
-    `${first}.${last}@${domain}`,
-    `${first[0]}${last}@${domain}`,
-    `${last}@${domain}`,
-    `${first}${last}@${domain}`,
-  ].map((e) => e.toLowerCase());
-}
-
 // ─── SSRF egress gate ─────────────────────────────────────────────────────────
 // fetchHtml / fetchPdfBuffer / epmcFetch GET URLs that originate from third parties
 // (Unpaywall url_for_landing_page / url_for_pdf, OpenAlex locations, …). Without a
@@ -1163,10 +1312,12 @@ async function unpaywallFetch(doi) {
   return res.json();
 }
 
-/** ROR organization record (carries `domains[]` — an authoritative email domain). */
+/** ROR organization record — its verified `domains` is the cleanest institutional
+ *  email domain (public even when the email isn't). Feeds the Layer 3 guess. */
 async function rorFetch(rorId) {
-  const id = String(rorId || '').replace(/^https?:\/\/ror\.org\//, '');
+  const id = String(rorId || '').replace(/^https?:\/\/ror\.org\//i, '');
   const url = `${ROR_API}/${encodeURIComponent(id)}`;
+  await assertPublicHttpUrl(url); // constant host, but gate for consistency
   const res = await fetch(url, {
     headers: { 'User-Agent': UA, Accept: 'application/json' },
     signal: AbortSignal.timeout(EMAIL_FETCH_TIMEOUT_MS),
@@ -1175,16 +1326,35 @@ async function rorFetch(rorId) {
   return res.json();
 }
 
-/** ORCID public record section (e.g. 'employments') as JSON. */
+/** ORCID public record section (e.g. 'employments') — confirms the current school. */
 async function orcidFetch(orcid, section) {
-  const id = String(orcid || '').replace(/^https?:\/\/orcid\.org\//, '');
-  const url = `${ORCID_API}/${encodeURIComponent(id)}/${section}`;
+  const url = `${ORCID_API}/${encodeURIComponent(orcid)}/${section}`;
+  await assertPublicHttpUrl(url); // constant host, but gate for consistency
   const res = await fetch(url, {
     headers: { 'User-Agent': UA, Accept: 'application/json' },
     signal: AbortSignal.timeout(EMAIL_FETCH_TIMEOUT_MS),
   });
-  if (!res.ok) throw new Error(`ORCID ${res.status}: ${id}/${section}`);
+  if (!res.ok) throw new Error(`ORCID ${res.status}: ${orcid}`);
   return res.json();
+}
+
+/** Crossref work metadata for a DOI. Works even for PAYWALLED papers — that's the
+ *  point: Crossref carries author records (occasionally an explicit email) without
+ *  needing OA full text. mailto= joins the polite pool. */
+async function crossrefFetch(doi) {
+  const url = `${CROSSREF_API}/works/${encodeURIComponent(doi)}?mailto=${encodeURIComponent(CONTACT_EMAIL)}`;
+  await assertPublicHttpUrl(url); // constant host, but gate for consistency
+  const res = await fetch(url, {
+    headers: { 'User-Agent': UA, Accept: 'application/json' },
+    signal: AbortSignal.timeout(EMAIL_FETCH_TIMEOUT_MS),
+  });
+  if (!res.ok) throw new Error(`Crossref ${res.status}: ${doi}`);
+  // Defense-in-depth size cap: probeCrossref runs extractEmails(JSON.stringify(...))
+  // over this, so an oversized body would feed EMAIL_RE an unbounded string. Read
+  // text + bound before parsing (throw is swallowed by probeCrossref's try/catch).
+  const t = await res.text();
+  if (t.length > 4 * 1024 * 1024) throw new Error('Crossref response too large'); // ~4MB ceiling
+  return JSON.parse(t);
 }
 
 /**
@@ -1250,11 +1420,11 @@ function emailsFromHtml(html) {
 /**
  * Race several email-probe thunks concurrently, resolving the instant a `verified`
  * result arrives; otherwise, when budgetMs elapses, return the best result seen so
- * far by confidence rank (verified > likely > guess). Probes that are still running
- * are returned in `pending` so the caller can await them for a background upgrade.
+ * far by confidence rank (verified > likely). Probes that are still running are
+ * returned in `pending` so the caller can await them for a background upgrade.
  * Each thunk resolves to { email, confidence, source } or null. Never rejects.
  */
-const CONFIDENCE_RANK = { verified: 3, likely: 2, guess: 1 };
+const CONFIDENCE_RANK = { verified: 2, likely: 1 };
 function raceForEmail(probeThunks, budgetMs) {
   let best = null;
   const consider = (r) => {
@@ -1309,9 +1479,10 @@ function arxivIdFromWork(work, doi) {
 }
 
 /**
- * Layer 1 — Europe PMC. Search by DOI; if an open-access PMC full text exists,
- * fetch its JATS XML and reuse emailsFromPmcXml + pickPersonEmail. A `<corresp>`
- * email is `verified`; an author-affiliation email is `likely`. Cached per DOI.
+ * Layer 1 — Europe PMC. Search by DOI; if a PMC full text exists, fetch its JATS
+ * XML via NCBI efetch (EuropePMC's own fullTextXML endpoint 404s broadly) and
+ * reuse emailsFromPmcXml + pickPersonEmail. A `<corresp>` email is `verified`;
+ * an author-affiliation email is `likely`. Cached per DOI.
  * Returns { email, confidence, source } or null. Never throws.
  */
 async function probeEuropePmc(doi, matchCtx) {
@@ -1324,8 +1495,11 @@ async function probeEuropePmc(doi, matchCtx) {
     const q = encodeURIComponent(`DOI:"${doi}"`);
     const search = await epmcFetch(`/search?query=${q}&format=json&resultType=core&pageSize=1`);
     const hit = search && search.resultList && search.resultList.result && search.resultList.result[0];
-    if (hit && /^(Y|y)$/.test(String(hit.isOpenAccess || '')) && hit.pmcid) {
-      const xml = await epmcFetch(`/${hit.source}/${hit.pmcid}/fullTextXML`, { json: false });
+    // Europe PMC's fullTextXML endpoint 404s broadly, so fetch the JATS via NCBI
+    // efetch instead — it returns OA full text whenever a PMCID exists (the EPMC
+    // isOpenAccess flag proved unreliable, so the gate is just "pmcid present").
+    if (hit && hit.pmcid) {
+      const xml = await ncbiFetch('pmc', [String(hit.pmcid).replace(/^PMC/i, '')]);
       const correspEmail = pickPersonEmail(emailsFromPmcXml(xml), matchCtx);
       const url = `https://europepmc.org/article/${hit.source}/${hit.id}`;
       if (correspEmail) {
@@ -1336,7 +1510,9 @@ async function probeEuropePmc(doi, matchCtx) {
         if (affEmail) result = { email: affEmail.email, confidence: 'likely', source: url };
       }
     }
-    await cacheSet(key, result, INTERMEDIATE_TTL_MS);
+    // Found → reuse ~30d; nothing useful → re-probe in ~1d (a paper may get a PMC
+    // record or correspondence block added later).
+    await cacheSet(key, result, result ? INTERMEDIATE_TTL_MS : NEG_INTERMEDIATE_TTL_MS);
     return result;
   } catch {
     return null;
@@ -1387,7 +1563,9 @@ async function probeLandingPage(doi, matchCtx) {
         }
       }
     }
-    await cacheSet(key, result, INTERMEDIATE_TTL_MS);
+    // Non-null (a found email OR a {pdfUrl} pointer worth reusing) → ~30d; nothing
+    // useful → re-probe in ~1d (an OA copy / pdf_url may appear later).
+    await cacheSet(key, result, result ? INTERMEDIATE_TTL_MS : NEG_INTERMEDIATE_TTL_MS);
     return result;
   } catch {
     return null;
@@ -1416,10 +1594,11 @@ async function probeArxiv(arxivId, matchCtx) {
 }
 
 /**
- * Background-only PDF parse for the landing-page/OA PDF of a DOI. Used for the
- * off-path upgrade AFTER the response is sent — a verified/likely hit it finds
- * rewrites email:{authorId} for the next viewer. Returns { email, confidence,
- * source } or null. Never throws.
+ * Parse the OA PDF of a DOI. Runs both in-band (hot path) and in the off-path
+ * upgrade; probePdfCached dedupes the parse between them. A corresponding-marker
+ * proximity hit (a `/correspond|✉|electronic address/` marker within ~200 chars of
+ * the matched email in the PDF text) is `verified`; any other person-matched email
+ * is `likely`. Returns { email, confidence, source } or null. Never throws.
  */
 async function probePdf(pdfUrl, sourceUrl, matchCtx) {
   if (!pdfUrl) return null;
@@ -1432,32 +1611,205 @@ async function probePdf(pdfUrl, sourceUrl, matchCtx) {
     }
     const ranked = rankEmailsByContext(parsed.text, parsed.emails, matchCtx);
     const picked = ranked.find((e) => personMatch(e, matchCtx));
-    return picked ? { email: picked, confidence: 'verified', source: sourceUrl || pdfUrl } : null;
+    if (!picked) return null;
+    // Mirror probeLandingPage's proximity test: a correspondence marker within ~200
+    // chars of the picked email → verified, else likely. The email is regex-escaped
+    // (a "+" in the local part must not become a quantifier and throw).
+    const near = /correspond|✉|electronic address/i.test(parsed.text) &&
+      new RegExp(`correspond[\\s\\S]{0,200}${picked.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i').test(parsed.text);
+    return { email: picked, confidence: near ? 'verified' : 'likely', source: sourceUrl || pdfUrl };
   } catch {
     return null;
   }
 }
 
 /**
- * Resolve the institution's real email domain for the Layer-3 guess. Order:
- * ROR `domains[0]` (authoritative, cached per ROR id) → registrableDomain of the
- * institution's OpenAlex homepage links → institutionDomain (homepage_url) fallback.
+ * Cached wrapper around probePdf, keyed per DOI (`pdf:${doi}`) so the hot-path probe
+ * and the background upgrade share ONE parse. Found → ~30d; null → re-probe in ~1d.
  * Never throws.
  */
-async function resolveInstitutionDomain(inst, ror) {
-  if (ror) {
-    const key = `rordomain:${ror}`;
-    try {
-      let d = await cacheGet(key);
-      if (d === undefined) {
-        const rec = await rorFetch(ror);
-        d = (rec && Array.isArray(rec.domains) && rec.domains[0]) || null;
-        await cacheSet(key, d, INTERMEDIATE_TTL_MS);
-      }
-      if (d) return d;
-    } catch { /* fall through */ }
+async function probePdfCached(doi, pdfUrl, source, matchCtx) {
+  if (!pdfUrl) return null;
+  const key = `pdf:${doi}`;
+  try {
+    const cached = await cacheGet(key);
+    if (cached !== undefined) return cached || null;
+    const result = await probePdf(pdfUrl, source, matchCtx);
+    await cacheSet(key, result, result ? INTERMEDIATE_TTL_MS : NEG_INTERMEDIATE_TTL_MS);
+    return result;
+  } catch {
+    return null;
   }
-  // OpenAlex institution `links`/homepage as a secondary source.
+}
+
+/**
+ * Author-level probe — ORCID public record. Added ONCE (not per-DOI) when the author
+ * has an ORCID id. ORCID emails are usually private, but a PUBLIC one is authoritative
+ * → `verified`. Cached per orcid (found ~30d / null ~1d). Never throws.
+ */
+async function probeOrcid(orcid, matchCtx) {
+  if (!orcid) return null;
+  const key = `orcid:${orcid}`;
+  try {
+    const cached = await cacheGet(key);
+    if (cached !== undefined) return cached || null;
+
+    let result = null;
+    const record = await orcidFetch(orcid, 'email');
+    const emails = cleanEmails((record && record.email || []).map((e) => e && e.email));
+    const picked = pickPersonEmail(emails, matchCtx);
+    if (picked) result = { email: picked.email, confidence: 'verified', source: `https://orcid.org/${orcid}` };
+
+    await cacheSet(key, result, result ? INTERMEDIATE_TTL_MS : NEG_INTERMEDIATE_TTL_MS);
+    return result;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Per-DOI probe — Crossref work metadata. Crossref carries author records even for
+ * PAYWALLED papers (no OA full text needed) — that's its value over the OA tiers.
+ * Mines any email-shaped token in the author array (explicit `a.email` fields are
+ * rare but exact). A person-matched hit is `likely` (no corresponding marker).
+ * Cached per DOI (found ~30d / null ~1d). Never throws.
+ */
+async function probeCrossref(doi, matchCtx) {
+  const key = `crossref:${doi}`;
+  try {
+    const cached = await cacheGet(key);
+    if (cached !== undefined) return cached || null;
+
+    let result = null;
+    const data = await crossrefFetch(doi);
+    const authors = (data && data.message && data.message.author) || [];
+    const candidates = extractEmails(JSON.stringify(authors));
+    for (const a of authors) if (a && a.email) candidates.push(a.email);
+    const picked = pickPersonEmail(cleanEmails(candidates), matchCtx);
+    if (picked) result = { email: picked.email, confidence: 'likely', source: `https://doi.org/${doi}` };
+
+    await cacheSet(key, result, result ? INTERMEDIATE_TTL_MS : NEG_INTERMEDIATE_TTL_MS);
+    return result;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Layer 1b — author-level PMC. The DOI probes only see the ~25 most-recent works,
+ * but the paper that actually carries THIS professor's own email is frequently
+ * OLDER than that window. So probe the author's OA PMC papers directly:
+ *   1. OpenAlex → the author's open-access PubMed Central works (newest first).
+ *      OpenAlex only exposes the pmid here (not the pmcid).
+ *   2. ONE batched PubMed efetch over those pmids → each chunk carries its linked
+ *      PMCID (pmcidFromPubmedChunk) and the corresponding author's <Affiliation>.
+ *   3. ONE batched PMC efetch over those PMCIDs → JATS <corresp> emails (verified).
+ *      Falling back to the PubMed affiliation email (likely) when no PMC hit.
+ * Batched (all ids in ONE request each) to stay under NCBI's 3 req/s. Cached per
+ * author; never throws (returns null on any failure). Returns { email, confidence,
+ * source } or null.
+ *
+ * Id-format note: ncbiFetch('pmc', ids) needs the BARE numeric PMCID and
+ * splitPmcArticles keys its map via normPmcid(...) — which also strips the "PMC"
+ * prefix to bare digits. pmcidFromPubmedChunk already returns that same bare-numeric
+ * form, so the ordered ids we collect double as both the efetch ids AND the map keys
+ * pickEmailFromChunks scans. The sourceFn re-adds the "PMC" prefix for the URL.
+ */
+async function probeAuthorPmc(fullId, matchCtx) {
+  const key = `pmcauthor:${fullId}`;
+  try {
+    const cached = await cacheGet(key);
+    if (cached !== undefined) return cached || null;
+
+    let result = null;
+    // The author's OA Europe PMC (PubMed Central) works, newest first. OpenAlex
+    // surfaces ids.pmid (a PubMed URL) but not the pmcid — we resolve that via NCBI.
+    const works = await oaFetch(
+      `/works?filter=author.id:${encodeURIComponent(fullId)},` +
+      `locations.source.id:https://openalex.org/S4306400806,is_oa:true` +
+      `&sort=publication_date:desc&per_page=10&select=ids,doi,publication_date`
+    );
+    const pmids = [];
+    for (const w of (works && works.results) || []) {
+      const pmid = normPmid((w.ids && w.ids.pmid) || ''); // ids.pmid is a URL; keep the digits
+      if (pmid && !pmids.includes(pmid)) pmids.push(pmid);
+    }
+
+    if (pmids.length) {
+      // Step 1 — ONE batched PubMed efetch. Per pmid (recency order) harvest the
+      // linked PMCID + keep the chunk for the affiliation fallback.
+      const pubmedById = await fetchNcbiChunks('pubmed', pmids, splitPubmedArticles);
+      const pmcids = [];
+      for (const pmid of pmids) {
+        const chunk = pubmedById.get(pmid);
+        if (!chunk) continue;
+        const pmcid = pmcidFromPubmedChunk(chunk); // bare-numeric (normPmcid)
+        if (pmcid && !pmcids.includes(pmcid)) pmcids.push(pmcid);
+      }
+
+      // Step 2 — ONE batched PMC efetch over the PMCIDs → JATS <corresp> (verified).
+      if (pmcids.length) {
+        const pmcById = await fetchNcbiChunks('pmc', pmcids, splitPmcArticles);
+        const hit = pickEmailFromChunks(
+          pmcids, pmcById, emailsFromPmcXml, matchCtx,
+          (id) => `https://www.ncbi.nlm.nih.gov/pmc/articles/${/^PMC/i.test(id) ? id : `PMC${id}`}/`
+        );
+        if (hit) result = { email: hit.email, confidence: 'verified', source: hit.source };
+      }
+
+      // Fallback — PubMed <Affiliation> is the corresponding author's free text (likely).
+      if (!result) {
+        const aff = pickEmailFromChunks(
+          pmids, pubmedById, emailsFromPubmedXml, matchCtx,
+          (id) => `https://pubmed.ncbi.nlm.nih.gov/${id}/`
+        );
+        if (aff) result = { email: aff.email, confidence: 'likely', source: aff.source };
+      }
+    }
+
+    // Found → reuse for ~30d; nothing (no PMC paper / no person match) → re-probe in ~1d.
+    await cacheSet(key, result, result ? INTERMEDIATE_TTL_MS : NEG_INTERMEDIATE_TTL_MS);
+    return result;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Institution email-pattern best-guesses (Layer 3 fallback). 4 common
+ * patterns; the first is shown as `email`, all are returned as `candidates`.
+ * Surfaced as a mailable `likely` (source:'institution-pattern'). Returns []
+ * if any component is missing.
+ */
+function guessEmails(first, last, domain) {
+  if (!domain || !first || !last) return [];
+  return [
+    `${first}.${last}@${domain}`,
+    `${first[0]}${last}@${domain}`,
+    `${last}@${domain}`,
+    `${first}${last}@${domain}`,
+  ].map((e) => e.toLowerCase());
+}
+
+/**
+ * Resolve the institution's registrable email domain — for matchCtx scoring, the
+ * Layer 3 guess, and to scope the faculty-search link to the institution's site.
+ * ROR's verified `domains` FIRST (when a ror id is known), then the institution's
+ * OpenAlex homepage/links, then the cached institutionDomain fallback. Never throws.
+ */
+async function resolveInstitutionDomain(inst, ror) {
+  // ROR's verified `domains` is the cleanest source when a ror id is available.
+  if (ror) {
+    try {
+      const rec = await rorFetch(ror);
+      const d = (rec && Array.isArray(rec.domains) && rec.domains[0]) || null;
+      if (d) return String(d).toLowerCase();
+      const link = rec && Array.isArray(rec.links) && rec.links[0];
+      const rd = registrableDomain(typeof link === 'string' ? link : (link && link.value));
+      if (rd) return rd;
+    } catch { /* fall through to OpenAlex homepage */ }
+  }
+  // OpenAlex institution `links`/homepage as the secondary source.
   const links = (inst && (inst.homepage_url ? [inst.homepage_url] : (inst.links || []))) || [];
   for (const l of links) {
     const d = registrableDomain(l);
@@ -1644,7 +1996,7 @@ const LOCATIONS_PAYLOAD = Object.freeze({
   ]),
 });
 
-async function discoverByField(field, { page = 1, perPage = 12, preferredFieldId = null, unis = [] } = {}) {
+async function discoverByField(field, { page = 1, perPage = 12, preferredFieldId = null, unis = [], topic: topicOverride = null } = {}) {
   const hasField = !!(field && field.trim());
   const hasUnis = Array.isArray(unis) && unis.length > 0;
 
@@ -1681,7 +2033,8 @@ async function discoverByField(field, { page = 1, perPage = 12, preferredFieldId
   // The route no longer defaults the field, so coerce a default here for the
   // no-unis prestige path to preserve byte-identical legacy behavior.
   const f = hasField ? field.trim() : 'machine learning';
-  const topic = await resolveTopicId(f, preferredFieldId);
+  // A pre-resolved topic (e.g. a related sibling) skips the /topics?search lookup.
+  const topic = topicOverride || await resolveTopicId(f, preferredFieldId);
   if (!topic) return { field: f, topic: null, total: 0, page, results: [] };
 
   const target = { topicId: topic.id, fieldId: topic.fieldId, subfieldId: topic.subfieldId };
@@ -1805,6 +2158,157 @@ async function resolveLocations(tokens) {
   return [...out];
 }
 
+// ─── Location-proximity ranking (geo helpers) ────────────────────────────────
+// A gentle, BOOST-ONLY nudge: professors whose institution is geographically
+// closer to the student's own institution rank a little higher. Fully gated —
+// when no student location is resolvable the score is byte-identical to before.
+
+/** Great-circle distance in km between {lat,lng} points. null if either invalid. */
+function haversineKm(a, b) {
+  if (!a || !b) return null;
+  const { lat: la1, lng: lo1 } = a;
+  const { lat: la2, lng: lo2 } = b;
+  if (![la1, lo1, la2, lo2].every(Number.isFinite)) return null;
+  const R = 6371;
+  const rad = (d) => (d * Math.PI) / 180;
+  const dLat = rad(la2 - la1);
+  const dLng = rad(lo2 - lo1);
+  const s = Math.sin(dLat / 2) ** 2 +
+            Math.cos(rad(la1)) * Math.cos(rad(la2)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
+}
+
+// Tunable proximity policy. wProx is the max blend-units added at proximity 1, so
+// the largest possible boost is round(69 * wProx) ≈ +8 match points. L_KM is the
+// exponential decay length (proximity halves roughly every L*ln2 ≈ 208 km).
+const PROX_CONFIG = { wProx: 0.12, L_KM: 300, floorKm: 5 };
+
+/** Distance (km) → proximity in [0,1]; null when distance is unknown (→ neutral). */
+function proximity01(distKm, cfg = PROX_CONFIG) {
+  if (!Number.isFinite(distKm)) return null;
+  if (distKm <= cfg.floorKm) return 1;
+  return Math.exp(-distKm / cfg.L_KM);
+}
+
+// Institution coordinates are static — cache them durably for a long time. The
+// durable cache distinguishes a MISS (undefined) from a negative hit (stored null),
+// so institutions with no geo aren't re-queried on every request.
+const INSTGEO_TTL_MS = 90 * DAY_MS;
+
+/**
+ * Resolve OpenAlex institution short-ids (`I…`) to {lat,lng,country}.
+ * @param {string[]} ids
+ * @returns {Promise<Map<string,{lat:number,lng:number,country:string}>>}
+ */
+async function resolveInstitutionGeos(ids) {
+  const want = [...new Set((Array.isArray(ids) ? ids : []).filter((id) => /^I\d+$/.test(id)))];
+  const out = new Map();
+  const missing = [];
+  for (const id of want) {
+    const hit = await cacheGet(`instgeo:${id}`); // undefined = miss, null = no-geo, obj = geo
+    if (hit !== undefined) { if (hit) out.set(id, hit); }
+    else missing.push(id);
+  }
+  // OpenAlex OR-filter caps at ~50 ids; select only id+geo to keep payloads tiny.
+  for (let i = 0; i < missing.length; i += 50) {
+    const chunk = missing.slice(i, i + 50);
+    let results = [];
+    try {
+      const data = await oaFetch(
+        `/institutions?filter=ids.openalex:${chunk.join('|')}&select=id,geo&per_page=50`
+      );
+      results = data.results || [];
+    } catch {
+      continue; // proximity is an enhancement — a geo fetch failure must never throw
+    }
+    const got = new Set();
+    for (const r of results) {
+      const id = stripId(r.id);
+      if (!id) continue;
+      const g = r.geo || {};
+      const loc = (Number.isFinite(g.latitude) && Number.isFinite(g.longitude))
+        ? { lat: g.latitude, lng: g.longitude, country: g.country_code || '' }
+        : null;
+      await cacheSet(`instgeo:${id}`, loc, INSTGEO_TTL_MS); // cache negatives too
+      if (loc) out.set(id, loc);
+      got.add(id);
+    }
+    for (const id of chunk) if (!got.has(id)) await cacheSet(`instgeo:${id}`, null, INSTGEO_TTL_MS);
+  }
+  return out;
+}
+
+/**
+ * Resolve Wikidata entity ids (`Q…`) to {lat,lng} via the P625 coordinate claim.
+ * Covers high schools that OpenAlex (a research graph) doesn't index.
+ * @param {string[]} qids
+ * @returns {Promise<Map<string,{lat:number,lng:number,country:string}>>}
+ */
+async function resolveWikidataCoords(qids) {
+  const want = [...new Set((Array.isArray(qids) ? qids : []).filter((q) => /^Q\d+$/.test(q)))];
+  const out = new Map();
+  const missing = [];
+  for (const q of want) {
+    const hit = await cacheGet(`wdgeo:${q}`);
+    if (hit !== undefined) { if (hit) out.set(q, hit); }
+    else missing.push(q);
+  }
+  for (let i = 0; i < missing.length; i += 50) {
+    const chunk = missing.slice(i, i + 50);
+    let entities = {};
+    try {
+      const url = 'https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&props=claims' +
+        `&ids=${chunk.join('|')}`;
+      const data = await wdFetch(url);
+      entities = data.entities || {};
+    } catch {
+      continue;
+    }
+    for (const q of chunk) {
+      const claim = entities[q]?.claims?.P625?.[0]?.mainsnak?.datavalue?.value;
+      const loc = (claim && Number.isFinite(claim.latitude) && Number.isFinite(claim.longitude))
+        ? { lat: claim.latitude, lng: claim.longitude, country: '' }
+        : null;
+      await cacheSet(`wdgeo:${q}`, loc, INSTGEO_TTL_MS);
+      if (loc) out.set(q, loc);
+    }
+  }
+  return out;
+}
+
+/**
+ * Best-effort resolve a student's free-text institution NAME to {lat,lng}.
+ * OpenAlex autocomplete first (universities/research institutes), then Wikidata
+ * (high schools). Durable-cached by normalized name; a stored null means
+ * "unresolvable" so we don't re-query. Never throws — proximity just stays off.
+ * @param {string} name
+ * @returns {Promise<{lat:number,lng:number,country:string}|null>}
+ */
+async function resolveStudentGeoByName(name) {
+  const norm = String(name || '').toLowerCase().replace(/\s+/g, ' ').trim().slice(0, 200);
+  if (!norm) return null;
+  const key = `studgeo:${norm}`;
+  const hit = await cacheGet(key);
+  if (hit !== undefined) return hit; // null (unresolvable) is a real, cached answer
+  let geo = null;
+  try {
+    const ac = await oaFetch(`/autocomplete/institutions?q=${encodeURIComponent(norm)}`);
+    const id = stripId((ac.results || [])[0]?.id);
+    if (id) geo = (await resolveInstitutionGeos([id])).get(id) || null;
+  } catch { /* fall through to Wikidata */ }
+  if (!geo) {
+    try {
+      const url = 'https://www.wikidata.org/w/api.php?action=query&format=json&list=search' +
+        `&srlimit=1&srsearch=${encodeURIComponent(norm)}%20haswbstatement:${SCHOOL_TYPE_FILTER}`;
+      const data = await wdFetch(url);
+      const qid = (data.query?.search || [])[0]?.title;
+      if (/^Q\d+$/.test(qid || '')) geo = (await resolveWikidataCoords([qid])).get(qid) || null;
+    } catch { /* leave geo null */ }
+  }
+  await cacheSet(key, geo, INSTGEO_TTL_MS);
+  return geo;
+}
+
 /**
  * Decide whether a free-text query is a real research FIELD by checking it
  * against an OpenAlex topic display name. Used to disambiguate field-vs-name.
@@ -1891,24 +2395,47 @@ async function discover(query, { page = 1, perPage = 12, unis = [] } = {}) {
  * @param {{ field?:string, goal?:string, unis?:string[], limit?:number, perPage?:number }} opts
  * @returns {Promise<Professor[]>} cards with matchScore + breakdown (no internal stats)
  */
-async function recommendForInterests(interests, { field = '', goal = '', unis = [], limit = 24, perPage = 12 } = {}) {
+async function recommendForInterests(interests, { field = '', goal = '', unis = [], limit = 24, perPage, studentGeo = null } = {}) {
+  // Per-bucket fetch scales with the requested result cap (when not pinned by the
+  // caller): a bigger `limit` pulls a wider page through the SAME precision filter,
+  // so we surface more cards to paginate without lowering match quality. The cap is
+  // 100 (OpenAlex per-page max is 200) so a limit:150 request can net ~5 pages of
+  // survivors after cross-bucket dedupe instead of starving at ~3.
+  const effPerPage = perPage ?? Math.min(100, Math.max(12, limit));
   const interestList = (Array.isArray(interests) ? interests : []).map((s) => String(s).trim()).filter(Boolean);
   const fieldStr = (field || '').toString().trim();
   const hasField = !!fieldStr;
-  // Buckets to search: the declared field (if any) plus each interest.
-  const all = [fieldStr, ...interestList].filter(Boolean);
-  if (!all.length) return [];
+  // Buckets the user actually declared: the field (if any) plus each interest.
+  const declared = [fieldStr, ...interestList].filter(Boolean);
+  if (!declared.length) return [];
 
-  const n = all.length;
+  // Score normalization rides on DECLARED intent only. The related-topic buckets
+  // added below for thin profiles are recall-only, so `n` (and every card's score)
+  // is identical whether or not the fan-out ran.
+  const n = declared.length;
   const cleanUnis = Array.isArray(unis) ? unis : [];
 
   // Bias every bucket's topic resolution toward the searcher's dominant field.
-  const dominantFieldId = await pickDominantField(all);
+  const dominantFieldId = await pickDominantField(declared);
+
+  // THIN-PROFILE FAN-OUT: with 0–1 interests, a single narrow field (e.g.
+  // "healthcare administration") yields too few candidates to fill even one page.
+  // Broaden recall with the primary topic's OpenAlex siblings (related topics in
+  // the same subfield). RECALL-ONLY — see the dedupe weighting below.
+  const related = interestList.length < 2
+    ? await relatedTopics(declared[0], dominantFieldId, 5)
+    : [];
+
+  // Declared buckets first (so idx 0 stays the field), then the related ones.
+  const searchBuckets = [
+    ...declared.map((label) => ({ label, topic: null, related: false })),
+    ...related.map((t) => ({ label: t.name, topic: t, related: true })),
+  ];
 
   // Fan out one discoverByField per bucket, in parallel; a failed bucket is skipped.
   const buckets = await Promise.all(
-    all.map((bucket) =>
-      discoverByField(bucket, { page: 1, perPage, preferredFieldId: dominantFieldId, unis: cleanUnis })
+    searchBuckets.map((b) =>
+      discoverByField(b.label, { page: 1, perPage: effPerPage, preferredFieldId: dominantFieldId, unis: cleanUnis, topic: b.topic })
         .catch(() => null)
     )
   );
@@ -1923,20 +2450,25 @@ async function recommendForInterests(interests, { field = '', goal = '', unis = 
     throw err;
   }
 
-  // Dedupe by author id. Track cross-bucket coverage (the FIELD bucket counts
-  // DOUBLE toward hitCount — it's the declared primary domain — and drives FIT01);
-  // interestHits counts distinct INTEREST buckets only, for the honest reason
-  // string. bestBase = the best topical base score across buckets.
+  // Dedupe by author id. The FIELD bucket counts DOUBLE toward hitCount (declared
+  // primary domain, drives FIT01); INTEREST buckets count single and bump
+  // interestHits (the honest "appears in N of your interests" reason). RELATED
+  // buckets are recall-only: they surface candidates but never touch hitCount /
+  // interestHits, so a professor found only via a sibling topic ranks purely on its
+  // own topical base + reply-fit, and declared-intent scores stay unchanged.
   const seen = new Map(); // authorId → { prof, hitCount, interestHits, bestBase }
   buckets.forEach((bucket, idx) => {
     if (!bucket) return;
-    const isFieldBucket = hasField && idx === 0; // all[0] is the field when present
+    const b = searchBuckets[idx];
+    const isFieldBucket = hasField && idx === 0; // declared[0] is the field when present
     const weight = isFieldBucket ? 2 : 1;
     (bucket.results || []).forEach((prof) => {
       const entry = seen.get(prof.id);
       if (entry) {
-        entry.hitCount += weight;
-        if (!isFieldBucket) entry.interestHits += 1;
+        if (!b.related) {
+          entry.hitCount += weight;
+          if (!isFieldBucket) entry.interestHits += 1;
+        }
         if (prof.matchScore > entry.bestBase) {
           entry.bestBase = prof.matchScore;
           entry.prof = prof; // keep the card from the strongest bucket
@@ -1944,18 +2476,30 @@ async function recommendForInterests(interests, { field = '', goal = '', unis = 
       } else {
         seen.set(prof.id, {
           prof,
-          hitCount: weight,
-          interestHits: isFieldBucket ? 0 : 1,
+          hitCount: b.related ? 0 : weight,
+          interestHits: (!b.related && !isFieldBucket) ? 1 : 0,
           bestBase: prof.matchScore,
         });
       }
     });
   });
 
+  // Location proximity (gated): only when the student's coordinates are known do we
+  // resolve the candidate institutions' geos (durably cached) and boost nearby
+  // professors. studentGeo null ⇒ this whole block is skipped, no added calls,
+  // scores identical to before.
+  let geoByInst = new Map();
+  if (studentGeo) {
+    const instIds = [...new Set([...seen.values()].map(({ prof }) => prof.institutionId).filter(Boolean))];
+    if (instIds.length) geoByInst = await resolveInstitutionGeos(instIds);
+  }
+
   // Score each survivor with the reply-fit blend, then strip the internal scoring
   // inputs (stats/dominantField) from the public card.
   const professors = [...seen.values()]
     .map(({ prof, hitCount, interestHits, bestBase }) => {
+      const profGeo = studentGeo ? geoByInst.get(prof.institutionId) || null : null;
+      const prox01 = studentGeo ? proximity01(haversineKm(studentGeo, profGeo)) : null;
       const { percent, breakdown } = computeReplyFitScore({
         bestBase,
         hitCount,
@@ -1965,11 +2509,14 @@ async function recommendForInterests(interests, { field = '', goal = '', unis = 
         dominantField: prof.dominantField,
         goal,
         coverage: interestHits,
+        prox01,
       });
       const { stats, dominantField, ...card } = prof; // drop internals from the DTO
       return { ...card, matchScore: percent, breakdown };
     })
-    .sort((a, b) => b.matchScore - a.matchScore)
+    // Primary by score; exact ties break toward the geographically nearer professor.
+    .sort((a, b) => (b.matchScore - a.matchScore) ||
+      ((b.breakdown.proximity ?? -1) - (a.breakdown.proximity ?? -1)))
     .slice(0, limit); // cap; do NOT pad — return fewer if fewer qualify
 
   return professors;
@@ -2137,23 +2684,41 @@ app.get('/api/schools', async (req, res) => {
 
     const seen = new Set();
     const results = [];
-    const add = (name, hint) => {
+    const add = (name, hint, id, qid) => {
       if (!name || /^Q\d+$/.test(name) || name.startsWith('Category:')) return;
       const key = name.toLowerCase();
       if (seen.has(key)) return;
       seen.add(key);
-      results.push({ name, hint: hint || '' });
+      results.push({ name, hint: hint || '', id: id || '', qid: qid || '' });
     };
-    // OpenAlex first (well-ranked prefix matches, with city/country hints),
-    // then Wikidata (adds high schools).
+    // OpenAlex first (well-ranked prefix matches, with city/country hints + an
+    // institution id), then Wikidata (adds high schools, carrying its QID).
     if (oa.status === 'fulfilled') {
-      for (const r of oa.value.results || []) add(r.display_name, r.hint);
+      for (const r of oa.value.results || []) add(r.display_name, r.hint, stripId(r.id), '');
     }
     if (wd && wd.status === 'fulfilled') {
       const pages = Object.values(wd.value?.query?.pages || {}).sort((a, b) => (a.index || 0) - (b.index || 0));
-      for (const p of pages) add(p.entityterms?.label?.[0], '');
+      for (const p of pages) add(p.entityterms?.label?.[0], '', '', p.title);
     }
-    res.json({ query: q, results: results.slice(0, 12) });
+    const out = results.slice(0, 12);
+
+    // Attach institution coordinates (best-effort, durably cached) so the client can
+    // capture them at pick time and the recommender can boost nearby professors. A
+    // geo failure degrades to id/qid-only — it must never 502 the autocomplete.
+    try {
+      const oaIds = out.map((r) => r.id).filter(Boolean);
+      const wdQids = out.filter((r) => !r.id).map((r) => r.qid).filter(Boolean);
+      const [instGeo, wdGeo] = await Promise.all([
+        oaIds.length ? resolveInstitutionGeos(oaIds) : new Map(),
+        wdQids.length ? resolveWikidataCoords(wdQids) : new Map(),
+      ]);
+      for (const r of out) {
+        const g = (r.id && instGeo.get(r.id)) || (r.qid && wdGeo.get(r.qid)) || null;
+        if (g) { r.lat = g.lat; r.lng = g.lng; r.country = g.country || ''; }
+      }
+    } catch { /* geo optional — return id/qid without coords */ }
+
+    res.json({ query: q, results: out });
   } catch (err) {
     console.error('[/api/schools]', err.message);
     res.status(502).json({ error: 'Failed to reach institution sources', detail: err.message });
@@ -2294,6 +2859,12 @@ function dedupeAchievements(list, cap = 4) {
  * Analyse a resume image or PDF and suggest matching professors.
  *
  * POST /api/analyze-resume
+ * Auth: REQUIRED — `Authorization: Bearer <Firebase ID token>`. Missing/invalid → 401.
+ * Rate limit: 1 upload per account per UTC day. A 2nd same-day call → 429 with a
+ *   `Retry-After` (seconds) header and `{ error, resetAt, limit: 1 }`. The slot is
+ *   reserved AFTER input validation but BEFORE Claude, and refunded only when the
+ *   failure is ours/Claude's (malformed-JSON or upstream 502); a successful 200 and
+ *   the "not a resume" 400 both consume the day's slot.
  * Body: { data: "<base64>", mediaType: "image/png" | "image/jpeg" | "application/pdf" }
  *
  * Response: { interests: string[], summary: string,
@@ -2304,16 +2875,37 @@ function dedupeAchievements(list, cap = 4) {
  * The file is never persisted — it is sent to Claude, interests extracted, then discarded.
  */
 app.post('/api/analyze-resume', async (req, res) => {
+  // ── Auth first ───────────────────────────────────────────────────────────────
+  // A missing/expired token never reaches input validation, a slot, or Claude.
+  let uid;
+  try {
+    ({ uid } = await verifyFirebaseToken(req.headers.authorization));
+  } catch {
+    return res.status(401).json({ error: 'Please sign in to analyze a résumé.' });
+  }
+
   try {
     const { data, mediaType } = req.body || {};
 
     // ── Validate input ────────────────────────────────────────────────────────
+    // Runs before the slot reservation so a malformed request never burns a slot.
     if (!data || typeof data !== 'string' || data.length < 100) {
       return res.status(400).json({ error: 'Missing or too-small `data` field (base64 string required).' });
     }
     if (!ALLOWED_MEDIA_TYPES.has(mediaType)) {
       return res.status(400).json({
         error: `Unsupported mediaType "${mediaType}". Allowed: image/png, image/jpeg, application/pdf.`,
+      });
+    }
+
+    // ── Reserve the day's single slot BEFORE spending a Claude call ───────────
+    const reservation = await reserveDailyUpload(uid);
+    if (!reservation.ok) {
+      res.set('Retry-After', String(Math.ceil(msUntilNextUtcMidnight() / 1000)));
+      return res.status(429).json({
+        error: 'Max daily limit reached — come back tomorrow.',
+        resetAt: reservation.resetAt,
+        limit: 1,
       });
     }
 
@@ -2343,11 +2935,16 @@ app.post('/api/analyze-resume', async (req, res) => {
         .replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
       extracted = JSON.parse(rawText);
     } catch {
+      // Our/Claude's fault — refund the slot so the user isn't charged for it.
+      await refundDailyUpload(uid);
       return res.status(502).json({ error: 'Claude returned malformed JSON.', raw: message.content });
     }
 
     if (!extracted.isResume) {
-      return res.status(400).json({ error: 'This doesn\'t look like a resume. Please upload a resume or CV.' });
+      // A valid Claude call that ruled the upload out — consumes the day's slot (no
+      // refund). `slotConsumed` lets the client record today's date and keep its local
+      // gate in sync (the input-validation 400s above never set it — they reserve nothing).
+      return res.status(400).json({ error: 'This doesn\'t look like a resume. Please upload a resume or CV.', slotConsumed: true });
     }
 
     // Cap interests to top 3 for the matching step.
@@ -2370,12 +2967,29 @@ app.post('/api/analyze-resume', async (req, res) => {
     // Resume and saved-profile recommendations rank through ONE engine: it infers
     // the dominant field across [field, ...interests], fans out per bucket, dedupes,
     // and scores each survivor with the reply-fit blend (matchScore + breakdown).
-    const professors = await recommendForInterests(interests, { field, goal, limit: 24 });
+    //
+    // Scoped try/catch ON PURPOSE: Claude has already run, been billed, and produced a
+    // usable profile by this point. If the downstream OpenAlex matching fails (e.g. an
+    // upstream outage) we must NOT bubble to the outer catch — that refunds the slot and
+    // would let the user re-upload (re-billing Claude) repeatedly during an outage, so
+    // the cap never engages. Keep the slot consumed and degrade to a no-matches 200; the
+    // client handles an empty `professors` list. (Claude-call failures throw earlier, at
+    // anthropic.messages.create, before extraction — those still hit the outer catch and
+    // refund, since no usable profile was produced.)
+    let professors = [];
+    try {
+      professors = await recommendForInterests(interests, { field, goal, limit: 90 });
+    } catch (matchErr) {
+      console.error('[/api/analyze-resume] matching failed, returning profile with no matches:', matchErr.message);
+    }
 
     res.json({ interests, summary, sellingPoints, accomplishments,
       name, institution, field, goal, professors });
   } catch (err) {
     console.error('[/api/analyze-resume]', err.message);
+    // Any failure that reaches here is ours/Claude's (the slot was already reserved
+    // by this point) — refund it before responding so the user isn't charged.
+    await refundDailyUpload(uid);
     if (err.status === 401) {
       return res.status(502).json({ error: 'Invalid or missing ANTHROPIC_API_KEY on the server.' });
     }
@@ -2428,11 +3042,30 @@ app.post('/api/recommend', async (req, res) => {
     const locInstIds = await resolveLocations(locations);   // [] when locations empty (no upstream call)
     const mergedUnis = [...new Set([...unis, ...locInstIds])].slice(0, 150);
 
-    // Clamp the result cap to a sane range (default 24).
-    const limit = Math.min(50, Math.max(1, parseInt(body.limit, 10) || 24));
+    // Clamp the result cap to a sane range (default 24, up to 150 so the client
+    // can paginate a larger scored set across multiple pages).
+    const limit = Math.min(150, Math.max(1, parseInt(body.limit, 10) || 24));
+
+    // Student institution → coordinates for the location-proximity boost. Most
+    // trusted source first; all optional; all soft-fail to null (proximity is an
+    // enhancement and must NEVER take down the route — unlike resolveLocations,
+    // which is strict because it changes the candidate SET).
+    let studentGeo = null;
+    const loc = body.institutionLoc;
+    if (loc && Number.isFinite(loc.lat) && Number.isFinite(loc.lng) &&
+        Math.abs(loc.lat) <= 90 && Math.abs(loc.lng) <= 180) {
+      studentGeo = { lat: loc.lat, lng: loc.lng, country: String(loc.country || '') };
+    }
+    if (!studentGeo) {
+      const stuInstId = /^I\d+$/.test(String(body.institutionId || '')) ? String(body.institutionId) : '';
+      if (stuInstId) studentGeo = (await resolveInstitutionGeos([stuInstId])).get(stuInstId) || null;
+    }
+    if (!studentGeo && body.institution) {
+      studentGeo = await resolveStudentGeoByName(String(body.institution));
+    }
 
     // ── Match via the shared reply-fit engine ────────────────────────────────
-    const professors = await recommendForInterests(interests, { field, goal, unis: mergedUnis, limit });
+    const professors = await recommendForInterests(interests, { field, goal, unis: mergedUnis, limit, studentGeo });
 
     res.json({ interests, goal, professors });
   } catch (err) {
@@ -3092,20 +3725,25 @@ app.post('/api/professor/:authorId/draft-email', async (req, res) => {
  * Discover a professor's email address from free public sources, on demand.
  *
  * GET /api/professor/:authorId/email
- * Response: { email, confidence: 'verified'|'likely'|'guess'|null,
+ * Response: { email, confidence: 'verified'|'likely'|null,
  *             source, mailtoEnabled, facultySearchUrl, candidates }
  *
  * DOI-keyed, all-fields fan-out (NOT a serial cascade):
- *   Layer 1  Europe PMC — JATS <corresp> (verified) / author-affiliation (likely)
- *   Layer 2  Unpaywall landing-page HTML (verified/likely) + arXiv PDF (likely);
- *            the OA PDF parse is pushed OFF the blocking path (background upgrade)
- *   Layer 3  institution email-pattern guess (display-only, never mailto)
+ *   Layer 1  Europe PMC — JATS <corresp> (verified) / author-affiliation (likely);
+ *            plus author-level ORCID public email (verified) added once
+ *   Layer 2  Unpaywall landing-page HTML (verified/likely) + the OA PDF parse IN-BAND
+ *            (verified/likely) + arXiv PDF (likely) + Crossref author metadata —
+ *            works even for paywalled papers (likely). The detached background
+ *            upgrade re-parses the OA PDFs and re-caches only a STRICTLY better hit.
+ *   Layer 3  institution email-pattern best-guess (confidence:'likely', mailable, source:'institution-pattern')
+ * When no verified/likely email is found, fall back to the Layer 3 guess; the
+ * facultySearchUrl is always returned as the actionable fallback link.
  * The probes for the top 3–5 recent OA+DOI works fire concurrently; the user-facing
  * wait is capped at PUBLIC_BUDGET_MS via raceForEmail (verified wins instantly).
  * The whole handler is in try/catch and ALWAYS returns 200 with at least a
  * facultySearchUrl — a Firestore/upstream outage must degrade, never throw.
  */
-const PUBLIC_BUDGET_MS = 3000;
+const PUBLIC_BUDGET_MS = 5000; // one EMAIL_FETCH_TIMEOUT_MS (4500) fetch now fits the window
 
 app.get('/api/professor/:authorId/email', async (req, res) => {
   const { authorId } = req.params;
@@ -3140,7 +3778,7 @@ app.get('/api/professor/:authorId/email', async (req, res) => {
       oaFetch(`/authors/${safeId}`),
       oaFetch(
         `/works?filter=author.id:${safeId}&sort=publication_date:desc&per_page=25` +
-        `&select=id,ids,doi,title,publication_date,authorships,open_access,best_oa_location,primary_location,locations`
+        `&select=id,ids,doi,title,type,publication_date,authorships,open_access,best_oa_location,primary_location,locations`
       ),
     ]);
 
@@ -3156,18 +3794,16 @@ app.get('/api/professor/:authorId/email', async (req, res) => {
     const works = worksData.results || [];
     // Sustained "home" institution from affiliations[] (last_known[0] is often stale).
     const inst = primaryInstitution(author);
-    const instId = inst.id ? stripId(inst.id) : '';
-    const ror = inst.ror || (inst.ids && inst.ids.ror) || null;
     const institution = inst.display_name || '';
 
     // facultySearchUrl built EARLY so even a total upstream failure returns a link.
     payload.facultySearchUrl =
       `https://www.google.com/search?q=${encodeURIComponent(`"${name}" ${institution} faculty profile`)}`;
 
-    // Institution domain (ROR domains[0] → OpenAlex homepage → institutionDomain) —
-    // used for matchCtx scoring AND the Layer-3 guess. Kicked off here, awaited once.
-    const domainPromise = resolveInstitutionDomain(inst, ror).catch(() => null);
-    const domain = await domainPromise;
+    // Institution domain (ROR domains → OpenAlex homepage → institutionDomain) —
+    // used for matchCtx scoring, the Layer 3 guess, and the faculty-search link.
+    const ror = (inst && (inst.ror || (inst.ids && inst.ids.ror))) || null;
+    const domain = await resolveInstitutionDomain(inst, ror).catch(() => null);
     const matchCtx = { first, last, domain };
 
     // Scope the faculty search to the institution's own domain once we have it.
@@ -3176,30 +3812,68 @@ app.get('/api/professor/:authorId/email', async (req, res) => {
         `https://www.google.com/search?q=${encodeURIComponent(`site:${domain} "${name}"`)}`;
     }
 
-    // Probe set — recent works that are open access AND carry a DOI. Cap at 5; we
-    // probe the top 3–5, never the whole 25. Each probe carries its derived ids.
-    const probes = [];
+    // Probe set — recent works that are open access AND carry a DOI. Cap at 8; we
+    // never probe the whole 25. Each probe carries its derived ids.
+    //
+    // Two prioritized passes (recency order preserved WITHIN each pass) so the real
+    // PMC papers aren't crowded out by preprints/supplementary records that share
+    // the recency slots:
+    //   pass 1 — works Layer 1 can actually read: a Europe PMC / PubMed Central
+    //            location (source S4306400806) OR ones where THIS author is the
+    //            corresponding author;
+    //   pass 2 — the remaining OA+DOI works.
+    // Records that can't carry a useful author email (paratext, supplementary
+    // materials, datasets, peer reviews, editorials, errata) are skipped outright.
+    const PMC_SOURCE_ID = 'https://openalex.org/S4306400806'; // Europe PMC (PubMed Central)
+    const SKIP_TYPES = new Set([
+      'paratext', 'supplementary-materials', 'dataset', 'peer-review', 'editorial', 'erratum',
+    ]);
+    const priority = [];
+    const rest = [];
     for (const w of works) {
+      if (SKIP_TYPES.has(w.type)) continue;
       const doi = normDoi(w.doi || (w.ids && w.ids.doi));
       if (!doi) continue;
       const oa = (w.open_access && w.open_access.is_oa) || (w.best_oa_location && w.best_oa_location.is_oa) ||
         (w.locations || []).some((l) => l.is_oa);
       if (!oa) continue;
-      probes.push({ doi, arxiv: arxivIdFromWork(w, doi) });
-      if (probes.length >= 5) break;
+      const entry = { doi, arxiv: arxivIdFromWork(w, doi) };
+      const hasPmcLocation = (w.locations || []).some((l) => l.source && l.source.id === PMC_SOURCE_ID);
+      const authorIsCorresponding = (w.authorships || []).some(
+        (a) => shortId(a.author && a.author.id) === fullId && a.is_corresponding === true
+      );
+      (hasPmcLocation || authorIsCorresponding ? priority : rest).push(entry);
     }
+    const probes = priority.concat(rest).slice(0, 8);
 
     // Fan-out: for each probe DOI fire Layer 1 (Europe PMC) + Layer 2 (landing page,
-    // arXiv) concurrently. raceForEmail resolves the instant a `verified` arrives,
-    // else returns best-by-confidence at PUBLIC_BUDGET_MS. Pending promises keep
-    // running for the post-response background upgrade.
+    // OA PDF, arXiv) + Crossref concurrently. raceForEmail resolves the instant a
+    // `verified` arrives, else returns best-by-confidence at PUBLIC_BUDGET_MS. Pending
+    // promises keep running for the post-response background upgrade.
     const probeThunks = [];
     for (const { doi, arxiv } of probes) {
       probeThunks.push(() => probeEuropePmc(doi, matchCtx));
       probeThunks.push(() => probeLandingPage(doi, matchCtx).then((r) =>
         r && r.email ? r : null)); // a {pdfUrl}-only result is not a hit here
+      // In-band OA PDF parse: probeLandingPage is already a cached thunk above, so this
+      // call is a `page:${doi}` cache hit that yields the pdfUrl; probePdfCached then
+      // shares its `pdf:${doi}` parse with the background upgrade.
+      probeThunks.push(() => probeLandingPage(doi, matchCtx).then((lp) => {
+        const pdfUrl = lp && lp.pdfUrl;
+        return pdfUrl ? probePdfCached(doi, pdfUrl, (lp && lp.source) || pdfUrl, matchCtx) : null;
+      }));
+      // Crossref — works even for PAYWALLED papers (author metadata, no OA needed).
+      probeThunks.push(() => probeCrossref(doi, matchCtx));
       if (arxiv) probeThunks.push(() => probeArxiv(arxiv, matchCtx));
     }
+    // Layer 1b — author-level PMC. Added ONCE (not per-DOI): probes the author's own
+    // OA PubMed Central papers directly so an OLD paper carrying this professor's
+    // email is still reached even when it falls outside the recent-works window.
+    probeThunks.push(() => probeAuthorPmc(fullId, matchCtx));
+    // ORCID — author-level, added ONCE when the author has an ORCID id (author.orcid
+    // is a FULL URL; strip to the bare id). A PUBLIC ORCID email is authoritative.
+    const orcidId = author.orcid ? String(author.orcid).replace(/^https?:\/\/orcid\.org\//i, '') : null;
+    if (orcidId) probeThunks.push(() => probeOrcid(orcidId, matchCtx));
 
     let best = null;
     if (probeThunks.length) {
@@ -3216,50 +3890,76 @@ app.get('/api/professor/:authorId/email', async (req, res) => {
         mailtoEnabled,
       });
     }
-
-    // Layer 3 — institution email-pattern guess (display-only, never mailto). Only
-    // when nothing better was found. ORCID employment confirmation is best-effort.
+    // Layer 3 — no verified/likely hit: fall back to an institution email-pattern
+    // best-guess. Surfaced as `likely` and mailable, but flagged via
+    // source:'institution-pattern' so the UI can show a softer "confirm before
+    // sending" note. `candidates` carries all 4 patterns.
     if (!payload.email && domain && first && last) {
       const guesses = guessEmails(first, last, domain);
-      Object.assign(payload, {
-        email: guesses[0],
-        confidence: 'guess',
-        source: 'institution-pattern',
-        mailtoEnabled: false,
-        candidates: guesses,
-      });
+      if (guesses.length) {
+        Object.assign(payload, {
+          email: guesses[0],
+          confidence: 'likely',
+          source: 'institution-pattern',
+          mailtoEnabled: true,
+          candidates: guesses,
+          institution, // display name → UI renders "Standard <institution> email format"
+        });
+      }
     }
 
-    // Persist: verified/likely ~7d, guess/negative ~2d (negatives still carry the
+    // Persist: verified + real `likely` ~7d; constructed institution-pattern
+    // best-guesses and not-found ~2d (re-probe sooner; negatives still carry the
     // facultySearchUrl). Then respond.
-    const ttl = (payload.confidence === 'verified' || payload.confidence === 'likely')
+    const ttl = (payload.confidence === 'verified'
+      || (payload.confidence === 'likely' && payload.source !== 'institution-pattern'))
       ? EMAIL_TTL_VERIFIED_MS : EMAIL_TTL_GUESS_MS;
     await cacheSet(cacheKey, payload, ttl);
     res.json(payload);
 
     // Background upgrade — after responding, if the result isn't verified, parse the
-    // OA PDFs for the probe DOIs off-path. A better hit rewrites email:{authorId} for
-    // the NEXT viewer. Safe in this long-running `node index.js` process; fully
-    // detached (no awaiting, errors swallowed).
+    // OA PDFs for the probe DOIs off-path (probePdfCached reuses the in-band parse). A
+    // STRICTLY better hit rewrites email:{authorId} for the NEXT viewer. Safe in this
+    // long-running `node index.js` process; fully detached (no awaiting, errors swallowed).
     if (payload.confidence !== 'verified' && probes.length) {
+      // Rank an email result so we only re-cache a genuine improvement over what we
+      // already served: verified > a real (non-pattern) likely > a pattern guess /
+      // null. A bare `confidence` compare isn't enough — a PDF `likely` must NOT
+      // overwrite an already-served real `likely`, but it SHOULD overwrite a
+      // `source:'institution-pattern'` guess (also confidence:'likely') or a null.
+      const rank = (r) => {
+        if (!r || !r.email) return 0;
+        if (r.confidence === 'verified') return 3;
+        if (r.confidence === 'likely' && r.source !== 'institution-pattern') return 2;
+        return 1; // pattern guess
+      };
+      const servedRank = rank(payload);
       (async () => {
         try {
           for (const { doi } of probes) {
             const lp = await probeLandingPage(doi, matchCtx); // cached; gives us a pdfUrl
             const pdfUrl = lp && lp.pdfUrl;
             if (!pdfUrl) continue;
-            const upgraded = await probePdf(pdfUrl, lp.source || pdfUrl, matchCtx);
-            if (upgraded && upgraded.email && upgraded.confidence === 'verified') {
+            const upgraded = await probePdfCached(doi, pdfUrl, lp.source || pdfUrl, matchCtx);
+            if (upgraded && upgraded.email && rank(upgraded) > servedRank) {
               const upPayload = {
                 ...payload,
                 email: upgraded.email,
-                confidence: 'verified',
+                confidence: upgraded.confidence,
                 source: upgraded.source,
-                mailtoEnabled: true,
+                mailtoEnabled: true, // verified or real likely → always mailable
                 candidates: [],
               };
-              await cacheSet(cacheKey, upPayload, EMAIL_TTL_VERIFIED_MS);
-              return; // first verified upgrade wins
+              // Re-read the CURRENT cached value and gate against IT, not our own
+              // (stale) servedRank: two cold-miss requests for the same author can
+              // race here — without this a PDF `likely` could clobber a `verified`
+              // that the other request's background task already wrote. rank(cur)
+              // is 0 on a cache miss (rank() returns 0 for falsy/no-email).
+              const cur = await cacheGet(cacheKey);
+              if (rank(upgraded) > rank(cur)) {
+                await cacheSet(cacheKey, upPayload, EMAIL_TTL_VERIFIED_MS);
+              }
+              if (upgraded.confidence === 'verified') return; // verified is terminal
             }
           }
         } catch { /* background best-effort — never surfaces */ }
@@ -3436,7 +4136,13 @@ export {
   cache,
   cacheGet,
   cacheSet,
+  cacheDelete,
   cacheClear,
+  verifyFirebaseToken,
+  dayKeyUTC,
+  msUntilNextUtcMidnight,
+  reserveDailyUpload,
+  refundDailyUpload,
   emailsFromHtml,
   raceForEmail,
   reconstructAbstract,
@@ -3463,6 +4169,12 @@ export {
   emailsFromPubmedXml,
   pmcidFromPubmedChunk,
   resolveLocations,
+  haversineKm,
+  proximity01,
+  PROX_CONFIG,
+  resolveInstitutionGeos,
+  resolveWikidataCoords,
+  resolveStudentGeoByName,
   LOCATIONS_PAYLOAD,
   LOC_RE,
   LOCATION_TOKEN_SET,
