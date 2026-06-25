@@ -156,14 +156,14 @@ test('GET /api/professor/:id returns 502 when OpenAlex is unreachable', async ()
 
 // ─── POST /api/analyze-resume ────────────────────────────────────────────────
 test('POST /api/analyze-resume returns 400 on missing/too-small data', async () => {
-  const res = await request(app).post('/api/analyze-resume').send({ data: 'short', mediaType: 'application/pdf' });
+  const res = await request(app).post('/api/analyze-resume').set('Authorization', 'Bearer test:alice').send({ data: 'short', mediaType: 'application/pdf' });
   assert.equal(res.status, 400);
   assert.match(res.body.error, /Missing or too-small/);
 });
 
 test('POST /api/analyze-resume returns 400 on unsupported mediaType', async () => {
   const big = 'A'.repeat(200);
-  const res = await request(app).post('/api/analyze-resume').send({ data: big, mediaType: 'text/plain' });
+  const res = await request(app).post('/api/analyze-resume').set('Authorization', 'Bearer test:alice').send({ data: big, mediaType: 'text/plain' });
   assert.equal(res.status, 400);
   assert.match(res.body.error, /Unsupported mediaType/);
 });
@@ -173,7 +173,7 @@ test('POST /api/analyze-resume strips a ```json fence before JSON.parse', async 
   // short-circuits before any OpenAlex call, isolating the fence-strip behavior.
   mockAnthropicText('```json\n{"isResume": false}\n```');
   const big = 'A'.repeat(200);
-  const res = await request(app).post('/api/analyze-resume').send({ data: big, mediaType: 'application/pdf' });
+  const res = await request(app).post('/api/analyze-resume').set('Authorization', 'Bearer test:alice').send({ data: big, mediaType: 'application/pdf' });
   // Fenced JSON parsed successfully → isResume:false → the 400 "not a resume" path.
   assert.equal(res.status, 400);
   assert.match(res.body.error, /doesn't look like a resume/);
@@ -182,7 +182,7 @@ test('POST /api/analyze-resume strips a ```json fence before JSON.parse', async 
 test('POST /api/analyze-resume returns 502 when Claude returns malformed JSON', async () => {
   mockAnthropicText('I am not JSON at all, sorry.');
   const big = 'A'.repeat(200);
-  const res = await request(app).post('/api/analyze-resume').send({ data: big, mediaType: 'application/pdf' });
+  const res = await request(app).post('/api/analyze-resume').set('Authorization', 'Bearer test:alice').send({ data: big, mediaType: 'application/pdf' });
   assert.equal(res.status, 502);
   assert.match(res.body.error, /malformed JSON/);
 });
@@ -196,7 +196,7 @@ test('POST /api/analyze-resume returns parsed fields with no interests (no OpenA
     accomplishments: ['Dean\'s list'],
   }) + '\n```');
   const big = 'A'.repeat(200);
-  const res = await request(app).post('/api/analyze-resume').send({ data: big, mediaType: 'application/pdf' });
+  const res = await request(app).post('/api/analyze-resume').set('Authorization', 'Bearer test:alice').send({ data: big, mediaType: 'application/pdf' });
   assert.equal(res.status, 200);
   assert.deepEqual(res.body.interests, []);
   assert.equal(res.body.summary, 'A promising student.');
@@ -216,7 +216,7 @@ test('GET /api/professor/:id/email ALWAYS returns 200, even when upstream throws
   assert.ok('facultySearchUrl' in res.body);
 });
 
-test('GET /api/professor/:id/email returns a guess payload from the institution pattern', async () => {
+test('GET /api/professor/:id/email returns a likely institution-pattern payload (mailable)', async () => {
   mockFetch([
     {
       match: (u) => /\/authors\/A1(\?|$)/.test(u),
@@ -240,9 +240,10 @@ test('GET /api/professor/:id/email returns a guess payload from the institution 
 
   const res = await request(app).get('/api/professor/A1/email');
   assert.equal(res.status, 200);
-  // No PMC/PubMed/PDF hits → Tier 4 institution-pattern guess.
-  assert.equal(res.body.confidence, 'guess');
+  // No PMC/PubMed/PDF hits → Layer 3 institution-pattern best-guess, now a mailable `likely`.
+  assert.equal(res.body.confidence, 'likely');
   assert.equal(res.body.email, 'jane.smith@stanford.edu');
-  assert.equal(res.body.mailtoEnabled, false);
+  assert.equal(res.body.mailtoEnabled, true);
+  assert.equal(res.body.source, 'institution-pattern');
   assert.ok(res.body.candidates.includes('jsmith@stanford.edu'));
 });

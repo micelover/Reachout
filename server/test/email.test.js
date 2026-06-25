@@ -4,11 +4,13 @@
 // Every upstream (OpenAlex / Europe PMC / Unpaywall / ROR / landing-page HTML) is
 // mocked by URL substring so these tests run fully offline, deterministically, and
 // never touch the network or spend Anthropic tokens. The handler's contract under
-// test (see index.js ~2753-2929):
-//   • Europe PMC <corresp> person-matched email → confidence:'verified'
+// test (Layer 1 now: Europe PMC SEARCH-by-DOI for the pmcid, then NCBI efetch for
+// the JATS full text — Europe PMC's own fullTextXML endpoint is no longer used):
+//   • PMC <corresp> person-matched email (efetch JATS) → confidence:'verified'
+//   • a PMC affiliation-only person-matched email       → confidence:'likely'
 //   • landing-page mailto person-matched         → 'likely' (or 'verified' when a
 //                                                   corresponding marker sits beside it)
-//   • all probes empty + a resolvable inst domain → 'guess' / institution-pattern
+//   • all probes empty + a resolvable inst domain → 'likely' / institution-pattern (mailable best-guess)
 //   • a co-author's email (wrong surname) is REJECTED by personMatch
 //   • the route NEVER errors — always 200 with at least the partial payload
 //   • a cached (incl. negative) hit returns instantly, no upstream calls
@@ -31,7 +33,7 @@ afterEach(() => {
 
 // URL-matching fetch stub. Unlike the routes.test.js version this one supports a
 // per-route `contentType`, because the new handler's fetchHtml requires `text/html`
-// and Europe PMC's fullTextXML comes back as XML — a single hard-coded
+// and the NCBI-efetch JATS comes back as XML — a single hard-coded
 // `application/json` content-type would make those tiers silently no-op.
 function mockFetch(routes) {
   global.fetch = async (url) => {
@@ -53,9 +55,44 @@ function mockFetch(routes) {
       body: null, // forces fetchHtml down its non-streaming res.text() branch
       json: async () => r.json ?? {},
       text: async () => r.text ?? '',
-      arrayBuffer: async () => new ArrayBuffer(0),
+      // A route may carry a real binary `buffer` (e.g. a hand-built PDF) so the
+      // in-band OA-PDF probe path can be exercised fully offline. Default to empty.
+      arrayBuffer: async () => {
+        if (r.buffer) {
+          const b = r.buffer;
+          return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength);
+        }
+        return new ArrayBuffer(0);
+      },
     };
   };
+}
+
+// Build a tiny, valid single-page PDF whose page text is exactly `lines` (one
+// content-stream line each). pdf-parse extracts this text losslessly offline, so a
+// hand-built PDF lets us drive probePdf with NO network and NO real-PDF fixture file.
+function buildPdf(lines) {
+  const content = 'BT /F1 12 Tf 50 750 Td ' +
+    lines.map((l, i) => `${i ? '0 -20 Td ' : ''}(${l}) Tj `).join('') + 'ET';
+  const objs = [];
+  objs[1] = '<< /Type /Catalog /Pages 2 0 R >>';
+  objs[2] = '<< /Type /Pages /Kids [3 0 R] /Count 1 >>';
+  objs[3] = '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] ' +
+    '/Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>';
+  objs[4] = `<< /Length ${content.length} >>\nstream\n${content}\nendstream`;
+  objs[5] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>';
+
+  let pdf = '%PDF-1.4\n';
+  const offsets = [];
+  for (let i = 1; i <= 5; i++) {
+    offsets[i] = Buffer.byteLength(pdf, 'latin1');
+    pdf += `${i} 0 obj\n${objs[i]}\nendobj\n`;
+  }
+  const xrefStart = Buffer.byteLength(pdf, 'latin1');
+  pdf += 'xref\n0 6\n0000000000 65535 f \n';
+  for (let i = 1; i <= 5; i++) pdf += `${String(offsets[i]).padStart(10, '0')} 00000 n \n`;
+  pdf += `trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
+  return Buffer.from(pdf, 'latin1');
 }
 
 // ── Shared fixtures ───────────────────────────────────────────────────────────
@@ -78,10 +115,12 @@ const AUTHOR = {
 };
 
 // One recent open-access work carrying a DOI → exactly one probe DOI.
+// `type:'article'` keeps it out of the SKIP_TYPES set, so the probe loop fires.
 const WORKS_ONE_OA_DOI = {
   results: [{
     id: 'https://openalex.org/W1',
     doi: 'https://doi.org/10.1234/abc',
+    type: 'article',
     open_access: { is_oa: true },
     locations: [],
   }],
@@ -95,18 +134,20 @@ const epmcEmpty = {
   json: { resultList: { result: [] } },
 };
 
-// ── 1. Verified via Europe PMC <corresp> ──────────────────────────────────────
-test('email: Europe PMC <corresp> person-matched email → confidence:verified, mailtoEnabled', async () => {
+// ── 1. Verified via PMC <corresp> (EPMC search → pmcid → NCBI efetch JATS) ─────
+test('email: PMC <corresp> person-matched email (NCBI efetch JATS) → confidence:verified, mailtoEnabled', async () => {
   mockFetch([
     authorRoute,
     worksRoute,
     rorRoute,
+    // Layer 1 step A: Europe PMC SEARCH-by-DOI returns a hit carrying the pmcid.
     {
       match: (u) => u.includes('europepmc') && u.includes('/search'),
-      json: { resultList: { result: [{ source: 'PMC', id: 'PMC123', pmcid: 'PMC123', isOpenAccess: 'Y' }] } },
+      json: { resultList: { result: [{ source: 'MED', id: 'PMC123', pmcid: 'PMC123', isOpenAccess: 'Y' }] } },
     },
+    // Layer 1 step B: NCBI efetch (db=pmc, bare numeric id) returns the JATS XML.
     {
-      match: (u) => u.includes('europepmc') && u.includes('fullTextXML'),
+      match: (u) => u.includes('eutils.ncbi.nlm.nih.gov') && u.includes('efetch.fcgi'),
       contentType: 'application/xml',
       text: '<article><corresp id="c1">Correspondence to <email>jane.smith@stanford.edu</email></corresp></article>',
     },
@@ -118,6 +159,94 @@ test('email: Europe PMC <corresp> person-matched email → confidence:verified, 
   assert.equal(res.body.confidence, 'verified');
   assert.equal(res.body.mailtoEnabled, true);
   // Source points at the Europe PMC article, not the institution pattern.
+  assert.match(res.body.source, /europepmc\.org\/article/);
+});
+
+// ── 1b. Likely via PMC affiliation email (efetch JATS, NO <corresp>) ──────────
+test('email: PMC affiliation-only email (no <corresp>) person-matched → confidence:likely, mailtoEnabled', async () => {
+  mockFetch([
+    authorRoute,
+    worksRoute,
+    rorRoute,
+    {
+      match: (u) => u.includes('europepmc') && u.includes('/search'),
+      json: { resultList: { result: [{ source: 'MED', id: 'PMC123', pmcid: 'PMC123', isOpenAccess: 'Y' }] } },
+    },
+    // The efetch JATS carries the address inside an <aff> affiliation block only —
+    // no <corresp>, so emailsFromPmcXml's structured pass misses it and the handler
+    // falls back to extractEmails(xml) → graded `likely`.
+    {
+      match: (u) => u.includes('eutils.ncbi.nlm.nih.gov') && u.includes('efetch.fcgi'),
+      contentType: 'application/xml',
+      text: '<article><front><aff id="a1">Dept of CS, Stanford University. ' +
+        'jane.smith@stanford.edu</aff></front></article>',
+    },
+  ]);
+
+  const res = await request(app).get('/api/professor/A1/email');
+  assert.equal(res.status, 200);
+  assert.equal(res.body.email, 'jane.smith@stanford.edu');
+  assert.equal(res.body.confidence, 'likely');
+  assert.equal(res.body.mailtoEnabled, true);
+  assert.match(res.body.source, /europepmc\.org\/article/);
+});
+
+// ── 1c. Probe selection: a supplementary-materials record is SKIPPED ──────────
+test('email: a supplementary-materials work is skipped; only the real article DOI drives the verified hit', async () => {
+  // Two OA+DOI works: a supplementary-materials record (SKIP_TYPES) and a real
+  // article (with a PMC location → prioritized). Only the ARTICLE's DOI gets a
+  // successful efetch email; the supplementary DOI, if it were probed, would 404
+  // its search and produce nothing. Asserting a verified hit proves the article
+  // was probed AND that the skipped record never short-circuited it.
+  const PMC_SOURCE_ID = 'https://openalex.org/S4306400806';
+  mockFetch([
+    authorRoute,
+    {
+      match: (u) => u.includes('/works'),
+      json: {
+        results: [
+          // Comes first in recency order but must be skipped outright.
+          {
+            id: 'https://openalex.org/W9',
+            doi: 'https://doi.org/10.9999/supp',
+            type: 'supplementary-materials',
+            open_access: { is_oa: true },
+            locations: [],
+          },
+          // The real article — carries a PMC location so it lands in pass 1.
+          {
+            id: 'https://openalex.org/W1',
+            doi: 'https://doi.org/10.1234/abc',
+            type: 'article',
+            open_access: { is_oa: true },
+            locations: [{ source: { id: PMC_SOURCE_ID } }],
+          },
+        ],
+      },
+    },
+    rorRoute,
+    // EPMC search: only the ARTICLE's DOI yields a pmcid hit. The supplementary
+    // DOI's search returns an empty result list (so even if probed, it's a no-op).
+    {
+      match: (u) => u.includes('europepmc') && u.includes('/search') && u.includes('10.1234'),
+      json: { resultList: { result: [{ source: 'MED', id: 'PMC123', pmcid: 'PMC123', isOpenAccess: 'Y' }] } },
+    },
+    {
+      match: (u) => u.includes('europepmc') && u.includes('/search'),
+      json: { resultList: { result: [] } },
+    },
+    {
+      match: (u) => u.includes('eutils.ncbi.nlm.nih.gov') && u.includes('efetch.fcgi'),
+      contentType: 'application/xml',
+      text: '<article><corresp id="c1">Correspondence to <email>jane.smith@stanford.edu</email></corresp></article>',
+    },
+  ]);
+
+  const res = await request(app).get('/api/professor/A1/email');
+  assert.equal(res.status, 200);
+  assert.equal(res.body.email, 'jane.smith@stanford.edu');
+  assert.equal(res.body.confidence, 'verified');
+  assert.equal(res.body.mailtoEnabled, true);
   assert.match(res.body.source, /europepmc\.org\/article/);
 });
 
@@ -175,8 +304,8 @@ test('email: landing-page mailto next to a "Corresponding author" marker → ver
   assert.equal(res.body.mailtoEnabled, true);
 });
 
-// ── 3. Guess via ROR institution domain (all paper probes empty) ──────────────
-test('email: all probes empty + ROR domain → confidence:guess, 4-pattern candidates, source:institution-pattern', async () => {
+// ── 3. Institution-pattern best-guess via ROR domain (all paper probes empty) ──
+test('email: all probes empty + ROR domain → confidence:likely, 4-pattern candidates, source:institution-pattern', async () => {
   mockFetch([
     authorRoute,
     { match: (u) => u.includes('/works'), json: { results: [] } }, // no probe DOIs at all
@@ -185,9 +314,9 @@ test('email: all probes empty + ROR domain → confidence:guess, 4-pattern candi
 
   const res = await request(app).get('/api/professor/A1/email');
   assert.equal(res.status, 200);
-  assert.equal(res.body.confidence, 'guess');
+  assert.equal(res.body.confidence, 'likely');
   assert.equal(res.body.source, 'institution-pattern');
-  assert.equal(res.body.mailtoEnabled, false); // a guess is display-only, never a mailto
+  assert.equal(res.body.mailtoEnabled, true); // constructed best-guess is now mailable, flagged via source
   // email is the FIRST guess; candidates is the full 4-pattern list.
   assert.equal(res.body.email, 'jane.smith@stanford.edu');
   assert.deepEqual(res.body.candidates, [
@@ -235,7 +364,7 @@ test('email: every upstream throws → route never errors, returns 200 with emai
 });
 
 // ── 5. personMatch gate: a DIFFERENT-surname co-author email is REJECTED ──────
-test('email: a corresponding email belonging to a different-surname co-author is REJECTED (falls through to guess)', async () => {
+test('email: a corresponding email belonging to a different-surname co-author is REJECTED (falls through to institution-pattern likely)', async () => {
   // The PMC <corresp> carries "bob.jones@stanford.edu" — same institution domain,
   // wrong surname. personMatch must reject it: a domain match alone never wins. The
   // handler then degrades to the institution-pattern guess, NOT the co-author email.
@@ -245,10 +374,10 @@ test('email: a corresponding email belonging to a different-surname co-author is
     rorRoute,
     {
       match: (u) => u.includes('europepmc') && u.includes('/search'),
-      json: { resultList: { result: [{ source: 'PMC', id: 'PMC123', pmcid: 'PMC123', isOpenAccess: 'Y' }] } },
+      json: { resultList: { result: [{ source: 'MED', id: 'PMC123', pmcid: 'PMC123', isOpenAccess: 'Y' }] } },
     },
     {
-      match: (u) => u.includes('europepmc') && u.includes('fullTextXML'),
+      match: (u) => u.includes('eutils.ncbi.nlm.nih.gov') && u.includes('efetch.fcgi'),
       contentType: 'application/xml',
       text: '<article><corresp id="c1">Correspondence to <email>bob.jones@stanford.edu</email></corresp></article>',
     },
@@ -259,7 +388,7 @@ test('email: a corresponding email belonging to a different-surname co-author is
   assert.equal(res.status, 200);
   // The co-author's address must NOT be surfaced as the professor's email.
   assert.notEqual(res.body.email, 'bob.jones@stanford.edu');
-  assert.equal(res.body.confidence, 'guess');
+  assert.equal(res.body.confidence, 'likely');
   assert.equal(res.body.source, 'institution-pattern');
   assert.equal(res.body.email, 'jane.smith@stanford.edu');
 });
@@ -285,6 +414,202 @@ test('email: a cached negative payload returns instantly without calling any ups
   assert.equal(res.status, 200);
   assert.equal(fetchCalls, 0, 'no upstream fetch should occur on a cache hit');
   assert.deepEqual(res.body, negative);
+});
+
+// ── 7. ORCID author-level verified (a PUBLIC ORCID email is authoritative) ─────
+test('email: a surname-matched PUBLIC ORCID email → confidence:verified, mailtoEnabled, source orcid.org', async () => {
+  // Author carries a full ORCID URL → probeOrcid runs once (author-level). To prove
+  // ORCID is the winner and no earlier probe short-circuits it, works is EMPTY:
+  //   • no OA+DOI works → no per-DOI probes (EPMC / landing / PDF / Crossref / arXiv)
+  //   • probeAuthorPmc's own /works query also returns [] → no pmids → null
+  // So ORCID's `verified` is the only hit, and it short-circuits raceForEmail.
+  const orcidAuthor = { ...AUTHOR, orcid: 'https://orcid.org/0000-0002-1234-5678' };
+  mockFetch([
+    { match: (u) => /\/authors\/A1(\?|$)/.test(u), json: orcidAuthor },
+    { match: (u) => u.includes('/works'), json: { results: [] } },
+    rorRoute,
+    // ORCID v3.0 email section: { email: [ { email, visibility } ] }. The API only
+    // returns PUBLIC emails; the handler does not re-check visibility, it surname-gates.
+    {
+      match: (u) => u.includes('pub.orcid.org') && u.includes('0000-0002-1234-5678') && u.includes('/email'),
+      json: { email: [{ email: 'jane.smith@stanford.edu', visibility: 'public' }] },
+    },
+  ]);
+
+  const res = await request(app).get('/api/professor/A1/email');
+  assert.equal(res.status, 200);
+  assert.equal(res.body.email, 'jane.smith@stanford.edu');
+  assert.equal(res.body.confidence, 'verified');
+  assert.equal(res.body.mailtoEnabled, true);
+  assert.match(res.body.source, /orcid\.org\/0000-0002-1234-5678/);
+});
+
+// ── 7b. ORCID gate: a different-surname public ORCID email is REJECTED ─────────
+test('email: a wrong-surname PUBLIC ORCID email is rejected → falls through to institution-pattern', async () => {
+  // ORCID returns a real public email but for the WRONG person (surname "Jones").
+  // pickPersonEmail's personMatch gate must reject it, so probeOrcid yields null and
+  // the route degrades to the institution-pattern best-guess (a domain is resolvable).
+  const orcidAuthor = { ...AUTHOR, orcid: 'https://orcid.org/0000-0002-1234-5678' };
+  mockFetch([
+    { match: (u) => /\/authors\/A1(\?|$)/.test(u), json: orcidAuthor },
+    { match: (u) => u.includes('/works'), json: { results: [] } },
+    rorRoute,
+    {
+      match: (u) => u.includes('pub.orcid.org') && u.includes('/email'),
+      json: { email: [{ email: 'bob.jones@stanford.edu', visibility: 'public' }] },
+    },
+  ]);
+
+  const res = await request(app).get('/api/professor/A1/email');
+  assert.equal(res.status, 200);
+  assert.notEqual(res.body.email, 'bob.jones@stanford.edu');
+  assert.equal(res.body.confidence, 'likely');
+  assert.equal(res.body.source, 'institution-pattern');
+  assert.equal(res.body.email, 'jane.smith@stanford.edu');
+});
+
+// ── 8. Crossref per-DOI likely (author metadata, even for paywalled papers) ────
+test('email: a surname-matched Crossref author email → confidence:likely, source doi.org', async () => {
+  // One OA+DOI work drives the per-DOI fan-out. Layer 1 (Europe PMC) is empty, the
+  // Unpaywall landing page yields neither an email nor a pdfUrl (so the landing-page
+  // AND in-band PDF probes are both no-ops), leaving Crossref as the winning hit.
+  mockFetch([
+    authorRoute,
+    // Crossref BEFORE worksRoute: api.crossref.org/works/... also contains "/works",
+    // and mockFetch is first-match — so the Crossref route must precede the OpenAlex
+    // worksRoute or the latter would swallow it and return the wrong (works) JSON.
+    {
+      match: (u) => u.includes('api.crossref.org') && u.includes('/works/'),
+      // crossrefFetch reads the body via res.text() + JSON.parse (size-capped), so the
+      // mock must serve `text` (a real HTTP response exposes both .json() and .text();
+      // this mock's .text() returns '' for json-only routes — see mockFetch).
+      text: JSON.stringify({
+        message: {
+          author: [
+            { given: 'Jane', family: 'Smith', email: 'jane.smith@stanford.edu' },
+            { given: 'Bob', family: 'Jones' },
+          ],
+        },
+      }),
+    },
+    worksRoute,
+    rorRoute,
+    epmcEmpty,
+    // Unpaywall: no best_oa_location → probeLandingPage returns null (no email, no pdf).
+    { match: (u) => u.includes('unpaywall'), json: {} },
+  ]);
+
+  const res = await request(app).get('/api/professor/A1/email');
+  assert.equal(res.status, 200);
+  assert.equal(res.body.email, 'jane.smith@stanford.edu');
+  assert.equal(res.body.confidence, 'likely');
+  assert.equal(res.body.mailtoEnabled, true);
+  assert.match(res.body.source, /doi\.org\/10\.1234\/abc/);
+});
+
+// ── 8b. Crossref gate: an email mined from affiliation free-text JSON ──────────
+test('email: a surname-matched email buried in a Crossref affiliation JSON string → likely', async () => {
+  // No explicit a.email field — the address is embedded in the affiliation text.
+  // probeCrossref mines email-shaped tokens out of JSON.stringify(authors), so this
+  // surname-matched address is still recovered and graded `likely`.
+  mockFetch([
+    authorRoute,
+    // Crossref BEFORE worksRoute (first-match ordering — see test above).
+    {
+      match: (u) => u.includes('api.crossref.org') && u.includes('/works/'),
+      // crossrefFetch reads the body via res.text() + JSON.parse (size-capped) — serve
+      // `text`, not `json` (mockFetch's .text() returns '' for json-only routes).
+      text: JSON.stringify({
+        message: {
+          author: [
+            {
+              given: 'Jane',
+              family: 'Smith',
+              affiliation: [{ name: 'Dept of CS, Stanford University (jane.smith@stanford.edu)' }],
+            },
+          ],
+        },
+      }),
+    },
+    worksRoute,
+    rorRoute,
+    epmcEmpty,
+    { match: (u) => u.includes('unpaywall'), json: {} },
+  ]);
+
+  const res = await request(app).get('/api/professor/A1/email');
+  assert.equal(res.status, 200);
+  assert.equal(res.body.email, 'jane.smith@stanford.edu');
+  assert.equal(res.body.confidence, 'likely');
+  assert.match(res.body.source, /doi\.org\/10\.1234\/abc/);
+});
+
+// ── 9. In-band OA-PDF probe — verified when a corresponding marker sits nearby ─
+test('email: OA PDF with a "Corresponding author" marker near the email → confidence:verified', async () => {
+  // probeLandingPage (Unpaywall best_oa_location.url_for_pdf) hands a pdfUrl to
+  // probePdfCached → probePdf → fetchPdfBuffer → pdf-parse. The hand-built PDF's text
+  // carries the email within ~200 chars of a "Corresponding" marker → verified.
+  // EPMC empty + no landing-page email keeps the PDF probe as the deciding hit.
+  const pdfBuf = buildPdf([
+    'Corresponding author: Jane Smith',
+    'Email: jane.smith@stanford.edu',
+  ]);
+  mockFetch([
+    authorRoute,
+    worksRoute,
+    rorRoute,
+    epmcEmpty,
+    {
+      match: (u) => u.includes('unpaywall'),
+      json: { best_oa_location: { url_for_pdf: 'https://oa.example/paper.pdf' } },
+    },
+    {
+      match: (u) => u.includes('oa.example') && u.includes('.pdf'),
+      contentType: 'application/pdf',
+      buffer: pdfBuf,
+    },
+    { match: (u) => u.includes('api.crossref.org'), text: JSON.stringify({ message: { author: [] } }) },
+  ]);
+
+  const res = await request(app).get('/api/professor/A1/email');
+  assert.equal(res.status, 200);
+  assert.equal(res.body.email, 'jane.smith@stanford.edu');
+  assert.equal(res.body.confidence, 'verified');
+  assert.equal(res.body.mailtoEnabled, true);
+  assert.equal(res.body.source, 'https://oa.example/paper.pdf');
+});
+
+// ── 9b. In-band OA-PDF probe — likely when NO corresponding marker is present ──
+test('email: OA PDF with a surname-matched email but no corresponding marker → confidence:likely', async () => {
+  // Same path, but the PDF text has no correspondence marker near (or anywhere) the
+  // email → probePdf grades it `likely`. Crossref returns nothing so the PDF wins.
+  const pdfBuf = buildPdf([
+    'Authors: Jane Smith, Bob Jones',
+    'Contact: jane.smith@stanford.edu',
+  ]);
+  mockFetch([
+    authorRoute,
+    worksRoute,
+    rorRoute,
+    epmcEmpty,
+    {
+      match: (u) => u.includes('unpaywall'),
+      json: { best_oa_location: { url_for_pdf: 'https://oa.example/paper.pdf' } },
+    },
+    {
+      match: (u) => u.includes('oa.example') && u.includes('.pdf'),
+      contentType: 'application/pdf',
+      buffer: pdfBuf,
+    },
+    { match: (u) => u.includes('api.crossref.org'), text: JSON.stringify({ message: { author: [] } }) },
+  ]);
+
+  const res = await request(app).get('/api/professor/A1/email');
+  assert.equal(res.status, 200);
+  assert.equal(res.body.email, 'jane.smith@stanford.edu');
+  assert.equal(res.body.confidence, 'likely');
+  assert.equal(res.body.mailtoEnabled, true);
+  assert.equal(res.body.source, 'https://oa.example/paper.pdf');
 });
 
 // ── emailsFromHtml — the new pure mailto/de-obfuscation extractor ─────────────
