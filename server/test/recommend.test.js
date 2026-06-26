@@ -210,3 +210,41 @@ test('POST /api/recommend: a total OpenAlex outage (every bucket fails) returns 
   assert.equal(res.status, 502, 'a total OpenAlex outage is an honest 502, not a 200');
   assert.ok(res.body.error, '502 carries an { error } message for the UI to surface');
 });
+
+// ── excludeIds: drop already-contacted professors, then top the list back up ──
+
+test('POST /api/recommend: excludeIds drops a professor and tops the list back up from the pool', async () => {
+  mockOpenAlexHappyPath();
+  // Baseline at limit:1 → the single top-ranked survivor (the reachable riser).
+  const base = await request(app)
+    .post('/api/recommend')
+    .send({ interests: ['machine learning'], field: 'Computer Science', limit: 1 });
+  assert.equal(base.status, 200);
+  assert.equal(base.body.professors.length, 1, 'baseline returns exactly one professor');
+  const topId = base.body.professors[0].id;
+
+  // Excluding that professor must REFILL the slot from the pool (the other author),
+  // not collapse the list to empty — this is the "stays full" guarantee.
+  const res = await request(app)
+    .post('/api/recommend')
+    .send({ interests: ['machine learning'], field: 'Computer Science', limit: 1, excludeIds: [topId] });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.professors.length, 1, 'count topped up from the pool, not just filtered down');
+  assert.ok(!res.body.professors.some((p) => p.id === topId), 'the excluded professor is gone');
+});
+
+test('POST /api/recommend: excludeIds is sanitized and can empty the list when it covers the whole pool', async () => {
+  mockOpenAlexHappyPath();
+  // Garbage tokens are dropped (only /^A\d+$/ shapes survive). Excluding BOTH stub
+  // authors leaves nothing → empty array, still 200 (honest, no padding, no crash).
+  const res = await request(app)
+    .post('/api/recommend')
+    .send({
+      interests: ['machine learning'],
+      field: 'Computer Science',
+      excludeIds: ['not-an-id', 'A123 OR 1=1', 42, null, 'A2000', 'A1000'],
+    });
+  assert.equal(res.status, 200);
+  assert.ok(Array.isArray(res.body.professors));
+  assert.equal(res.body.professors.length, 0, 'excluding the whole pool yields an empty list, not a crash');
+});

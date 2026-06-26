@@ -2432,7 +2432,10 @@ async function discover(query, { page = 1, perPage = 12, unis = [] } = {}) {
  * @param {{ field?:string, goal?:string, unis?:string[], limit?:number, perPage?:number }} opts
  * @returns {Promise<Professor[]>} cards with matchScore + breakdown (no internal stats)
  */
-async function recommendForInterests(interests, { field = '', goal = '', unis = [], limit = 24, perPage, studentGeo = null } = {}) {
+async function recommendForInterests(interests, { field = '', goal = '', unis = [], limit = 24, perPage, studentGeo = null, excludeIds = [] } = {}) {
+  // Author ids the caller has already contacted (Sent/Replied) — dropped from the
+  // scored pool BEFORE the limit slice so the list refills from the next-best.
+  const excludeSet = new Set(Array.isArray(excludeIds) ? excludeIds : []);
   // Per-bucket fetch scales with the requested result cap (when not pinned by the
   // caller): a bigger `limit` pulls a wider page through the SAME precision filter,
   // so we surface more cards to paginate without lowering match quality. The cap is
@@ -2551,6 +2554,9 @@ async function recommendForInterests(interests, { field = '', goal = '', unis = 
       const { stats, dominantField, ...card } = prof; // drop internals from the DTO
       return { ...card, matchScore: percent, breakdown };
     })
+    // Already-contacted professors drop out BEFORE the limit slice, so the next-best
+    // survivors top the returned list back up to `limit` automatically.
+    .filter((card) => !excludeSet.has(card.id))
     // Primary by score; exact ties break toward the geographically nearer professor.
     .sort((a, b) => (b.matchScore - a.matchScore) ||
       ((b.breakdown.proximity ?? -1) - (a.breakdown.proximity ?? -1)))
@@ -3039,7 +3045,8 @@ app.post('/api/analyze-resume', async (req, res) => {
  *
  * POST /api/recommend
  * Body: { interests: string[], field?: string, goal?: string,
- *         unis?: string[] (OpenAlex ids), limit?: number }
+ *         unis?: string[] (OpenAlex ids), limit?: number,
+ *         excludeIds?: string[] (OpenAlex author ids to omit — already-contacted) }
  *
  * Response: { interests: string[], goal: string,
  *             professors: [{ ...card, matchScore: 30–99, breakdown }] }
@@ -3101,8 +3108,17 @@ app.post('/api/recommend', async (req, res) => {
       studentGeo = await resolveStudentGeoByName(String(body.institution));
     }
 
+    // Professors the client has already contacted (Sent/Replied) — excluded from the
+    // scored pool so the Recommended grid can top itself back up. Author-id shape only;
+    // deduped and capped, bad tokens silently dropped (same discipline as `unis`).
+    const excludeIds = [...new Set(
+      (Array.isArray(body.excludeIds) ? body.excludeIds : [])
+        .map((s) => String(s ?? '').trim())
+        .filter((s) => /^A\d+$/.test(s)),
+    )].slice(0, 500);
+
     // ── Match via the shared reply-fit engine ────────────────────────────────
-    const professors = await recommendForInterests(interests, { field, goal, unis: mergedUnis, limit, studentGeo });
+    const professors = await recommendForInterests(interests, { field, goal, unis: mergedUnis, limit, studentGeo, excludeIds });
 
     res.json({ interests, goal, professors });
   } catch (err) {
