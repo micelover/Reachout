@@ -7,6 +7,9 @@
 // handler instead. Non-API routes are served as static index.html by Vercel's
 // CDN (see vercel.json), so the app's own SPA fallback is unused here.
 
+// Must run before server/index.js loads pdf-parse → pdfjs-dist (needs DOMMatrix).
+import './_polyfills.js';
+
 // TEMP DIAGNOSTIC: surface any cold-start import failure in the HTTP response,
 // since Hobby runtime logs don't show it. Zero overhead when the import succeeds.
 let handler;
