@@ -1,0 +1,8 @@
+# https://heyreachout.com/robots.txt
+User-agent: *
+Allow: /
+
+# Keep crawlers out of the JSON API (no indexable content there)
+Disallow: /api/
+
+Sitemap: https://heyreachout.com/sitemap.xml
