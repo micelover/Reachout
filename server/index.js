@@ -2,7 +2,7 @@
  * ReachOut — Professor Discovery Engine
  * Lightweight Express proxy over the OpenAlex API (free, no key).
  *
- * Port: 8787
+ * Port: process.env.PORT || 8787 (PaaS hosts inject PORT; defaults to 8787 locally)
  * All OpenAlex calls use the "polite pool" (mailto param) for better rate limits.
  *
  * Endpoints:
@@ -16,10 +16,13 @@
  *   GET  /api/professor/:authorId/papers
  *   POST /api/professor/:authorId/email-guide  (deterministic: rank recent papers by student fit)
  *   GET  /api/professor/:authorId/email
- *   POST /api/professor/:authorId/draft-email  (requires ANTHROPIC_API_KEY env var)
- *   POST /api/analyze-resume  (requires ANTHROPIC_API_KEY env var)
+ *   POST /api/professor/:authorId/draft-email  (auth required; 30/day; needs ANTHROPIC_API_KEY)
+ *   POST /api/analyze-resume  (auth required; 1/day; needs ANTHROPIC_API_KEY)
  *   POST /api/recommend  (deterministic reply-fit recommendations from a profile)
- *   POST /api/merge-profile  (requires ANTHROPIC_API_KEY env var)
+ *   POST /api/merge-profile  (auth required; 30/day; needs ANTHROPIC_API_KEY)
+ *
+ * CORS: env-configurable allowlist via CORS_ALLOWED_ORIGINS (comma-separated exact
+ * origins); localhost/127.0.0.1 (any port) and file:// pages always allowed in dev.
  */
 
 import 'dotenv/config';
@@ -33,7 +36,7 @@ import { PDFParse } from 'pdf-parse';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
-const PORT = 8787;
+const PORT = process.env.PORT || 8787;
 const OPENALEX = 'https://api.openalex.org';
 // Real contact email — used in the OpenAlex polite-pool `mailto`, the NCBI
 // `tool=reachout&email=`, the Unpaywall `?email=` (which REQUIRES a real address),
@@ -282,39 +285,81 @@ function msUntilNextUtcMidnight(now = Date.now()) {
   return next - now;
 }
 
-/** Durable key for one account's daily résumé-upload slot. */
-const dailyUploadKey = (uid) => `rl:resume:${uid}:${dayKeyUTC()}`;
+/** Durable key for one account's daily quota of `action` (e.g. 'resume', 'draft', 'merge'). */
+const dailyActionKey = (uid, action) => `rl:${action}:${uid}:${dayKeyUTC()}`;
 
 /**
- * Reserve today's single résumé-upload slot for `uid`. Returns { ok:true } and marks
- * the slot used, or { ok:false, resetAt } (ISO of next UTC midnight) when already used.
- * Read-then-set: a benign concurrent double-submit could slip a second request through
- * before the first writes — acceptable for a 1/day cap. The slot TTL outlives the UTC
- * day by 60s of slack so it never expires a hair early.
+ * Reserve one of today's `limit` slots for (`uid`, `action`). Returns { ok:true } and
+ * increments the day's counter, or { ok:false, resetAt } (ISO of next UTC midnight)
+ * when the count has already reached `limit`. Read-then-set: a benign concurrent
+ * double-submit could slip an extra request through before the first writes —
+ * acceptable for a coarse daily cap. The counter TTL outlives the UTC day by 60s of
+ * slack so it never expires a hair early.
  */
-async function reserveDailyUpload(uid) {
-  const key = dailyUploadKey(uid);
-  const used = await cacheGet(key);
+async function reserveDailyAction(uid, action, limit) {
+  const key = dailyActionKey(uid, action);
+  const count = (await cacheGet(key)) || 0;
   const resetAt = new Date(Date.now() + msUntilNextUtcMidnight()).toISOString();
-  if (used) return { ok: false, resetAt };
-  await cacheSet(key, 1, msUntilNextUtcMidnight() + 60000);
+  if (count >= limit) return { ok: false, resetAt };
+  await cacheSet(key, count + 1, msUntilNextUtcMidnight() + 60000);
   return { ok: true };
 }
 
-/** Release today's slot for `uid` (refund after our own / Claude's failure). Never throws. */
-async function refundDailyUpload(uid) {
+/** Release today's slot for (`uid`, `action`) (refund after our own / Claude's failure). Never throws. */
+async function refundDailyAction(uid, action) {
   try {
-    await cacheDelete(dailyUploadKey(uid));
+    await cacheDelete(dailyActionKey(uid, action));
   } catch { /* best-effort — a failed refund just costs the user one slot */ }
 }
+
+// ── Résumé-upload limiter: thin wrappers preserving the EXACT legacy key + 1/day cap ──
+// `rl:resume:${uid}:${day}` and the 1-per-day behavior are unchanged so the existing
+// resume-ratelimit.test.js suite passes verbatim.
+
+/** Durable key for one account's daily résumé-upload slot (legacy alias). */
+const dailyUploadKey = (uid) => dailyActionKey(uid, 'resume');
+
+/** Reserve today's single résumé-upload slot for `uid`. See reserveDailyAction. */
+const reserveDailyUpload = (uid) => reserveDailyAction(uid, 'resume', 1);
+
+/** Release today's résumé-upload slot for `uid`. See refundDailyAction. */
+const refundDailyUpload = (uid) => refundDailyAction(uid, 'resume');
 
 // ─── Body parsing ────────────────────────────────────────────────────────────
 // Base64-encoded resume images inflate ~33%, so 15 MB covers ~10 MB source files.
 app.use(express.json({ limit: '15mb' }));
 
-// ─── CORS (allow file:// and any localhost origin for dev) ───────────────────
+// ─── CORS (env-configurable allowlist; dev origins always allowed) ────────────
+// Production origins are declared in CORS_ALLOWED_ORIGINS (comma-separated EXACT
+// origins, e.g. "https://reachout.app,https://www.reachout.app"). Dev is always
+// allowed: any localhost/127.0.0.1 (any port) and file:// pages (whose browser
+// Origin header is the literal string "null"). A request with NO Origin header
+// (same-origin / curl / server-to-server) is never blocked.
+const CORS_ALLOWED_ORIGINS = new Set(
+  String(process.env.CORS_ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean),
+);
+
+/** True when `origin` may be reflected into Access-Control-Allow-Origin. */
+function isAllowedOrigin(origin) {
+  if (!origin) return false;                          // caller handles the no-Origin case
+  if (origin === 'null') return true;                 // file:// pages
+  if (CORS_ALLOWED_ORIGINS.has(origin)) return true;  // explicit production allowlist
+  // Any localhost / 127.0.0.1 dev origin, any scheme, any port.
+  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+}
+
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin;
+  // Only reflect an explicitly-allowed Origin. A missing Origin (same-origin / curl /
+  // server-to-server) is allowed through without an ACAO header; a present-but-not-
+  // allowed Origin gets no ACAO header (the browser then blocks the response).
+  if (origin && isAllowedOrigin(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
@@ -2600,7 +2645,7 @@ app.get('/api/discover', async (req, res) => {
     res.json(data);
   } catch (err) {
     console.error('[/api/discover]', err.message);
-    res.status(502).json({ error: 'Failed to reach OpenAlex', detail: err.message });
+    res.status(502).json({ error: 'Failed to reach OpenAlex' });
   }
 });
 
@@ -2637,7 +2682,7 @@ app.get('/api/institutions', async (req, res) => {
     res.json({ query: q, results });
   } catch (err) {
     console.error('[/api/institutions]', err.message);
-    res.status(502).json({ error: 'Failed to reach OpenAlex', detail: err.message });
+    res.status(502).json({ error: 'Failed to reach OpenAlex' });
   }
 });
 
@@ -2674,7 +2719,7 @@ app.get('/api/institution/:id/logo', async (req, res) => {
     });
   } catch (err) {
     console.error('[/api/institution/:id/logo]', err.message);
-    res.status(502).json({ error: 'Failed to reach OpenAlex', detail: err.message });
+    res.status(502).json({ error: 'Failed to reach OpenAlex' });
   }
 });
 
@@ -2764,7 +2809,7 @@ app.get('/api/schools', async (req, res) => {
     res.json({ query: q, results: out });
   } catch (err) {
     console.error('[/api/schools]', err.message);
-    res.status(502).json({ error: 'Failed to reach institution sources', detail: err.message });
+    res.status(502).json({ error: 'Failed to reach institution sources' });
   }
 });
 
@@ -2980,7 +3025,7 @@ app.post('/api/analyze-resume', async (req, res) => {
     } catch {
       // Our/Claude's fault — refund the slot so the user isn't charged for it.
       await refundDailyUpload(uid);
-      return res.status(502).json({ error: 'Claude returned malformed JSON.', raw: message.content });
+      return res.status(502).json({ error: 'Claude returned malformed JSON.' });
     }
 
     if (!extracted.isResume) {
@@ -3036,7 +3081,7 @@ app.post('/api/analyze-resume', async (req, res) => {
     if (err.status === 401) {
       return res.status(502).json({ error: 'Invalid or missing ANTHROPIC_API_KEY on the server.' });
     }
-    res.status(502).json({ error: 'Resume analysis failed.', detail: err.message });
+    res.status(502).json({ error: 'Resume analysis failed.' });
   }
 });
 
@@ -3123,7 +3168,7 @@ app.post('/api/recommend', async (req, res) => {
     res.json({ interests, goal, professors });
   } catch (err) {
     console.error('[/api/recommend]', err.message);
-    res.status(502).json({ error: 'Failed to reach OpenAlex', detail: err.message });
+    res.status(502).json({ error: 'Failed to reach OpenAlex' });
   }
 });
 
@@ -3166,6 +3211,16 @@ function sanitizeProfile(p) {
 }
 
 app.post('/api/merge-profile', async (req, res) => {
+  // ── Auth first ───────────────────────────────────────────────────────────────
+  // A missing/expired token never reaches input validation, a slot, or Claude.
+  let uid;
+  try {
+    ({ uid } = await verifyFirebaseToken(req.headers.authorization));
+  } catch {
+    return res.status(401).json({ error: 'Please sign in to merge your profile.' });
+  }
+
+  let reserved = false; // refund only if we took a slot AND the failure is ours/Claude's
   try {
     // This route only ever carries a few KB of JSON profile text; reject oversized
     // bodies early instead of inheriting the 15 MB limit (meant for base64 PDFs).
@@ -3179,6 +3234,19 @@ app.post('/api/merge-profile', async (req, res) => {
     if (!isObj(existing) || !isObj(incoming)) {
       return res.status(400).json({ error: '`existing` and `incoming` must both be objects.' });
     }
+
+    // ── Reserve one of the day's 30 merge slots BEFORE spending a Claude call ───
+    // After input validation so a malformed request never burns a slot.
+    const reservation = await reserveDailyAction(uid, 'merge', 30);
+    if (!reservation.ok) {
+      res.set('Retry-After', String(Math.ceil(msUntilNextUtcMidnight() / 1000)));
+      return res.status(429).json({
+        error: 'Max daily limit reached — come back tomorrow.',
+        resetAt: reservation.resetAt,
+        limit: 30,
+      });
+    }
+    reserved = true;
 
     // Defensively cap/sanitize sizes; lenient on missing sub-fields.
     const safeExisting = sanitizeProfile(existing);
@@ -3209,7 +3277,9 @@ app.post('/api/merge-profile', async (req, res) => {
         .replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
       merged = JSON.parse(rawText);
     } catch {
-      return res.status(502).json({ error: 'Claude returned malformed JSON.', raw: message.content });
+      // Our/Claude's fault — refund the slot so the user isn't charged for it.
+      await refundDailyAction(uid, 'merge');
+      return res.status(502).json({ error: 'Claude returned malformed JSON.' });
     }
 
     // ── Normalize to the contract shape ──────────────────────────────────────
@@ -3236,10 +3306,13 @@ app.post('/api/merge-profile', async (req, res) => {
     res.json({ name, institution, field, goals, interests, accomplishments, summary, sellingPoints });
   } catch (err) {
     console.error('[/api/merge-profile]', err.message);
+    // Any failure that reaches here is ours/Claude's (the slot was reserved by this
+    // point unless we 400'd on input earlier) — refund it before responding.
+    if (reserved) await refundDailyAction(uid, 'merge');
     if (err.status === 401) {
       return res.status(502).json({ error: 'Invalid or missing ANTHROPIC_API_KEY on the server.' });
     }
-    res.status(502).json({ error: 'Profile merge failed.', detail: err.message });
+    res.status(502).json({ error: 'Profile merge failed.' });
   }
 });
 
@@ -3250,13 +3323,17 @@ app.post('/api/merge-profile', async (req, res) => {
 app.get('/api/professor/:authorId', async (req, res) => {
   try {
     const { authorId } = req.params;
-    const fullId = authorId.startsWith('A') ? authorId : `A${authorId}`;
+    // Validate the id BEFORE it touches any upstream URL: an OpenAlex author id is
+    // 'A' + digits; anything else (e.g. "A1&select=id") could inject query params.
+    if (!/^A?\d+$/i.test(authorId)) return res.status(400).json({ error: 'Invalid author id.' });
+    const fullId = `A${authorId.replace(/^A/i, '')}`;   // canonical, digits-only after 'A'
+    const safeId = encodeURIComponent(fullId);           // belt-and-suspenders on interpolation
 
     // Fetch author profile and recent works in parallel
     const [authorData, worksData] = await Promise.all([
-      oaFetch(`/authors/${fullId}`),
+      oaFetch(`/authors/${safeId}`),
       oaFetch(
-        `/works?filter=author.id:${fullId}&sort=publication_date:desc&per_page=5` +
+        `/works?filter=author.id:${safeId}&sort=publication_date:desc&per_page=5` +
         `&select=id,title,publication_year,primary_location,cited_by_count,abstract_inverted_index`
       ),
     ]);
@@ -3280,7 +3357,7 @@ app.get('/api/professor/:authorId', async (req, res) => {
     res.json({ profile, recentPapers, latestPublication });
   } catch (err) {
     console.error('[/api/professor]', err.message);
-    res.status(502).json({ error: 'Failed to reach OpenAlex', detail: err.message });
+    res.status(502).json({ error: 'Failed to reach OpenAlex' });
   }
 });
 
@@ -3297,7 +3374,10 @@ app.get('/api/professor/:authorId', async (req, res) => {
 app.get('/api/professor/:authorId/papers', async (req, res) => {
   try {
     const { authorId } = req.params;
-    const fullId = authorId.startsWith('A') ? authorId : `A${authorId}`;
+    // Validate the id BEFORE it touches any upstream URL (see /api/professor/:id).
+    if (!/^A?\d+$/i.test(authorId)) return res.status(400).json({ error: 'Invalid author id.' });
+    const fullId = `A${authorId.replace(/^A/i, '')}`;   // canonical, digits-only after 'A'
+    const safeId = encodeURIComponent(fullId);           // belt-and-suspenders on interpolation
 
     const clamp = (v, lo, hi, dflt) => {
       const n = parseInt(v, 10);
@@ -3313,9 +3393,9 @@ app.get('/api/professor/:authorId/papers', async (req, res) => {
 
     // Author (for orcid/name/works_count) + two sorted work queries, in parallel.
     const [author, recentData, citedData] = await Promise.all([
-      oaFetch(`/authors/${fullId}`),
-      oaFetch(`/works?filter=author.id:${fullId}&sort=publication_date:desc&per_page=25&select=${SELECT}`),
-      oaFetch(`/works?filter=author.id:${fullId}&sort=cited_by_count:desc&per_page=25&select=${SELECT}`),
+      oaFetch(`/authors/${safeId}`),
+      oaFetch(`/works?filter=author.id:${safeId}&sort=publication_date:desc&per_page=25&select=${SELECT}`),
+      oaFetch(`/works?filter=author.id:${safeId}&sort=cited_by_count:desc&per_page=25&select=${SELECT}`),
     ]);
 
     // Merge + dedupe by short work id.
@@ -3426,7 +3506,7 @@ app.get('/api/professor/:authorId/papers', async (req, res) => {
     res.json({ authorId: fullId, papers, selected, directions, links, counts });
   } catch (err) {
     console.error('[/api/professor/:authorId/papers]', err.message);
-    res.status(502).json({ error: 'Failed to reach OpenAlex', detail: err.message });
+    res.status(502).json({ error: 'Failed to reach OpenAlex' });
   }
 });
 
@@ -3473,7 +3553,10 @@ app.get('/api/professor/:authorId/papers', async (req, res) => {
 app.post('/api/professor/:authorId/email-guide', async (req, res) => {
   try {
     const { authorId } = req.params;
-    const fullId = authorId.startsWith('A') ? authorId : `A${authorId}`;
+    // Validate the id BEFORE it touches any upstream URL (see /api/professor/:id).
+    if (!/^A?\d+$/i.test(authorId)) return res.status(400).json({ error: 'Invalid author id.' });
+    const fullId = `A${authorId.replace(/^A/i, '')}`;   // canonical, digits-only after 'A'
+    const safeId = encodeURIComponent(fullId);           // belt-and-suspenders on interpolation
 
     const body = req.body || {};
     if (typeof body !== 'object' || Array.isArray(body)) {
@@ -3493,7 +3576,7 @@ app.post('/api/professor/:authorId/email-guide', async (req, res) => {
       'id,ids,title,publication_year,publication_date,type,primary_location,' +
       'best_oa_location,open_access,cited_by_count,topics,abstract_inverted_index';
     const recentData = await oaFetch(
-      `/works?filter=author.id:${fullId}&sort=publication_date:desc&per_page=25&select=${SELECT}`
+      `/works?filter=author.id:${safeId}&sort=publication_date:desc&per_page=25&select=${SELECT}`
     );
 
     const raws = recentData.results || [];
@@ -3667,7 +3750,7 @@ app.post('/api/professor/:authorId/email-guide', async (req, res) => {
     res.json({ authorId: fullId, hook: matches[0] || null, matches });
   } catch (err) {
     console.error('[/api/professor/:authorId/email-guide]', err.message);
-    res.status(502).json({ error: 'Failed to reach OpenAlex', detail: err.message });
+    res.status(502).json({ error: 'Failed to reach OpenAlex' });
   }
 });
 
@@ -3685,16 +3768,42 @@ app.post('/api/professor/:authorId/email-guide', async (req, res) => {
  * Requires ANTHROPIC_API_KEY (else 502, matching /api/analyze-resume).
  */
 app.post('/api/professor/:authorId/draft-email', async (req, res) => {
+  // ── Auth first ───────────────────────────────────────────────────────────────
+  // A missing/expired token never reaches input validation, a slot, or Claude.
+  let uid;
+  try {
+    ({ uid } = await verifyFirebaseToken(req.headers.authorization));
+  } catch {
+    return res.status(401).json({ error: 'Please sign in to draft an email.' });
+  }
+
+  let reserved = false; // refund only if we took a slot AND the failure is ours/Claude's
   try {
     const { authorId } = req.params;
-    const fullId = authorId.startsWith('A') ? authorId : `A${authorId}`;
+    // Validate the id BEFORE it touches any upstream URL (see /api/professor/:id) and
+    // BEFORE reserving a rate-limit slot, so a bad id never burns the day's quota.
+    if (!/^A?\d+$/i.test(authorId)) return res.status(400).json({ error: 'Invalid author id.' });
+    const fullId = `A${authorId.replace(/^A/i, '')}`;   // canonical, digits-only after 'A'
+    const safeId = encodeURIComponent(fullId);           // belt-and-suspenders on interpolation
     const student = (req.body && req.body.student) || {};
+
+    // ── Reserve one of the day's 30 draft slots BEFORE spending a Claude call ───
+    const reservation = await reserveDailyAction(uid, 'draft', 30);
+    if (!reservation.ok) {
+      res.set('Retry-After', String(Math.ceil(msUntilNextUtcMidnight() / 1000)));
+      return res.status(429).json({
+        error: 'Max daily limit reached — come back tomorrow.',
+        resetAt: reservation.resetAt,
+        limit: 30,
+      });
+    }
+    reserved = true;
 
     // Professor profile + recent papers (with abstracts) — both cached by oaFetch.
     const [authorData, worksData] = await Promise.all([
-      oaFetch(`/authors/${fullId}`),
+      oaFetch(`/authors/${safeId}`),
       oaFetch(
-        `/works?filter=author.id:${fullId}&sort=publication_date:desc&per_page=5` +
+        `/works?filter=author.id:${safeId}&sort=publication_date:desc&per_page=5` +
         `&select=id,title,publication_year,primary_location,cited_by_count,abstract_inverted_index`
       ),
     ]);
@@ -3757,6 +3866,8 @@ app.post('/api/professor/:authorId/draft-email', async (req, res) => {
         .replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
       draft = JSON.parse(rawText);
     } catch {
+      // Our/Claude's fault — refund the slot so the user isn't charged for it.
+      await refundDailyAction(uid, 'draft');
       return res.status(502).json({ error: 'Claude returned malformed JSON.' });
     }
 
@@ -3767,10 +3878,13 @@ app.post('/api/professor/:authorId/draft-email', async (req, res) => {
     });
   } catch (err) {
     console.error('[/api/professor/:authorId/draft-email]', err.message);
+    // Any failure that reaches here is ours/Claude's (the slot was reserved by this
+    // point unless we 400'd on a bad id earlier) — refund it before responding.
+    if (reserved) await refundDailyAction(uid, 'draft');
     if (err.status === 401) {
       return res.status(502).json({ error: 'Invalid or missing ANTHROPIC_API_KEY on the server.' });
     }
-    res.status(502).json({ error: 'Email drafting failed.', detail: err.message });
+    res.status(502).json({ error: 'Email drafting failed.' });
   }
 });
 
@@ -4156,7 +4270,12 @@ function buildResearchSummary(raw, profile) {
 }
 
 // ─── Serve frontend ──────────────────────────────────────────────────────────
-app.use(express.static(join(__dirname, '..')));
+// Serve ONLY index.html — never the rest of the repo root (firestore.rules,
+// server/index.js, CLAUDE.md, *-mockups.html, .firebaserc, firebase.json, …).
+// index.html is fully CDN-based (zero local assets), so a SPA fallback suffices.
+// The regex matches any GET path that is NOT /api or /api/... so /api/* routes
+// (registered above) and the CORS/OPTIONS middleware (registered first) are intact.
+app.get(/^(?!\/api(\/|$)).*/, (req, res) => res.sendFile(join(__dirname, '..', 'index.html')));
 
 // ─── Start ───────────────────────────────────────────────────────────────────
 // Only bind a port when run directly (`node index.js`); stays silent when
@@ -4172,10 +4291,10 @@ if (isMainModule) app.listen(PORT, () => {
   console.log(`   GET  /api/professor/:authorId`);
   console.log(`   GET  /api/professor/:authorId/papers`);
   console.log(`   GET  /api/professor/:authorId/email`);
-  console.log(`   POST /api/professor/:authorId/draft-email  (requires ANTHROPIC_API_KEY env var)`);
-  console.log(`   POST /api/analyze-resume  (requires ANTHROPIC_API_KEY env var)`);
+  console.log(`   POST /api/professor/:authorId/draft-email  (auth required; 30/day; needs ANTHROPIC_API_KEY)`);
+  console.log(`   POST /api/analyze-resume  (auth required; 1/day; needs ANTHROPIC_API_KEY)`);
   console.log(`   POST /api/recommend  (profile-driven reply-fit, no key)`);
-  console.log(`   POST /api/merge-profile  (requires ANTHROPIC_API_KEY env var)\n`);
+  console.log(`   POST /api/merge-profile  (auth required; 30/day; needs ANTHROPIC_API_KEY)\n`);
   if (!process.env.ANTHROPIC_API_KEY) {
     console.warn(`   ⚠️  ANTHROPIC_API_KEY is not set — /api/analyze-resume will return 502.\n`);
   }
@@ -4196,6 +4315,8 @@ export {
   msUntilNextUtcMidnight,
   reserveDailyUpload,
   refundDailyUpload,
+  reserveDailyAction,
+  refundDailyAction,
   emailsFromHtml,
   raceForEmail,
   reconstructAbstract,

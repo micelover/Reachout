@@ -426,7 +426,9 @@ test('GET /api/discover: strict 502 when OpenAlex fails during location resoluti
   const res = await request(app).get('/api/discover?field=machine%20learning&locations=DE');
   assert.equal(res.status, 502);
   assert.equal(res.body.error, 'Failed to reach OpenAlex');
-  assert.ok(res.body.detail, '502 carries a detail string');
+  // Security (M3): upstream internals (endpoint paths, probed ids, resolved IPs) must
+  // never leak to the client. The 502 carries only the generic `error` string.
+  assert.equal(res.body.detail, undefined, '502 no longer leaks an upstream `detail`');
 });
 
 // ════════════════════════════════════════════════════════════════════════════

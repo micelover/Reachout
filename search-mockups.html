@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Search · Sort & Filter mockups</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --g900:#0D2B1E; --g800:#1B4D3E; --g700:#1F5C49; --g600:#2D7A5F; --g100:#D1FAE5; --g50:#ECFDF5;
+  --n950:#030712; --n900:#111827; --n800:#1F2937; --n700:#374151; --n600:#4B5563; --n500:#6B7280;
+  --n400:#9CA3AF; --n300:#D1D5DB; --n200:#E5E7EB; --n100:#F3F4F6; --n50:#F9FAFB; --white:#fff;
+  --font-d:'Fraunces',Georgia,serif; --font-b:'DM Sans',system-ui,sans-serif;
+  --r-md:14px; --r-lg:20px;
+  --sh-sm:0 1px 2px rgba(16,24,40,.05);
+  --sh-md:0 4px 12px -2px rgba(16,24,40,.08);
+  --sh-lg:0 12px 32px -6px rgba(16,24,40,.16);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-b);background:var(--n50);color:var(--n900);padding:48px 32px 120px;line-height:1.5}
+.wrap{max-width:1080px;margin:0 auto}
+h1{font-family:var(--font-d);font-size:32px;font-weight:600;margin-bottom:6px}
+.sub{color:var(--n500);font-size:15px;margin-bottom:40px;max-width:640px}
+.opt{background:var(--white);border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:28px 28px 32px;margin-bottom:28px;box-shadow:var(--sh-sm)}
+.opt-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+.opt-tag{font-family:var(--font-b);font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--white);background:var(--g800);padding:4px 9px;border-radius:6px}
+.opt-name{font-family:var(--font-d);font-size:20px;font-weight:600}
+.opt-desc{color:var(--n500);font-size:13.5px;margin-bottom:24px}
+.stage{background:var(--n50);border:1px dashed var(--n200);border-radius:var(--r-md);padding:26px 22px;position:relative}
+.stage+.stage{margin-top:14px}
+.stage-lbl{position:absolute;top:8px;right:12px;font-size:10.5px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--n400)}
+
+/* shared pill / control primitives (from the real app) */
+.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.search{flex:1;min-width:260px;display:flex;align-items:center;gap:10px;background:var(--white);border:1.5px solid var(--n200);border-radius:100px;padding:13px 20px;box-shadow:var(--sh-sm)}
+.search input{flex:1;border:none;outline:none;font-family:var(--font-b);font-size:14px;color:var(--n800);background:transparent}
+.search input::placeholder{color:var(--n400)}
+.pill{display:flex;align-items:center;gap:8px;padding:12px 18px;border:1.5px solid var(--n200);border-radius:100px;background:var(--white);font-family:var(--font-b);font-size:13.5px;font-weight:500;color:var(--n700);cursor:pointer;white-space:nowrap;box-shadow:var(--sh-sm);transition:all .15s}
+.pill:hover{border-color:var(--n300);background:var(--n50)}
+.pill .chev{color:var(--n400)}
+.pill.active{border-color:var(--g700);color:var(--g800)}
+.pill .cnt{background:var(--g800);color:#fff;font-size:11px;font-weight:700;min-width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;border-radius:9px;padding:0 5px}
+.lbl{color:var(--n400);font-weight:500}
+svg{flex:0 0 auto}
+
+/* segmented sort toggle */
+.seg{display:inline-flex;background:var(--n100);border:1.5px solid var(--n200);border-radius:100px;padding:3px;gap:2px}
+.seg button{display:flex;align-items:center;gap:6px;border:none;background:transparent;font-family:var(--font-b);font-size:13px;font-weight:500;color:var(--n600);padding:8px 15px;border-radius:100px;cursor:pointer;transition:all .15s}
+.seg button.on{background:var(--g800);color:#fff;box-shadow:var(--sh-sm)}
+
+/* dropdown panel */
+.panel{width:230px;background:var(--white);border:1.5px solid var(--n200);border-radius:var(--r-md);box-shadow:var(--sh-lg);padding:8px;margin-top:10px}
+.panel .ph{font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n400);padding:8px 10px 6px}
+.menu-item{display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:9px;font-size:13.5px;color:var(--n700);cursor:pointer}
+.menu-item:hover{background:var(--n50)}
+.menu-item.sel{background:var(--g50);color:var(--g800);font-weight:600}
+.menu-item .tick{margin-left:auto;color:var(--g700)}
+.menu-item .desc{font-size:11.5px;color:var(--n400);font-weight:400;margin-left:auto;text-align:right}
+.checkrow{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;font-size:13.5px;color:var(--n700);cursor:pointer}
+.checkrow:hover{background:var(--n50)}
+.box{width:17px;height:17px;border:1.5px solid var(--n300);border-radius:5px;flex:0 0 auto}
+.box.ck{background:var(--g800);border-color:var(--g800);display:flex;align-items:center;justify-content:center}
+.menu-foot{display:flex;justify-content:flex-end;padding:8px 6px 2px;border-top:1px solid var(--n100);margin-top:6px}
+.menu-foot button{background:none;border:none;color:var(--n500);font-family:var(--font-b);font-size:12.5px;font-weight:500;cursor:pointer}
+
+/* chips */
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.chip{display:inline-flex;align-items:center;gap:7px;background:var(--g50);border:1px solid var(--g100);color:var(--g800);font-size:12.5px;font-weight:500;padding:6px 8px 6px 12px;border-radius:100px}
+.chip .x{width:16px;height:16px;border-radius:50%;background:var(--g100);display:inline-flex;align-items:center;justify-content:center;color:var(--g700);font-size:11px;cursor:pointer}
+
+.float{position:relative}
+.float .panel{position:absolute;left:0;top:100%;z-index:5}
+.float.r .panel{left:auto;right:0}
+.note{font-size:12.5px;color:var(--n500);margin-top:14px;padding-left:2px}
+.note b{color:var(--n700);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Sort &amp; Filter — pick a direction</h1>
+  <p class="sub">Four ways to split <b>Sort</b> (reorders results — Best match / Closest) from <b>Filters</b> (narrows results — e.g. a specific university). Each shows the resting state and the opened menu. Tell me the letter you want and I'll wire it into the real app.</p>
+
+  <!-- ░░░ OPTION A ░░░ -->
+  <div class="opt">
+    <div class="opt-head"><span class="opt-tag">Option A</span><span class="opt-name">Two clean pills: Sort &amp; Filters</span></div>
+    <p class="opt-desc">Smallest change. A dedicated <b>Sort</b> pill (dropdown) and a <b>Filters</b> pill (dropdown for university). The Sort pill always shows the current mode in its label.</p>
+    <div class="stage"><span class="stage-lbl">Resting</span>
+      <div class="row">
+        <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input placeholder="Search by field (e.g. robotics, climate science)…"></div>
+        <div class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M6 12h12M10 18h4"/></svg><span class="lbl">Sort:</span> Best match <svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div>
+        <div class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Filters</div>
+      </div>
+    </div>
+    <div class="stage"><span class="stage-lbl">Sort open</span>
+      <div class="row">
+        <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input placeholder="Search by field…"></div>
+        <div class="float">
+          <div class="pill active"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M6 12h12M10 18h4"/></svg><span class="lbl">Sort:</span> Best match <svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg></div>
+          <div class="panel">
+            <div class="ph">Sort by</div>
+            <div class="menu-item sel">⭐ Best match <svg class="tick" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg></div>
+            <div class="menu-item">📍 Closest</div>
+          </div>
+        </div>
+        <div class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Filters</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ░░░ OPTION B ░░░ -->
+  <div class="opt">
+    <div class="opt-head"><span class="opt-tag">Option B</span><span class="opt-name">Always-visible segmented Sort + Filters pill</span></div>
+    <p class="opt-desc">Sort is a one-tap toggle, no menu — fastest and most discoverable. <b>Filters</b> stays a pill with a count badge when active.</p>
+    <div class="stage"><span class="stage-lbl">Resting</span>
+      <div class="row">
+        <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input placeholder="Search by field (e.g. robotics, climate science)…"></div>
+        <div class="seg">
+          <button class="on"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Best match</button>
+          <button><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Closest</button>
+        </div>
+        <div class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>Filters</div>
+      </div>
+    </div>
+    <div class="stage"><span class="stage-lbl">Closest selected · Filters open · 1 active</span>
+      <div class="row">
+        <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input placeholder="Search by field…"></div>
+        <div class="seg">
+          <button><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Best match</button>
+          <button class="on"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Closest</button>
+        </div>
+        <div class="float r">
+          <div class="pill active"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>Filters <span class="cnt">1</span></div>
+          <div class="panel">
+            <div class="ph">University</div>
+            <div class="checkrow"><span class="box ck"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span>University of Oxford</div>
+            <div class="checkrow"><span class="box"></span>University of Cambridge</div>
+            <div class="checkrow"><span class="box"></span>Carnegie Mellon</div>
+            <div class="menu-foot"><button>Clear</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="chips"><span class="chip">Oxford <span class="x">×</span></span></div>
+    </div>
+  </div>
+
+  <!-- ░░░ OPTION C ░░░ -->
+  <div class="opt">
+    <div class="opt-head"><span class="opt-tag">Option C</span><span class="opt-name">Full-width search, controls on a second row</span></div>
+    <p class="opt-desc">Search gets the whole top line. Below it: <b>Filters</b> on the left, <b>Sort by</b> on the right — the familiar marketplace layout. Roomy and unambiguous.</p>
+    <div class="stage"><span class="stage-lbl">Resting</span>
+      <div class="search" style="margin-bottom:14px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input placeholder="Search by field (e.g. robotics, climate science)…"></div>
+      <div class="row" style="justify-content:space-between">
+        <div class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>University <svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div>
+        <div class="pill" style="box-shadow:none;border-color:transparent;background:transparent"><span class="lbl">Sort by:</span> <b style="color:var(--n800);font-weight:600">Best match</b> <svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div>
+      </div>
+    </div>
+    <div class="stage"><span class="stage-lbl">Sort menu open (right-aligned)</span>
+      <div class="search" style="margin-bottom:14px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input placeholder="Search by field…"></div>
+      <div class="row" style="justify-content:space-between;align-items:flex-start">
+        <div class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>University</div>
+        <div class="float r">
+          <div class="pill active" style="box-shadow:none;border-color:transparent;background:transparent"><span class="lbl">Sort by:</span> <b style="color:var(--g800);font-weight:600">Best match</b> <svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg></div>
+          <div class="panel" style="width:250px">
+            <div class="menu-item sel">Best match <span class="desc">relevance to your field</span></div>
+            <div class="menu-item">Closest <span class="desc">nearest to you</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ░░░ OPTION D ░░░ -->
+  <div class="opt">
+    <div class="opt-head"><span class="opt-tag">Option D</span><span class="opt-name">One unified menu: Sort + Filters together</span></div>
+    <p class="opt-desc">A single <b>Sort &amp; Filter</b> button opens one panel with both — Sort at the top, University below. Tidiest toolbar; active selections surface as removable chips under the bar.</p>
+    <div class="stage"><span class="stage-lbl">Resting</span>
+      <div class="row">
+        <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input placeholder="Search by field (e.g. robotics, climate science)…"></div>
+        <div class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M6 12h12M10 18h4"/></svg>Sort &amp; Filter <svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div>
+      </div>
+    </div>
+    <div class="stage"><span class="stage-lbl">Open</span>
+      <div class="row">
+        <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input placeholder="Search by field…"></div>
+        <div class="float r">
+          <div class="pill active"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M6 12h12M10 18h4"/></svg>Sort &amp; Filter <span class="cnt">1</span></div>
+          <div class="panel" style="width:250px">
+            <div class="ph">Sort by</div>
+            <div class="seg" style="display:flex;margin:0 6px 8px">
+              <button class="on" style="flex:1;justify-content:center">Best match</button>
+              <button style="flex:1;justify-content:center">Closest</button>
+            </div>
+            <div class="ph">University</div>
+            <div class="checkrow"><span class="box ck"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span>University of Oxford</div>
+            <div class="checkrow"><span class="box"></span>University of Cambridge</div>
+            <div class="checkrow"><span class="box"></span>Carnegie Mellon</div>
+            <div class="menu-foot"><button>Clear all</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="chips"><span class="chip">Oxford <span class="x">×</span></span></div>
+    </div>
+  </div>
+
+  <p class="note"><b>My take:</b> Option B if you want sort to feel instant and obvious; Option A if you want the lightest-touch change that still reads clearly. Reply with the letter (and any tweaks) and I'll build it into <code>index.html</code>.</p>
+</div>
+</body>
+</html>

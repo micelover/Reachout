@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // A signed-in user can read and write only their own profile document.
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+
+      // Outreach outcome logs are owner-only, scoped under the same uid.
+      match /outreach/{authorId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
+    // Server-only cache (written by the Express backend via the Admin SDK, which
+    // bypasses these rules). No client may ever read or write it.
+    match /cache/{doc=**} {
+      allow read, write: if false;
+    }
+  }
+}

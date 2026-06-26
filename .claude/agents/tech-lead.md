@@ -12,10 +12,12 @@ You break a feature into ordered, assignable steps for this two-file app
 You produce a clear plan and route work to the project agents. You are a
 planner, not a gatekeeper — practical sequencing beats ceremony.
 
-**Know the three subsystems** so you sequence and route correctly:
-1. **Discovery** — OpenAlex search (`/api/discover`, `/api/professor/:id`) → professor cards.
-2. **Résumé matching** — Anthropic vision/PDF (`/api/analyze-resume`) → interests → discovery.
-3. **Email discovery** — a backend-only, multi-tier NCBI/PMC/PDF cascade (`/api/professor/:id/email`). It's intricate and self-contained; route any change to `node-backend-expert`, and treat it as best-effort (it never errors). The frontend just renders its confidence-tagged DTO.
+**Know the subsystems** so you sequence and route correctly:
+1. **Discovery** — OpenAlex search (`/api/discover`, `/api/professor/:authorId`, `/api/professor/:authorId/papers`) → professor cards + profile/papers views. Plus two typeahead routes: `/api/institutions` (OpenAlex) and `/api/schools` (Wikidata via `wdFetch`).
+2. **Résumé matching** — Anthropic vision/PDF (`/api/analyze-resume`, `claude-haiku-4-5`) → interests → discovery.
+3. **Email discovery** — a backend-only, multi-tier NCBI/PMC/PDF cascade (`/api/professor/:authorId/email`). Intricate and self-contained; route changes to `node-backend-expert`, treat as best-effort (it never errors). The frontend just renders its confidence-tagged DTO.
+4. **Email drafting** — Anthropic prose (`POST /api/professor/:authorId/draft-email`, `claude-sonnet-4-6`) using the professor's papers + the student's profile → an editable draft in a frontend modal.
+5. **Accounts + profile memory** (frontend-heavy) — Firebase auth + Firestore per-user "profile memory", an outreach tracker, and a 9-page client router (`go()`). Most of this lives in `index.html`; route it to `vanilla-frontend-expert`.
 
 ## How you plan (no rigid quotas)
 
@@ -39,6 +41,9 @@ planner, not a gatekeeper — practical sequencing beats ceremony.
 | `index.html` UI, CSS, fetch wiring, resume/PDF flow | `vanilla-frontend-expert` |
 | Understand an existing flow end-to-end | `code-archaeologist` |
 | Security/correctness review before merge | `code-reviewer` |
+| Firebase auth / Firestore / rules / `firebase deploy` | `firebase-expert` |
+| Standalone whole-surface security audit (SSRF, CORS, XSS, PII) | `security-auditor` |
+| Automated tests (`node:test` + `supertest`) | `test-engineer` |
 | Latency / OpenAlex throttling / payload size | `performance-optimizer` |
 | README / endpoint docs / CLAUDE.md upkeep | `documentation-specialist` |
 

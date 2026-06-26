@@ -15,13 +15,14 @@ modes that actually exist here.
 ## Review focus, in priority order
 
 **🔴 Critical / security**
-- `ANTHROPIC_API_KEY` **or `NCBI_API_KEY`** or any secret leaking into client code (`index.html`), logs, responses, or git. Keys stay server-side only. `.env` must never be committed (`.env.example` is fine; `NCBI_API_KEY` is optional but still a secret).
-- Unescaped OpenAlex/user/Claude text written into the DOM via `innerHTML` → XSS. Flag any new interpolation into HTML strings — **including discovered emails and `source` URLs** from the email route, which originate from third-party paper XML/PDFs.
+- `ANTHROPIC_API_KEY`, `NCBI_API_KEY`, `OPENALEX_API_KEY`, or any Firebase config/secret leaking into a place it shouldn't — server keys must stay server-side (never in `index.html`, logs, responses, or git). `.env` must never be committed (`.env.example` is fine; `NCBI_API_KEY` and `OPENALEX_API_KEY` are optional but still secrets). Note: the frontend's Firebase web config is *public by design* — judge it against Firestore security rules, not as a leaked secret.
+- Unescaped OpenAlex/user/Claude text written into the DOM via `innerHTML` → XSS. The frontend has `esc()` and `safeUrl()` helpers and uses them widely — flag any new interpolation that **skips** them. Known hot spots: discovered emails + `source` URLs from the email route (third-party paper XML/PDFs), the **draft-email** output, and **`user.photoURL`** which is currently injected raw into `<img src>` without `esc`/`safeUrl`.
 - New endpoints that proxy arbitrary user input into `fetch` URLs without `encodeURIComponent` (SSRF / injection into OpenAlex **or NCBI** query).
 - The email route fetches **arbitrary open-access PDF URLs** server-side (`fetchPdfBuffer`). Its 5s-timeout + 10 MB cap + content-type check are the SSRF/DoS guardrails — flag any change that loosens them.
 
 **🟠 Correctness**
-- OpenAlex calls that bypass `oaFetch` (lose caching, `mailto` polite pool, and the `User-Agent` → risk of rate-limit/throttle). NCBI calls correctly use `ncbiFetch` instead — don't flag those as "bypassing the cache"; the email cache is a separate `email:<id>` / 24h layer by design.
+- OpenAlex calls that bypass `oaFetch` (lose caching, `mailto` polite pool, and the `User-Agent` → risk of rate-limit/throttle). NCBI calls correctly use `ncbiFetch`, and Wikidata calls use `wdFetch` — don't flag those as "bypassing the cache"; the email cache is a separate `email:<id>` / 24h layer by design.
+- The two Anthropic routes use **different models on purpose** — `claude-haiku-4-5` for `/api/analyze-resume`, `claude-sonnet-4-6` for `/api/professor/:authorId/draft-email`. Flag any change that "upgrades" the Haiku call to Sonnet (silent cost regression) or collapses both to one model.
 - Cache bugs: wrong key (OpenAlex must be the full URL; email must be `email:<authorId>`), stale-TTL logic (10-min vs 24-hour), or caching error responses.
 - Error handling that returns `500`/throws raw instead of the house pattern (`400` client / `502` upstream with `{ error }`). **Do not flag `/api/professor/:id/email` for returning `200` from its `catch`** — that fault-tolerance is intentional. *Do* flag a *new* route that swallows errors without a reason.
 - Anthropic JSON parsing without the code-fence strip + `502` fallback.

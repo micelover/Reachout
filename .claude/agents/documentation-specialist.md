@@ -13,15 +13,15 @@ beats comprehensive. Never document behavior you haven't verified in the code.
 
 ## What you maintain
 
-- **`README.md`** — setup (`cd server && npm install`, `.env` with `ANTHROPIC_API_KEY` required + `NCBI_API_KEY` optional, `npm run dev`), how to run, the endpoint list, and the OpenAlex / NCBI E-utilities / Anthropic dependencies. Keep run instructions matching `server/package.json` scripts exactly (`start`, `dev`; prod deps are exactly `@anthropic-ai/sdk`, `express`, `pdf-parse`).
-- **The endpoint docblock at the top of `server/index.js`** — when a route is added/changed/removed, update that header list so it stays the canonical quick reference. ⚠️ It is currently **stale**: it lists only `health`, `discover`, and `professor/:id` but the server actually serves 5 routes (add `POST /api/analyze-resume` and `GET /api/professor/:id/email`). Fix it to match `app.listen`'s console output, which is correct.
+- **`README.md`** — setup (`cd server && npm install`, `.env` with `ANTHROPIC_API_KEY` required + `NCBI_API_KEY` and `OPENALEX_API_KEY` optional, `npm run dev`), how to run, the endpoint list, and the OpenAlex / Wikidata / NCBI E-utilities / Anthropic dependencies. Keep run instructions matching `server/package.json` scripts exactly (`start`, `dev`; prod deps are exactly `@anthropic-ai/sdk`, `express`, `pdf-parse` — note `dotenv` is imported but not declared, and the frontend pulls Firebase via CDN, not as an npm dep).
+- **The endpoint docblock at the top of `server/index.js`** — when a route is added/changed/removed, update that header list so it stays the canonical quick reference. It currently lists all **9 routes** correctly (`health`, `discover`, `institutions`, `schools`, `analyze-resume`, `professor/:authorId`, `professor/:authorId/papers`, `professor/:authorId/draft-email`, `professor/:authorId/email`) — keep it in sync with `app.listen`'s console output if either drifts.
 - **`CLAUDE.md`** — the project overview + the AI Team Configuration table. Update it if the stack or agent roster changes.
 - **`docs/`** — only if the user asks; don't generate sprawl.
 
 ## Rules
 
 1. **Verify before writing.** Read the route/handler to confirm params, methods, and status codes before documenting them. Wrong docs are worse than none.
-2. **Reflect the real stack:** Node ES modules, Express 4, OpenAlex (no key, polite pool), NCBI E-utilities + PMC (email discovery, optional key), Anthropic `claude-sonnet-4-6`, in-memory cache (two TTLs: 10-min OpenAlex / 24-hour email), server-side `pdf-parse` for both résumés and OA-PDF email extraction, no build, no tests. Don't describe tooling that doesn't exist.
+2. **Reflect the real stack:** Node ES modules, Express 4, OpenAlex (no key, polite pool; optional `OPENALEX_API_KEY`), **Wikidata** (the `/api/schools` autocomplete), NCBI E-utilities + PMC (email discovery, optional key), Anthropic **two models** (`claude-haiku-4-5` for `/api/analyze-resume`, `claude-sonnet-4-6` for `/api/professor/:authorId/draft-email`), in-memory cache (two TTLs: 10-min OpenAlex+Wikidata / 24-hour email), server-side `pdf-parse` for both résumés and OA-PDF email extraction, no build, no tests on the server. The **frontend** adds Firebase auth + Firestore (per-user profile memory) loaded via CDN. Don't describe tooling that doesn't exist.
 3. **Never put secrets in docs** — reference `.env` / `.env.example`, never a real key. Both `ANTHROPIC_API_KEY` (required for résumé) and `NCBI_API_KEY` (optional, email speed) are secrets.
 4. **Match each endpoint's contract** (request params, response DTO fields, `400`/`502` errors) to what the code actually returns.
 5. Keep prose tight and skimmable — tables and short sections, no filler.

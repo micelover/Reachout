@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReachOut — Simple hero · clean takes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800;9..144,900&family=DM+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --g900:#0D2B1E; --g800:#1B4D3E; --g700:#1F5C49; --g600:#2D7A5F; --g100:#D1FAE5; --g50:#ECFDF5;
+  --n950:#030712; --n900:#111827; --n800:#1F2937; --n700:#374151; --n600:#4B5563; --n500:#6B7280;
+  --n400:#9CA3AF; --n300:#D1D5DB; --n200:#E5E7EB; --n100:#F3F4F6; --n50:#F9FAFB; --white:#FFFFFF;
+  --bg:#F6F7F9;
+  --font-d:'Fraunces',Georgia,serif; --font-b:'DM Sans',system-ui,sans-serif; --font-m:'DM Mono',ui-monospace,monospace;
+  --r-sm:6px; --r-md:10px; --r-lg:14px; --r-xl:20px;
+  --sh-sm:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
+  --sh-md:0 4px 14px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.04);
+  --sh-lg:0 10px 32px rgba(0,0,0,.1),0 4px 10px rgba(0,0,0,.05);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:var(--font-b);background:var(--bg);color:var(--n900);line-height:1.6;-webkit-font-smoothing:antialiased;padding:48px 28px 120px}
+a{text-decoration:none;color:inherit}
+button{cursor:pointer;border:none;background:none;font-family:inherit}
+
+.brand-logo{display:inline-flex;align-items:center;gap:.45em;font-family:var(--font-d);font-weight:700;color:var(--g800);letter-spacing:-.4px}
+.brand-logo::before{content:"";flex:none;width:1.35em;height:1.1em;background:url("data:image/png;base64,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") left center/contain no-repeat}
+
+.page-head{max-width:1180px;margin:0 auto 48px}
+.page-head .eyebrow{display:inline-flex;align-items:center;gap:7px;background:var(--g50);border:1px solid var(--g100);color:var(--g800);font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:5px 12px;border-radius:100px;margin-bottom:16px}
+.page-head h1{font-family:var(--font-d);font-size:clamp(28px,3.4vw,40px);font-weight:800;letter-spacing:-.7px;line-height:1.12;margin-bottom:10px}
+.page-head p{color:var(--n500);font-size:15px;max-width:660px}
+
+.variant{max-width:1180px;margin:0 auto 72px}
+.variant-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px;padding:0 4px}
+.variant-num{flex:none;font-family:var(--font-d);font-size:14px;font-weight:800;color:var(--white);background:var(--g800);width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-top:1px}
+.variant-head>div{flex:1}
+.variant-name{font-family:var(--font-d);font-size:20px;font-weight:700;letter-spacing:-.3px;line-height:1.2}
+.variant-desc{font-size:13.5px;color:var(--n500);margin-top:2px}
+.variant-tag{flex:none;align-self:center;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g800);background:var(--g50);border:1px solid var(--g100);padding:5px 11px;border-radius:100px}
+.variant-stage{position:relative;background:var(--white);border:1.5px solid var(--n200);border-radius:var(--r-xl);box-shadow:var(--sh-lg);overflow:hidden;min-height:600px;display:flex;flex-direction:column;justify-content:center}
+
+@media(max-width:760px){
+  body{padding:32px 16px 80px}
+  .variant-stage{min-height:0}
+}
+</style>
+</head>
+<body>
+
+<header class="page-head">
+  <span class="eyebrow">✦ ReachOut · Simpler hero</span>
+  <h1>Clean, focused takes</h1>
+  <p>Stripped back to the essentials — one bold headline, one clear sign-up CTA, and a single typing-email animation. No charts, no callouts, nothing competing for attention. Three clean directions, same brand.</p>
+</header>
+
+<main>
+<section class="variant">
+  <header class="variant-head"><span class="variant-num">1</span><div><h2 class="variant-name">Bold Split</h2><p class="variant-desc">Punchy bold headline, clean email editor that types itself, one obvious CTA.</p></div><span class="variant-tag">Live demo</span></header>
+  <div class="variant-stage">
+    <div class="m1-hero">
+      <div class="m1-left">
+        <h1 class="m1-headline">STOP SENDING EMAILS PROFESSORS <span class="m1-box">IGNORE</span></h1>
+        <p class="m1-sub">Generic outreach gets ignored. ReachOut analyzes a professor's research and your background, then writes a personalized email that actually gets a reply.</p>
+        <div class="m1-cta">
+          <button class="m1-btn-primary" type="button">Start now <span class="m1-arrow">&rarr;</span></button>
+          <button class="m1-btn-secondary" type="button">See how it works</button>
+        </div>
+        <p class="m1-note">No credit card required</p>
+      </div>
+
+      <div class="m1-right">
+        <div class="m1-editor">
+          <div class="m1-chrome">
+            <div class="m1-dots">
+              <span class="m1-dot m1-dot-r"></span>
+              <span class="m1-dot m1-dot-y"></span>
+              <span class="m1-dot m1-dot-g"></span>
+            </div>
+            <span class="m1-chrome-title">Reachout &middot; Email editor</span>
+            <span class="m1-pill">AI-written</span>
+          </div>
+          <div class="m1-subject">
+            <span class="m1-subject-label">Subject:</span>
+            <span class="m1-subject-text">Prospective student &mdash; your work on graph neural networks</span>
+          </div>
+          <div class="m1-body">
+            <pre class="m1-typed" aria-live="polite"></pre>
+          </div>
+          <div class="m1-footer">
+            <button class="m1-send" type="button">Send email</button>
+            <button class="m1-edit" type="button">Edit</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .m1-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    gap: 48px;
+    align-items: center;
+    padding: 56px;
+    min-height: 600px;
+    box-sizing: border-box;
+    font-family: var(--font-b);
+  }
+
+  /* ---------- LEFT ---------- */
+  .m1-left {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .m1-headline {
+    margin: 0;
+    font-family: var(--font-b);
+    font-weight: 800;
+    font-size: clamp(38px, 4.6vw, 60px);
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    color: var(--n950);
+    max-width: 9ch;
+  }
+  .m1-box {
+    display: inline-block;
+    background: var(--g800);
+    color: var(--white);
+    padding: 0 12px 2px;
+    border-radius: 8px;
+    box-shadow: 4px 4px 0 var(--g100);
+    transform: rotate(-1deg);
+  }
+  .m1-sub {
+    margin: 26px 0 0;
+    font-size: 17px;
+    line-height: 1.55;
+    color: var(--n600);
+    max-width: 440px;
+  }
+  .m1-cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 34px;
+  }
+  .m1-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--g800);
+    color: var(--white);
+    font-family: var(--font-b);
+    font-weight: 700;
+    font-size: 17px;
+    padding: 16px 28px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 8px 22px rgba(27, 77, 62, 0.28);
+    transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+  }
+  .m1-btn-primary:hover {
+    background: var(--g900);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(13, 43, 30, 0.34);
+  }
+  .m1-btn-primary:focus-visible {
+    outline: 3px solid var(--g600);
+    outline-offset: 3px;
+  }
+  .m1-btn-primary .m1-arrow {
+    transition: transform 0.16s ease;
+  }
+  .m1-btn-primary:hover .m1-arrow {
+    transform: translateX(4px);
+  }
+  .m1-btn-secondary {
+    background: var(--white);
+    color: var(--n700);
+    font-family: var(--font-b);
+    font-weight: 600;
+    font-size: 17px;
+    padding: 16px 24px;
+    border: 2px solid var(--n200);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: border-color 0.16s ease, color 0.16s ease, background 0.16s ease;
+  }
+  .m1-btn-secondary:hover {
+    border-color: var(--n400);
+    color: var(--n900);
+    background: var(--n50);
+  }
+  .m1-btn-secondary:focus-visible {
+    outline: 3px solid var(--g600);
+    outline-offset: 3px;
+  }
+  .m1-note {
+    margin: 16px 0 0;
+    font-size: 13px;
+    color: var(--n500);
+  }
+
+  /* ---------- RIGHT (email editor) ---------- */
+  .m1-right {
+    display: flex;
+    justify-content: center;
+  }
+  .m1-editor {
+    width: 100%;
+    max-width: 520px;
+    background: var(--white);
+    border: 1px solid var(--n200);
+    border-radius: 16px;
+    box-shadow: 0 24px 60px rgba(17, 24, 39, 0.12);
+    overflow: hidden;
+  }
+  .m1-chrome {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    background: var(--n50);
+    border-bottom: 1px solid var(--n200);
+  }
+  .m1-dots {
+    display: flex;
+    gap: 7px;
+  }
+  .m1-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .m1-dot-r { background: #FF5F57; }
+  .m1-dot-y { background: #FEBC2E; }
+  .m1-dot-g { background: #28C840; }
+  .m1-chrome-title {
+    font-family: var(--font-m);
+    font-size: 12.5px;
+    color: var(--n500);
+    letter-spacing: 0.01em;
+  }
+  .m1-pill {
+    margin-left: auto;
+    font-family: var(--font-b);
+    font-weight: 600;
+    font-size: 11.5px;
+    color: var(--g700);
+    background: var(--g50);
+    border: 1px solid var(--g100);
+    padding: 4px 10px;
+    border-radius: 999px;
+    letter-spacing: 0.02em;
+  }
+  .m1-subject {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--n100);
+  }
+  .m1-subject-label {
+    font-family: var(--font-b);
+    font-weight: 700;
+    font-size: 13.5px;
+    color: var(--n500);
+    flex: none;
+  }
+  .m1-subject-text {
+    font-family: var(--font-b);
+    font-weight: 600;
+    font-size: 14.5px;
+    color: var(--n900);
+    line-height: 1.35;
+  }
+  .m1-body {
+    padding: 22px;
+    min-height: 244px;
+  }
+  .m1-typed {
+    margin: 0;
+    font-family: var(--font-b);
+    font-size: 14.5px;
+    line-height: 1.62;
+    color: var(--n700);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .m1-caret {
+    display: inline-block;
+    width: 2px;
+    height: 1.05em;
+    margin-left: 1px;
+    background: var(--g700);
+    vertical-align: text-bottom;
+    animation: m1-blink 1s step-end infinite;
+  }
+  @keyframes m1-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+  .m1-footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 22px;
+    background: var(--n50);
+    border-top: 1px solid var(--n200);
+  }
+  .m1-send {
+    background: var(--g700);
+    color: var(--white);
+    font-family: var(--font-b);
+    font-weight: 700;
+    font-size: 14px;
+    padding: 11px 22px;
+    border: none;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: background 0.16s ease;
+  }
+  .m1-send:hover { background: var(--g800); }
+  .m1-send:focus-visible {
+    outline: 3px solid var(--g600);
+    outline-offset: 2px;
+  }
+  .m1-edit {
+    background: transparent;
+    color: var(--n600);
+    font-family: var(--font-b);
+    font-weight: 600;
+    font-size: 14px;
+    padding: 11px 16px;
+    border: 1px solid var(--n200);
+    border-radius: 9px;
+    cursor: pointer;
+    transition: border-color 0.16s ease, color 0.16s ease;
+  }
+  .m1-edit:hover {
+    border-color: var(--n400);
+    color: var(--n800);
+  }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 760px) {
+    .m1-hero {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 36px;
+      padding: 40px 32px;
+      min-height: 0;
+    }
+    .m1-headline { max-width: none; }
+    .m1-right { justify-content: stretch; }
+    .m1-editor { max-width: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .m1-caret { animation: none; }
+  }
+</style>
+
+<script>
+(function () {
+  var root = [...document.querySelectorAll('.variant')].find(function (v) {
+    return v.querySelector('.m1-editor');
+  });
+  if (!root) return;
+
+  var typedEl = root.querySelector('.m1-typed');
+  if (!typedEl) return;
+
+  var body =
+    'Dear Prof. Chen,\n\n' +
+    'Your recent paper on scalable graph neural networks for molecular property prediction caught my attention — the message-passing scheme you proposed is exactly the direction I want to explore.\n\n' +
+    'I’m a junior in CS with hands-on GNN experience from a drug-discovery project, and I’d love to contribute to your lab this fall.\n\n' +
+    'Could we set up a brief call to discuss openings?\n\n' +
+    'Best,\nMaya Patel';
+
+  var reduceMotion = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function renderFull() {
+    typedEl.textContent = body;
+  }
+
+  if (reduceMotion) {
+    renderFull();
+    return;
+  }
+
+  var caret = document.createElement('span');
+  caret.className = 'm1-caret';
+  caret.setAttribute('aria-hidden', 'true');
+
+  var i = 0;
+  var timer = null;
+
+  function step() {
+    if (i <= body.length) {
+      typedEl.textContent = body.slice(0, i);
+      typedEl.appendChild(caret);
+      i++;
+      // brief natural pause on newlines
+      var lastChar = body.charAt(i - 2);
+      var delay = lastChar === '\n' ? 90 : (26 + Math.random() * 6);
+      timer = setTimeout(step, delay);
+    } else {
+      // done: hold ~3s then reset and loop
+      timer = setTimeout(function () {
+        i = 0;
+        typedEl.textContent = '';
+        typedEl.appendChild(caret);
+        timer = setTimeout(step, 400);
+      }, 3000);
+    }
+  }
+
+  step();
+})();
+</script>
+<section class="variant">
+  <header class="variant-head"><span class="variant-num">2</span><div><h2 class="variant-name">Refined Editorial</h2><p class="variant-desc">ReachOut's serif voice, soft and calm — a clean email card that types itself.</p></div><span class="variant-tag">Live demo</span></header>
+  <div class="variant-stage">
+
+    <div class="m2-hero">
+      <div class="m2-left">
+        <span class="m2-eyebrow"><span class="m2-spark">✦</span> Cold outreach, done right</span>
+        <h3 class="m2-title">The <em>right way</em> to cold-email a professor.</h3>
+        <p class="m2-sub">ReachOut finds the lab that fits and writes the first draft — so your email reads like you, and actually gets a reply.</p>
+        <div class="m2-cta">
+          <a class="m2-btn-primary" href="#">Get started free <span class="m2-arrow" aria-hidden="true">→</span></a>
+          <a class="m2-btn-text" href="#">See how it works →</a>
+        </div>
+        <p class="m2-fine">No credit card required.</p>
+      </div>
+
+      <div class="m2-right">
+        <div class="m2-email" role="img" aria-label="An email to Professor Elena Vasquez at Stanford being composed in ReachOut">
+          <div class="m2-email-head">
+            <div class="m2-email-meta">
+              <div class="m2-row"><span class="m2-label">To</span><span class="m2-to">Prof. Elena Vasquez <span class="m2-dot">·</span> <span class="m2-org">Stanford</span></span></div>
+              <div class="m2-row"><span class="m2-label">Subject</span><span class="m2-subject">Prospective student — your work on graph neural nets</span></div>
+            </div>
+            <span class="m2-fit">reply-fit 94%</span>
+          </div>
+          <div class="m2-email-body">
+            <p class="m2-line" data-text="Dear Professor Vasquez,"></p>
+            <p class="m2-line" data-text="Your recent paper on dynamic graph embeddings reshaped how I think about temporal networks."></p>
+            <p class="m2-line" data-text="I'm a junior in CS with hands-on work in exactly that area, and I'd love to contribute to your lab this fall."></p>
+            <p class="m2-line" data-text="Would you have 15 minutes to chat?"></p>
+            <p class="m2-line" data-text="Warmly, Maya"></p>
+            <span class="m2-caret" aria-hidden="true"></span>
+          </div>
+          <div class="m2-email-foot">
+            <span class="m2-foot-note">Drafted in your voice</span>
+            <button class="m2-send" type="button">Send <span aria-hidden="true">→</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<style>
+.m2-hero{
+  width:100%;
+  display:grid;
+  grid-template-columns:minmax(0,46fr) minmax(0,54fr);
+  align-items:center;
+  gap:56px;
+  padding:60px 64px;
+}
+
+/* ---------- LEFT ---------- */
+.m2-left{min-width:0}
+.m2-eyebrow{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--g50);border:1px solid var(--g100);color:var(--g800);
+  font-family:var(--font-b);font-size:12px;font-weight:600;letter-spacing:.3px;
+  padding:6px 13px;border-radius:100px;margin-bottom:22px;
+}
+.m2-spark{color:var(--g600);font-size:11px}
+.m2-title{
+  font-family:var(--font-d);
+  font-size:clamp(36px,4.4vw,56px);
+  font-weight:600;
+  line-height:1.04;
+  letter-spacing:-.5px;
+  color:var(--n950);
+  margin-bottom:20px;
+}
+.m2-title em{font-style:italic;color:var(--g700);font-weight:600}
+.m2-sub{
+  font-family:var(--font-b);
+  font-size:17px;
+  line-height:1.6;
+  color:var(--n500);
+  max-width:420px;
+  margin-bottom:32px;
+}
+.m2-cta{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.m2-btn-primary{
+  display:inline-flex;align-items:center;gap:9px;
+  background:var(--g800);color:var(--white);
+  font-family:var(--font-b);font-size:16px;font-weight:700;letter-spacing:-.1px;
+  padding:15px 26px;border-radius:12px;
+  box-shadow:0 10px 28px rgba(27,77,62,.28),0 2px 6px rgba(27,77,62,.18);
+  transition:transform .18s ease,box-shadow .18s ease,background .18s ease;
+}
+.m2-btn-primary:hover{
+  background:var(--g700);
+  transform:translateY(-2px);
+  box-shadow:0 16px 36px rgba(27,77,62,.32),0 4px 10px rgba(27,77,62,.2);
+}
+.m2-btn-primary .m2-arrow{transition:transform .18s ease}
+.m2-btn-primary:hover .m2-arrow{transform:translateX(3px)}
+.m2-btn-text{
+  font-family:var(--font-b);font-size:15px;font-weight:600;color:var(--n600);
+  transition:color .18s ease;
+}
+.m2-btn-text:hover{color:var(--g700)}
+.m2-fine{
+  font-family:var(--font-b);font-size:13px;color:var(--n500);
+  margin-top:18px;
+}
+
+/* ---------- RIGHT — email card ---------- */
+.m2-right{min-width:0;display:flex;justify-content:center}
+.m2-email{
+  width:100%;max-width:480px;
+  background:var(--white);
+  border:1px solid var(--n200);
+  border-radius:var(--r-lg);
+  box-shadow:0 18px 50px rgba(13,43,30,.12),0 4px 12px rgba(0,0,0,.05);
+  overflow:hidden;
+}
+.m2-email-head{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:14px;
+  padding:20px 22px 16px;
+  border-bottom:1px solid var(--n100);
+  background:var(--n50);
+}
+.m2-email-meta{min-width:0;display:flex;flex-direction:column;gap:8px}
+.m2-row{display:flex;align-items:baseline;gap:10px;min-width:0}
+.m2-label{
+  flex:none;width:48px;
+  font-family:var(--font-m);font-size:11px;font-weight:500;
+  color:var(--n400);text-transform:uppercase;letter-spacing:.4px;
+}
+.m2-to{font-family:var(--font-b);font-size:14px;font-weight:600;color:var(--n900);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m2-dot{color:var(--n300);font-weight:400}
+.m2-org{color:var(--n500);font-weight:500}
+.m2-subject{font-family:var(--font-b);font-size:13.5px;color:var(--n600);
+  overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.m2-fit{
+  flex:none;
+  font-family:var(--font-m);font-size:11px;font-weight:500;
+  color:var(--g800);background:var(--g50);border:1px solid var(--g100);
+  padding:5px 10px;border-radius:100px;white-space:nowrap;
+}
+
+.m2-email-body{
+  padding:22px;
+  min-height:236px;
+  font-family:var(--font-b);font-size:14.5px;line-height:1.62;color:var(--n800);
+}
+.m2-line{margin:0 0 13px;white-space:pre-wrap}
+.m2-line:last-of-type{margin-bottom:0}
+.m2-line:empty{display:none}
+.m2-caret{
+  display:inline-block;width:2px;height:1.05em;
+  background:var(--g600);vertical-align:-2px;margin-left:1px;
+  animation:m2-blink 1s step-end infinite;
+}
+@keyframes m2-blink{50%{opacity:0}}
+
+.m2-email-foot{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:16px 22px;border-top:1px solid var(--n100);background:var(--n50);
+}
+.m2-foot-note{font-family:var(--font-b);font-size:12.5px;color:var(--n500)}
+.m2-send{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--g700);color:var(--white);
+  font-family:var(--font-b);font-size:14px;font-weight:600;
+  padding:9px 18px;border-radius:9px;
+  box-shadow:0 6px 16px rgba(31,92,73,.22);
+  transition:background .18s ease,transform .18s ease;
+}
+.m2-send:hover{background:var(--g600);transform:translateY(-1px)}
+
+/* ---------- responsive ---------- */
+@media(max-width:760px){
+  .m2-hero{grid-template-columns:1fr;gap:40px;padding:40px 28px}
+  .m2-sub{max-width:none}
+  .m2-email{max-width:none}
+  .m2-email-body{min-height:0}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .m2-caret{display:none}
+}
+</style>
+
+<script>
+(function(){
+  var root=[...document.querySelectorAll('.variant')].find(function(v){return v.querySelector('.m2-email');});
+  if(!root)return;
+
+  var lines=[].slice.call(root.querySelectorAll('.m2-line'));
+  var caret=root.querySelector('.m2-caret');
+  var body=root.querySelector('.m2-email-body');
+  if(!lines.length)return;
+
+  var SPEED=28;      // ms per char
+  var LINE_GAP=420;  // pause between lines
+  var HOLD=3000;     // pause once fully typed before reset
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+  function showAll(){
+    lines.forEach(function(l){l.textContent=l.getAttribute('data-text');});
+    if(caret)body.appendChild(caret);
+  }
+
+  if(reduce){showAll();return;}
+
+  var li=0,ci=0,timer=null;
+
+  function clearAll(){
+    lines.forEach(function(l){l.textContent='';});
+  }
+
+  function place(){
+    // keep caret right after the line currently being typed
+    if(caret&&lines[li])lines[li].appendChild(caret);
+  }
+
+  function tick(){
+    var line=lines[li];
+    var full=line.getAttribute('data-text');
+    if(ci<=full.length){
+      line.textContent=full.slice(0,ci);
+      place();
+      ci++;
+      timer=setTimeout(tick,SPEED);
+    }else{
+      li++;ci=0;
+      if(li<lines.length){
+        timer=setTimeout(tick,LINE_GAP);
+      }else{
+        // done — park caret at end, hold, then loop
+        if(caret&&body)body.appendChild(caret);
+        timer=setTimeout(function(){
+          clearAll();li=0;ci=0;
+          timer=setTimeout(tick,300);
+        },HOLD);
+      }
+    }
+  }
+
+  clearAll();
+  timer=setTimeout(tick,500);
+})();
+</script>
+<section class="variant">
+  <header class="variant-head"><span class="variant-num">3</span><div><h2 class="variant-name">Minimal Centered</h2><p class="variant-desc">The most stripped-back — centered headline, one CTA, one small typing email.</p></div><span class="variant-tag">Live demo</span></header>
+  <div class="variant-stage">
+
+    <div class="m3-hero">
+      <h1 class="m3-headline">The <span class="m3-accent">right way</span> to cold-email a professor.</h1>
+      <p class="m3-sub">ReachOut writes the personalized email that actually gets a reply.</p>
+
+      <div class="m3-cta-wrap">
+        <a class="m3-cta" href="#" role="button">Get started free <span class="m3-arrow" aria-hidden="true">→</span></a>
+        <span class="m3-note">No credit card required</span>
+        <a class="m3-link" href="#">See how it works →</a>
+      </div>
+
+      <div class="m3-email" role="img" aria-label="Example of a personalized email ReachOut drafts for you">
+        <div class="m3-email-head">
+          <div class="m3-email-row"><span class="m3-email-label">To</span><span class="m3-email-val">Prof. Eleanor Vance</span></div>
+          <div class="m3-email-row"><span class="m3-email-label">Subject</span><span class="m3-email-val m3-email-subj">Prospective student — your work on neural decoding</span></div>
+        </div>
+        <div class="m3-email-body">
+          <p class="m3-type"><span class="m3-typed"></span><span class="m3-caret" aria-hidden="true"></span></p>
+        </div>
+        <div class="m3-email-foot">
+          <button class="m3-send" type="button" tabindex="-1">Send</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<style>
+  .m3-hero{
+    width:100%;
+    max-width:760px;
+    margin:0 auto;
+    padding:64px 56px;
+    text-align:center;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .m3-headline{
+    font-family:var(--font-d);
+    font-weight:700;
+    font-size:clamp(36px,4.6vw,56px);
+    line-height:1.05;
+    letter-spacing:-1px;
+    color:var(--n900);
+    max-width:700px;
+    margin:0;
+  }
+  .m3-accent{color:var(--g700)}
+  .m3-sub{
+    font-family:var(--font-b);
+    font-size:clamp(15px,1.5vw,18px);
+    line-height:1.55;
+    color:var(--n500);
+    max-width:480px;
+    margin:20px auto 0;
+  }
+
+  .m3-cta-wrap{
+    margin-top:34px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+  }
+  .m3-cta{
+    display:inline-flex;
+    align-items:center;
+    gap:.5em;
+    background:var(--g800);
+    color:var(--white);
+    font-family:var(--font-b);
+    font-weight:700;
+    font-size:17px;
+    letter-spacing:-.2px;
+    padding:16px 30px;
+    border-radius:12px;
+    box-shadow:var(--sh-md);
+    transition:transform .16s ease,box-shadow .16s ease,background .16s ease;
+  }
+  .m3-cta:hover{background:var(--g900);transform:translateY(-2px);box-shadow:var(--sh-lg)}
+  .m3-cta:focus-visible{outline:3px solid var(--g600);outline-offset:3px}
+  .m3-arrow{transition:transform .16s ease}
+  .m3-cta:hover .m3-arrow{transform:translateX(3px)}
+  .m3-note{
+    font-family:var(--font-b);
+    font-size:13px;
+    color:var(--n500);
+  }
+  .m3-link{
+    margin-top:4px;
+    font-family:var(--font-b);
+    font-size:14px;
+    font-weight:600;
+    color:var(--n600);
+    transition:color .16s ease;
+  }
+  .m3-link:hover{color:var(--g700)}
+  .m3-link:focus-visible{outline:2px solid var(--g600);outline-offset:3px;border-radius:4px}
+
+  .m3-email{
+    margin-top:48px;
+    width:100%;
+    max-width:560px;
+    text-align:left;
+    background:var(--white);
+    border:1px solid var(--n200);
+    border-radius:var(--r-lg);
+    box-shadow:var(--sh-md);
+    overflow:hidden;
+  }
+  .m3-email-head{
+    padding:14px 18px;
+    border-bottom:1px solid var(--n100);
+  }
+  .m3-email-row{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    font-size:13px;
+    line-height:1.5;
+  }
+  .m3-email-row + .m3-email-row{margin-top:5px}
+  .m3-email-label{
+    flex:none;
+    width:48px;
+    color:var(--n400);
+    font-weight:500;
+    font-family:var(--font-b);
+  }
+  .m3-email-val{
+    color:var(--n800);
+    font-weight:500;
+    font-family:var(--font-b);
+  }
+  .m3-email-subj{color:var(--n900);font-weight:600}
+
+  .m3-email-body{
+    padding:18px;
+    min-height:118px;
+  }
+  .m3-type{
+    font-family:var(--font-b);
+    font-size:14px;
+    line-height:1.65;
+    color:var(--n700);
+    margin:0;
+    white-space:pre-wrap;
+  }
+  .m3-caret{
+    display:inline-block;
+    width:2px;
+    height:1.05em;
+    margin-left:1px;
+    vertical-align:text-bottom;
+    background:var(--g600);
+    animation:m3-blink 1.05s steps(1) infinite;
+  }
+  @keyframes m3-blink{0%,50%{opacity:1}50.01%,100%{opacity:0}}
+
+  .m3-email-foot{
+    padding:12px 18px;
+    border-top:1px solid var(--n100);
+    display:flex;
+  }
+  .m3-send{
+    font-family:var(--font-b);
+    font-weight:600;
+    font-size:13px;
+    color:var(--white);
+    background:var(--g600);
+    padding:8px 20px;
+    border-radius:8px;
+    pointer-events:none;
+  }
+
+  @media(max-width:760px){
+    .m3-hero{padding:48px 24px}
+    .m3-email{margin-top:36px}
+  }
+
+  @media(prefers-reduced-motion:reduce){
+    .m3-caret{animation:none;opacity:1}
+    .m3-cta,.m3-arrow,.m3-link{transition:none}
+  }
+</style>
+
+<script>
+(function(){
+  var root=[...document.querySelectorAll('.variant')].find(function(v){return v.querySelector('.m3-email');});
+  if(!root)return;
+
+  var typed=root.querySelector('.m3-typed');
+  var caret=root.querySelector('.m3-caret');
+  if(!typed)return;
+
+  var EMAIL="Dear Professor Vance,\n\nI'm a third-year undergrad fascinated by your 2024 paper on neural decoding. I'd love to ask about joining your lab this fall.\n\nBest,\nMaya";
+
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if(reduce){
+    typed.textContent=EMAIL;
+    if(caret)caret.style.display='none';
+    return;
+  }
+
+  var i=0;
+  var timer=null;
+
+  function step(){
+    i++;
+    typed.textContent=EMAIL.slice(0,i);
+    if(i>=EMAIL.length){
+      // hold the finished email ~3s, then reset and loop
+      timer=setTimeout(reset,3000);
+      return;
+    }
+    var ch=EMAIL.charAt(i-1);
+    var delay=28+Math.random()*40;
+    if(ch==='\n')delay=160;
+    else if(ch==='.'||ch===','||ch==='!'||ch==='?')delay=240;
+    timer=setTimeout(step,delay);
+  }
+
+  function reset(){
+    i=0;
+    typed.textContent='';
+    timer=setTimeout(step,500);
+  }
+
+  timer=setTimeout(step,700);
+})();
+</script>
+</main>
+
+</body>
+</html>

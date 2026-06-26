@@ -187,7 +187,7 @@ test('POST /api/recommend: garbage unis + out-of-range limit are sanitized (200,
       interests: ['machine learning'],
       field: 'Computer Science',
       unis: ['not-an-id', 'I123 OR 1=1', 42, null, 'I7'], // only "I7" survives the /^I\d+$/ filter
-      limit: 9999, // clamped to 50
+      limit: 9999, // clamped to 150
     });
   assert.equal(res.status, 200, 'bad unis / oversized limit are sanitized, not fatal');
   assert.ok(Array.isArray(res.body.professors), 'still returns a professors array');

@@ -4,21 +4,39 @@ Static frontend (vanilla HTML/CSS/JS) backed by a lightweight Node/Express proxy
 over the OpenAlex API, with Anthropic-powered features. The server lives in
 `server/`; the site is a single `index.html` at the repo root.
 
+The saved profile drives **deterministic, non-AI "reply-fit" recommendations**
+(`POST /api/recommend`, shared engine with `/api/analyze-resume`): every recommended
+professor shows a 30–99% match blending topical fit with reply-likelihood (recent
+activity + field-normalized citation saturation). Outreach outcomes are logged to
+`users/{uid}/outreach/{authorId}` for future score calibration.
+
+Email discovery (`GET /api/professor/:authorId/email`) is a **DOI-keyed, fan-out,
+3-layer engine** over free sources with **3 outcomes** (`confidence: 'verified' |
+'likely' | null`) — Layer 1 Europe PMC (`<corresp>` → `verified`), Layer 2
+Unpaywall-resolved OA copy (HTML-landing-page-first, then PDF) plus arXiv in
+parallel (`verified`/`likely`), Layer 3 an institution email-pattern best-guess
+surfaced as `confidence:'likely'` (mailable, flagged via `source:'institution-pattern'`)
+using a real domain from ROR. A surname `personMatch` gate
+filters every candidate and `mailtoEnabled` is true only for verified/likely; the
+route always returns 200 with at least a `facultySearchUrl`.
+
 ## AI Team Configuration (project-local agents, tuned 2026-06-19)
 
 **Important: YOU MUST USE these subagents when available for the task.**
 
 These agents live in `.claude/agents/` and are **purpose-written for this repo** —
 they know `server/index.js`'s conventions (`oaFetch`, `normalizeAuthor`, the cache,
-`claude-sonnet-4-6`, the `400`/`502` error contract) and the single-file `index.html`
-frontend. Prefer them over any generic global agent of a similar name.
+the Anthropic model `claude-sonnet-4-6` for both `/api/analyze-resume` and
+`/api/professor/:authorId/draft-email` — the `400`/`502`
+error contract) and the single-file `index.html` frontend (now a 9-page SPA with
+Firebase auth). Prefer them over any generic global agent of a similar name.
 
 ### Detected stack
-- **Backend:** Node.js, Express 4 (ES modules), Anthropic SDK, dotenv
+- **Backend:** Node.js, Express 4 (ES modules), Anthropic SDK, firebase-admin (env-gated durable cache), dotenv
 - **Frontend:** Vanilla HTML / CSS / JS — single-page `index.html`, no framework
-- **Data:** OpenAlex REST API (no key, polite pool); in-memory Map cache (no database)
+- **Data:** OpenAlex REST API (primary; no key, polite pool, optional `OPENALEX_API_KEY`), Wikidata (school autocomplete), and for email discovery: Europe PMC REST, Unpaywall (DOI→OA, needs a contact email — `CONTACT_EMAIL`, default `gladwyn504@gmail.com`), arXiv, ROR (institution domains). NCBI E-utilities + PMC helpers remain in `index.js` but are retired from the email hot path. Volatile in-memory Map (10-min OpenAlex/Wikidata TTL) is unchanged; durable email/intermediate entries go through an async `cacheGet/cacheSet/cacheClear` layer that persists to **Firestore via firebase-admin** (project `reachout-93272`, server-only `cache` collection) when `FIREBASE_SERVICE_ACCOUNT` or `GOOGLE_APPLICATION_CREDENTIALS` is set, else falls back to an in-memory Map. Frontend adds Firebase auth + Firestore (per-user profile memory) via CDN.
 - **Build tools:** none (plain `node index.js` / `node --watch`)
-- **Test tools:** none configured
+- **Test tools:** `node:test` + `supertest` — scorer units + `/api/recommend` coverage in `server/test/`; run `npm test` in `server/`
 
 ### Agent assignments (project-local)
 
@@ -28,6 +46,9 @@ frontend. Prefer them over any generic global agent of a similar name.
 | Express routes, OpenAlex proxy, cache, Anthropic endpoints | `node-backend-expert` | Knows `oaFetch`/`normalizeAuthor`/the cache; main backend agent |
 | `index.html` UI, CSS, vanilla JS, resume/PDF flow | `vanilla-frontend-expert` | Single-page, `apiFetch`/`apiPost`, no framework |
 | Code review (all changes) | `code-reviewer` | Security-aware; key-handling, XSS, cache, upstream errors |
+| Firebase auth / Firestore / rules / deploy | `firebase-expert` | Owns `users/{uid}` profile-memory sync, `firestore.rules`, CDN-ESM SDK |
+| Whole-surface security audit | `security-auditor` | Proactive SSRF/CORS/XSS/PII/rules sweep; complements (≠) `code-reviewer` |
+| Automated tests | `test-engineer` | `node:test` + `supertest`, mocks upstreams; reply-fit scorer + `/api/recommend` covered in `server/test/` |
 | Performance tuning | `performance-optimizer` | Cache hit-rate, OpenAlex fan-out, payload, Anthropic cost |
 | Understand a flow end-to-end | `code-archaeologist` | Traces proxy ↔ frontend wiring, file:line anchored |
 | Docs / README / this file upkeep | `documentation-specialist` | Keeps endpoint docs honest |
