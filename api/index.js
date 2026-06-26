@@ -9,21 +9,6 @@
 
 // Must run before server/index.js loads pdf-parse → pdfjs-dist (needs DOMMatrix).
 import './_polyfills.js';
+import { app } from '../server/index.js';
 
-// TEMP DIAGNOSTIC: surface any cold-start import failure in the HTTP response,
-// since Hobby runtime logs don't show it. Zero overhead when the import succeeds.
-let handler;
-try {
-  const mod = await import('../server/index.js');
-  handler = mod.app;
-} catch (err) {
-  const msg = 'COLD_START_IMPORT_ERROR\n' + (err && err.stack ? err.stack : String(err));
-  console.error(msg);
-  handler = (req, res) => {
-    res.statusCode = 500;
-    res.setHeader('content-type', 'text/plain');
-    res.end(msg);
-  };
-}
-
-export default handler;
+export default app;
