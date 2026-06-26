@@ -366,6 +366,31 @@ function isActiveAuthor(raw, withinYears = 6) {
 }
 
 /**
+ * Quality gate for the NAME-search path: true when an author shows a real
+ * scholarly footprint. OpenAlex contains spam/garbage author records (e.g. the
+ * keyboard-mash "sdf") that still carry auto-assigned topics and so render as
+ * legitimate-looking cards. We keep an author only if they have at least ONE
+ * concrete signal of real scholarship: a listed affiliation, any citation, or a
+ * positive h-index/i10-index. This deliberately survives modest early-career
+ * professors (one cited paper OR one listed institution is enough) while dropping
+ * the no-institution / 0-citation / no-index junk. Used by discoverByName only —
+ * the field path already gets precision filtering via the top-5-topic gate.
+ * NOTE: in the name path the upstream `works_count:>4` filter in discoverByName
+ * runs FIRST (anyone with ≤4 works is already gone), so this footprint gate is the
+ * SECOND cut, not the only one.
+ */
+function hasScholarlyFootprint(raw) {
+  if (!raw) return false;
+  const insts = Array.isArray(raw.last_known_institutions) ? raw.last_known_institutions : [];
+  if (insts.length > 0) return true;
+  if ((raw.cited_by_count || 0) > 0) return true;
+  const stats = raw.summary_stats || {};
+  if ((stats.h_index || 0) > 0) return true;
+  if ((stats.i10_index || 0) > 0) return true;
+  return false;
+}
+
+/**
  * Fetch OpenAlex topic candidates for a free-text field, in RELEVANCE order.
  * Returns [{ id, fullId, name, fieldId, fieldName, subfieldId }] (short ids; null-safe).
  * Cached via oaFetch. OpenAlex topics are hyper-granular and domain-qualified
@@ -2340,12 +2365,24 @@ async function discoverByName(name, { page = 1, perPage = 12 } = {}) {
     'last_known_institutions', 'topics',
     'summary_stats', 'counts_by_year',
   ].join(',');
-  const authorsPath = `/authors?filter=display_name.search:${encodeURIComponent(name)}&sort=cited_by_count:desc&per_page=${perPage}&page=${page}&select=${select}`;
+  // Quality gate (cheap, server-side): a works_count:>4 floor — same floor
+  // discoverByField uses — cuts most keyboard-mash spam records before they ship.
+  const filter = [
+    `display_name.search:${name}`,
+    'works_count:>4',
+  ].join(',');
+  const authorsPath = `/authors?filter=${encodeURIComponent(filter)}&sort=cited_by_count:desc&per_page=${perPage}&page=${page}&select=${select}`;
   const data = await oaFetch(authorsPath);
   const rawAuthors = (data.results || []).filter(
-    (a) => isLatinName(a.display_name) && isActiveAuthor(a) // drop non-Latin-named + retired/deceased
+    (a) =>
+      isLatinName(a.display_name) && // drop non-Latin-named
+      isActiveAuthor(a) && // drop retired/deceased (no recent works)
+      hasScholarlyFootprint(a) // drop junk/spam: no institution, 0 citations, no h/i10-index
   );
   const results = rawAuthors.map((a) => normalizeAuthor(a, null, null)).slice(0, perPage);
+  // NOTE: `total` is OpenAlex's raw meta count for the works_count:>4 query; the
+  // post-fetch footprint/Latin/active gates run client-side, so `total` may
+  // slightly overcount what actually ships in `results`.
   return { field: name, topic: null, mode: 'name', total: data.meta?.count || 0, page, perPage, results };
 }
 
@@ -4151,6 +4188,7 @@ export {
   normalizeWork,
   isLatinName,
   isActiveAuthor,
+  hasScholarlyFootprint,
   buildAuthorStats,
   baselineHigh,
   FIELD_H_BASELINE,
