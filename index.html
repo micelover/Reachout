@@ -4843,12 +4843,14 @@ function renderPaperShortlist() {
 
   const MATCH_LIMIT = 3;
 
-  // Cards: the top-3 matches in order, best first. Guard against dupes. If no
-  // matches yet (still loading), leave whatever's shown (loading state) intact —
-  // this function re-runs when matches arrive.
+  // Cards: prefer the top-3 ranked profile matches (best first). If none have
+  // arrived (guide failed / still loading / genuinely no match) but the pool has,
+  // fall back to the 3 most-recent papers so the styled "Recent papers" box is
+  // never an empty bar. Guard against dupes; always ≤3 cards. This re-runs when
+  // matches arrive, so the fallback correctly upgrades to ranked cards.
+  const seen = new Set();
+  const cardsHTML = [];
   if (matches.length) {
-    const seen = new Set();
-    const cardsHTML = [];
     for (const m of matches) {
       if (cardsHTML.length >= MATCH_LIMIT) break;
       if (!m || !m.paperId || seen.has(m.paperId)) continue;
@@ -4867,8 +4869,27 @@ function renderPaperShortlist() {
       // topic) or the quiet "Most recent work" fallback.
       cardsHTML.push(paperCardHTML(p, m));
     }
-    selectedEl.innerHTML = cardsHTML.join('');
+  } else if (pool.length) {
+    // No ranked matches: fall back to the most-recent papers (year desc, then
+    // citations desc). paperCardHTML(p, null) shows the quiet "Most recent work"
+    // label, never a fake match line.
+    const recent = [...pool].sort(
+      (a, b) => (b.year || 0) - (a.year || 0) || (b.citedByCount || 0) - (a.citedByCount || 0)
+    );
+    for (const p of recent) {
+      if (cardsHTML.length >= MATCH_LIMIT) break;
+      if (!p || !p.id || seen.has(p.id)) continue;
+      seen.add(p.id);
+      cardsHTML.push(paperCardHTML(p, null));
+    }
   }
+
+  // Only rewrite the box when we produced cards; otherwise leave whatever's shown
+  // (e.g. nothing yet) intact — this re-runs as data lands.
+  if (cardsHTML.length) selectedEl.innerHTML = cardsHTML.join('');
+
+  // Belt-and-suspenders: never leave the styled .pub-rows box visible but empty.
+  selectedEl.style.display = selectedEl.innerHTML.trim() ? '' : 'none';
 
   // "See all papers": the full deduped pool, most influential first.
   if (!pool.length) return;
