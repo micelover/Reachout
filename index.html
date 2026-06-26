@@ -2416,8 +2416,29 @@ window.authSignOut  = authSignOut;
 window.showAuth     = showAuth;
 
 // ─── API helpers ─────────────────────────────────────
-async function apiFetch(path) {
-  const res = await fetch(API + path);
+// All API calls share one ceiling so a slow or hung upstream can't strand the UI
+// in a loading state forever. Cold /api/recommend is ~5s; email discovery fans
+// out over several free sources, so the default is generous. Callers may override.
+const API_TIMEOUT_MS = 25000;
+async function fetchWithTimeout(url, opts = {}, timeoutMs = API_TIMEOUT_MS) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...opts, signal: ctrl.signal });
+  } catch (e) {
+    if (e.name === 'AbortError') {
+      const err = new Error('The request timed out.');
+      err.code = 'timeout';
+      throw err;
+    }
+    throw e;                                   // network/CORS/etc. surface as-is
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function apiFetch(path, { timeoutMs } = {}) {
+  const res = await fetchWithTimeout(API + path, {}, timeoutMs);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
@@ -2431,17 +2452,17 @@ async function checkBackend() {
   }
 }
 
-async function apiPost(path, body) {
+async function apiPost(path, body, { timeoutMs } = {}) {
   const headers = { 'Content-Type': 'application/json' };
   // Authenticated POSTs: attach the signed-in user's Firebase ID token so the
   // server can identify the account (e.g. the per-day résumé cap).
   const u = auth.currentUser;
   if (u) headers['Authorization'] = 'Bearer ' + await u.getIdToken();
-  const res = await fetch(API + path, {
+  const res = await fetchWithTimeout(API + path, {
     method: 'POST',
     headers,
     body: JSON.stringify(body),
-  });
+  }, timeoutMs);
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     const e = new Error(err.error || `HTTP ${res.status}`);
@@ -3464,6 +3485,18 @@ function errorHTML(msg) {
   </div>`;
 }
 
+// Recoverable failure for the scored list (timeout, transient 502, server down).
+// Unlike errorHTML (a CLI hint) this offers an in-place retry.
+function recsRetryHTML(msg) {
+  return `
+  <div style="grid-column:1/-1;text-align:center;padding:60px 20px">
+    <div style="font-size:32px;margin-bottom:12px">⏳</div>
+    <div style="font-size:15px;font-weight:600;color:var(--n800);margin-bottom:6px">Couldn't load your matches</div>
+    <div style="font-size:13.5px;color:var(--n500);margin-bottom:20px;max-width:360px;margin-left:auto;margin-right:auto">${esc(msg)}</div>
+    <button class="mem-cta" onclick="loadRecommendations()">Try again</button>
+  </div>`;
+}
+
 function emptyHTML(field) {
   if (field === '' && (browseFilter.unis.size || browseFilter.locations.size)) {
     return `
@@ -4366,6 +4399,7 @@ async function loadRecommendations() {
     hideGenericRecsNotice();   // onboarding card already covers this case
     refreshBrowseProfileCta();
     cachedResults = [];
+    loadedRecSig = recScoringSig();   // onboarding state matches the (empty) profile
     return;
   }
 
@@ -4375,6 +4409,21 @@ async function loadRecommendations() {
   refreshBrowseProfileCta();
   if (sub) sub.innerHTML = 'Matched to your profile · ' +
     '<a href="#" onclick="go(\'myprofile\');return false" style="color:var(--g600);font-weight:600;text-decoration:none">edit</a>';
+
+  // Instant path: reuse this user's persisted scored list when it still matches the
+  // current request signature (profile + filters). loadedRecSig already covers
+  // in-session navigation; this covers full page reloads, where module state reset.
+  // No skeleton, no network — the page paints immediately.
+  const reqSig = recsRequestSig();
+  const cachedRecs = loadRecsCache(_memUid);
+  if (cachedRecs && cachedRecs.reqSig === reqSig && cachedRecs.professors.length) {
+    cachedResults = cachedRecs.professors;
+    loadedRecSig = recScoringSig();
+    state.page = 1;
+    updateRecsNudge(interests.length);
+    setSort('best');                      // renders from cachedResults
+    return;
+  }
 
   // Skeletons while we score.
   if (grid) grid.innerHTML = skeletonGrid();
@@ -4397,8 +4446,9 @@ async function loadRecommendations() {
     if (seq !== recsSeq) return;          // a newer request superseded this one
 
     cachedResults = data.professors || [];
-    recsDirty = false;
+    loadedRecSig = recScoringSig();   // this list now matches the live profile
     state.page = 1;
+    if (cachedResults.length) saveRecsCache(_memUid, reqSig, cachedResults);   // persist for instant reloads
 
     if (!cachedResults.length) {          // scored, but nothing cleared the bar
       if (grid) grid.innerHTML = recsZeroHTML();
@@ -4412,9 +4462,12 @@ async function loadRecommendations() {
     setSort('best');                      // best-fit ordering + re-render + sync sort UI
   } catch (err) {
     if (seq !== recsSeq) return;
-    // Keep recsDirty true so the next browse visit retries. The common failures
-    // are the server being down or a 502 from OpenAlex upstream.
-    if (grid) grid.innerHTML = errorHTML('Start the local server to score professors against your profile.');
+    // loadedRecSig stays unset so the next browse visit retries too. The common
+    // failures are a timeout, the server being down, or a 502 from OpenAlex.
+    const msg = err.code === 'timeout'
+      ? 'This is taking longer than expected — the discovery engine may be warming up. Try again.'
+      : 'We couldn\'t reach the discovery engine. Make sure the local server is running, then retry.';
+    if (grid) grid.innerHTML = recsRetryHTML(msg);
     if (pag) pag.innerHTML = '';
     hideRecsNudge();
   }
@@ -4434,6 +4487,7 @@ function browseByField() {
   document.getElementById('browseSearchInput')?.focus();
 }
 window.browseByField = browseByField;
+window.loadRecommendations = loadRecommendations;   // recsRetryHTML's inline retry button
 
 function renderPagination(total, current) {
   const pages = Math.ceil(total / state.perPage);
@@ -5920,8 +5974,15 @@ function go(page, authorId, force) {
   if (page === 'browse') {
     setBrowseState('filled');
     const hasProfile = profileComplete();
-    if (hasProfile && (!browseLoaded || recsDirty || browseMode !== 'recommend')) {
-      loadRecommendations();
+    if (hasProfile) {
+      // Refetch only when we don't already hold a scored list matching the current
+      // scoring inputs. Plain navigation back to Professors reuses the in-memory
+      // list (loadedRecSig === recScoringSig()); a profile edit changes the
+      // signature and triggers a fresh score. Auth-state re-fires no longer force
+      // a redundant refetch.
+      if (browseMode !== 'recommend' || loadedRecSig !== recScoringSig()) {
+        loadRecommendations();
+      }
     } else if (!browseLoaded) {
       loadBrowse();
     }
@@ -5948,9 +6009,12 @@ let browseLoaded = false;
 //   'search'    — generic field/name /api/discover list (UNscored)
 //   null        — nothing loaded yet
 let browseMode = null;
-// Recommendations are stale and should be refetched on the next browse visit.
-// True at startup so the first signed-in visit fetches; flipped on profile edits.
-let recsDirty = true;
+// Scoring signature (recScoringSig) that the current cachedResults were loaded
+// for; null means no scored list is in memory yet (also true after a full page
+// reload, since this is module state). The browse guard refetches only when this
+// no longer matches the live profile, so navigating back to the Professors page
+// reuses the list instead of re-scoring every visit.
+let loadedRecSig = null;
 // Bumped per /api/recommend request so a slow earlier response can't overwrite a
 // newer one (autocomplete-style race guard).
 let recsSeq = 0;
@@ -6362,26 +6426,61 @@ const todayUTC = () => new Date().toISOString().slice(0, 10);
 function hasReachedDailyResumeLimit(){ return _userMemory.lastResumeUploadDate === todayUTC(); }
 
 // Signature of the fields that actually drive recommendation scoring (field, goal,
-// interests). When this changes, the cached recommendations are stale and must be
-// refetched on the next browse visit. accomplishments/skills/name/institution do
-// NOT enter ranking, so editing them never triggers a refetch.
+// interests, school). When this changes, the cached recommendations are stale and
+// must be refetched on the next browse visit. accomplishments/skills/name do NOT
+// enter ranking, so editing them never triggers a refetch.
 function recScoringSig(m = _userMemory){
-  // institution(Id/Loc) included so changing schools re-ranks (location proximity).
+  // institution(Id/Loc) drive the location-proximity boost. The raw institution
+  // name is included too because the server falls back to resolving geo from it
+  // when no id/coords are available (e.g. a school lookup that failed), so a
+  // name-only change must still re-rank.
   return JSON.stringify([m.field || '', m.goal || '', [...(m.interests || [])].sort(),
-    m.institutionId || '', m.institutionLoc || null]);
+    m.institutionId || '', m.institutionLoc || null, (m.institution || '').trim().toLowerCase()]);
 }
 let _lastRecSig = recScoringSig();
+
+// Full request signature for the scored list: scoring inputs PLUS the active
+// university/location filters, since those change the result set too. Used as the
+// key for the persistent reload cache below.
+function recsRequestSig(){
+  return JSON.stringify([
+    recScoringSig(),
+    [...browseFilter.unis.keys()].sort(),
+    [...browseFilter.locations.keys()].sort(),
+  ]);
+}
+
+// Persistent (cross-reload) cache of the scored list, namespaced per uid like the
+// profile memory. A reload paints from here instantly when the stored request
+// signature still matches the live profile/filters — so we only refetch when
+// something that affects the ranking actually changed (or the entry went stale).
+const RECS_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;   // 7 days
+function recsCacheKey(uid){ return 'reachout.recsCache.' + uid; }
+function loadRecsCache(uid){
+  if (!uid) return null;
+  try {
+    const o = JSON.parse(localStorage.getItem(recsCacheKey(uid)) || 'null');
+    if (!o || !Array.isArray(o.professors) || typeof o.reqSig !== 'string') return null;
+    if (!o.ts || (Date.now() - o.ts) > RECS_CACHE_TTL_MS) return null;   // expired
+    return o;
+  } catch { return null; }
+}
+function saveRecsCache(uid, reqSig, professors){
+  if (!uid) return;
+  try { localStorage.setItem(recsCacheKey(uid), JSON.stringify({ v: 1, reqSig, professors, ts: Date.now() })); }
+  catch {}   // quota / serialization failure → just skip persistence
+}
 
 function saveMemory(){
   try { localStorage.setItem(memKey(_memUid), JSON.stringify(_userMemory)); } catch {}
   const sig = recScoringSig();
   if (sig !== _lastRecSig) {
     _lastRecSig = sig;
-    recsDirty = true;                           // scoring inputs changed → recommendations stale
-    // If the user is looking at their recommendations right now (saved without
-    // navigating away — e.g. the in-place résumé overlay), refetch on the spot
-    // instead of waiting for the next browse visit. recsSeq makes a redundant
-    // in-flight call safe; the lazy go('browse') guard covers the nav case.
+    // Scoring inputs changed. If the user is looking at their recommendations
+    // right now (saved without navigating away — e.g. the in-place résumé overlay),
+    // refetch on the spot; otherwise the browse guard refetches on the next visit
+    // because loadedRecSig no longer matches the live profile. recsSeq makes a
+    // redundant in-flight call safe.
     if (browseMode === 'recommend' && document.getElementById('page-browse')?.classList.contains('active')) {
       loadRecommendations();
     }
@@ -6427,7 +6526,7 @@ async function hydrateMemoryForUser(user){
     _memUid = null;
     _userMemory = blankMemory();
     _lastRecSig = recScoringSig();            // reset scoring baseline
-    recsDirty = true;                         // next browse must refetch (or show generic)
+    loadedRecSig = null;                      // no scored list for a signed-out user
     browseMode = null;
     browseLoaded = false;                     // re-seed the list for whoever signs in next
     Object.keys(_outreachReplied).forEach(k => delete _outreachReplied[k]); // drop prior user's toggles
@@ -6440,7 +6539,7 @@ async function hydrateMemoryForUser(user){
   normalizeMemory();
   // A new account's recommendations must not reuse the previous session's cache.
   _lastRecSig = recScoringSig();
-  recsDirty = true;
+  loadedRecSig = null;
   reRender();
   try {
     const snap = await getDoc(doc(db, 'users', uid));
@@ -6453,7 +6552,7 @@ async function hydrateMemoryForUser(user){
       if (changed) scheduleCloudSave();                       // persist the cleaned list back to Firestore
       // Cloud profile may differ from the optimistic cache → rebase the scoring
       // signature and invalidate so the next browse scores against the truth.
-      if (recScoringSig() !== _lastRecSig) { _lastRecSig = recScoringSig(); recsDirty = true; }
+      if (recScoringSig() !== _lastRecSig) { _lastRecSig = recScoringSig(); loadedRecSig = null; }
       reRender();
     } else if (!memoryIsEmpty()) {
       scheduleCloudSave();                                    // migrate this user's cache up

@@ -31,6 +31,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { lookup as dnsLookup } from 'dns/promises';
 import net from 'net';
+import crypto from 'node:crypto';
 import Anthropic from '@anthropic-ai/sdk';
 import { PDFParse } from 'pdf-parse';
 
@@ -240,6 +241,7 @@ const EMAIL_TTL_VERIFIED_MS = 7 * DAY_MS;  // verified/likely email payloads
 const EMAIL_TTL_GUESS_MS = 2 * DAY_MS;  // constructed-pattern best-guess + not-found payloads (re-probe sooner)
 const INTERMEDIATE_TTL_MS = 30 * DAY_MS;   // unpaywall/page/europepmc/instdomain
 const NEG_INTERMEDIATE_TTL_MS = 1 * DAY_MS; // negative author-PMC probe (no PMC paper / no match) — re-probe sooner
+const RECOMMEND_TTL_MS = 30 * 60 * 1000;   // memoized /api/recommend results (30 min)
 
 // ─── Firebase auth + per-account daily upload limit ──────────────────────────
 // verifyFirebaseToken authenticates the caller; the daily-upload helpers enforce a
@@ -3162,10 +3164,28 @@ app.post('/api/recommend', async (req, res) => {
         .filter((s) => /^A\d+$/.test(s)),
     )].slice(0, 500);
 
+    // Memoize the full scored result. Key on every input that changes the ranking
+    // (normalized + sorted so equivalent requests collide). The dominant cost is the
+    // OpenAlex fan-out inside recommendForInterests; a hit skips it entirely.
+    const recKey = 'recommend:' + crypto.createHash('sha1').update(JSON.stringify([
+      [...interests].map((s) => s.toLowerCase()).sort(),
+      field.toLowerCase(),
+      goal.toLowerCase(),
+      [...mergedUnis].sort(),
+      limit,
+      studentGeo ? [studentGeo.lat, studentGeo.lng, studentGeo.country || ''] : null,
+      [...excludeIds].sort(),
+    ])).digest('hex');
+
+    const cachedRec = await cacheGet(recKey);
+    if (cachedRec) return res.json(cachedRec);
+
     // ── Match via the shared reply-fit engine ────────────────────────────────
     const professors = await recommendForInterests(interests, { field, goal, unis: mergedUnis, limit, studentGeo, excludeIds });
 
-    res.json({ interests, goal, professors });
+    const payload = { interests, goal, professors };
+    await cacheSet(recKey, payload, RECOMMEND_TTL_MS);
+    res.json(payload);
   } catch (err) {
     console.error('[/api/recommend]', err.message);
     res.status(502).json({ error: 'Failed to reach OpenAlex' });
